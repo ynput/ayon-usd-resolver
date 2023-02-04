@@ -1,14 +1,14 @@
 # ayon-usd-resolver
 Home of AYON USD resolver plugin which resolves asset paths for [USD](https://github.com/PixarAnimationStudios/USD) and schema yon://.
 
-The plugin works as intermediary between YON (OpenPYPE) and USD. 
+The plugin works as intermediary between AYON and USD. 
 
 High level view:
 
-1. Some client application (call it **APP**) needs to resolve **yon://some\_path**
+1. Some client application (call it **APP**) needs to resolve **ayon://some\_path**
 1. **APP entrusts USD** (by C++ calling, by python calling, by usdresolve script calling, etc.) 
-1. **USD** asset resolving mechanism **entrusts** **this plugin** to resolve yon://some\_path.
-1. This plugin sends query with **unresolved path** to **REST** (YON REST API) where is written logic and returns **resolved path** to the plugin.
+1. **USD** asset resolving mechanism **entrusts** **this plugin** to resolve ayon://some\_path.
+1. This plugin sends query with **unresolved path** to **REST** (AYON REST API) where is written logic and returns **resolved path** to the plugin.
 1. The plugin has **resolved path**, so returns it **to USD**
 1. USD returns **resolved path to APP**.
 
@@ -43,31 +43,31 @@ In this file are instructions for CMake to:
 - **Passing exported name** of library **to plugInfo.json**.
 - **Installation instructions** for library and plugInfo.json.
 ## **Source Code**
-#### **YON\_AssetResolver**
-Class stored in <SOURCE\_ROOT>/src/Y**ON\_AssetResolver**(**.h**/**.cpp**)
+#### **AYON\_AssetResolver**
+Class stored in <SOURCE\_ROOT>/src/**AYON\_AssetResolver**(**.h**/**.cpp**)
 
 This class **implements** methods from USD class PXR\_NS::ArResolver.
-#### **YON\_AssetResolveResult**
-Class stored in <SOURCE\_ROOT>/src/**YON\_AssetResolveResult**(**.h**/**.cpp**)
+#### **AYON\_AssetResolveResult**
+Class stored in <SOURCE\_ROOT>/src/**AYON\_AssetResolveResult**(**.h**/**.cpp**)
 
 This class holds information about **resolved path**, **error message** and **boolean** information if **path was resolved**.
-#### **YON\_AssetResolvingProvider**
-Interface class stored in <SOURCE\_ROOT>/src/**YON\_AssetResolvingProvider.h**
+#### **AYON\_AssetResolvingProvider**
+Interface class stored in <SOURCE\_ROOT>/src/**AYON\_AssetResolvingProvider.h**
 
 This class has only one pure virtual method virtual YON\_AssetResolveResult Resolve(const std::string& AssetPath). This method is used as glue for future implementations of resolvers (another REST provider based on differrent logic than Boost.Beast, another type of provider, eg. direct access to database, etc.)
-#### **YON\_AssetResolvingProvider\_REST**
-<SOURCE\_ROOT>/src/**YON\_AssetResolveResult**(**.h**/**.cpp**)
+#### **AYON\_AssetResolvingProvider\_REST**
+<SOURCE\_ROOT>/src/**AYON\_AssetResolveResult**(**.h**/**.cpp**)
 
 In this class is written logic for communication with REST endpoint.
 
-#### **YON\_Logging**
+#### **AYON\_Logging**
 <SOURCE\_ROOT>/src/Logging/**YON\_Logging**(**.h**/**.cpp**)
 
-In these files are declared/defined YON\_LogUtils class and macros for logging.
+In these files are declared/defined AYON\_LogUtils class and macros for logging.
 
 **Logging** is flushed to **std::cerr stream**, so do not be startled by console output, where is flushed result output for calling and logs in one pile.
 
-To log exception call YON\_LOG\_EXCEPTION, to log information call YON\_LOG\_INFO
+To log exception call AYON\_LOG\_EXCEPTION, to log information call YON\_LOG\_INFO
 
 ## **plugInfo.json**
 Plugin handles **schema yon://**. Variable@PLUG\_INFO\_LIBRARY\_PATH@ is replaced by output library name, value is created in CMakeLists.txt (in subfolder src). 
