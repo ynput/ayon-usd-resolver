@@ -1,7 +1,7 @@
-#include "YON_Logging.h"
+#include "AYON_Logging.h"
 #include <iostream>
 
-void YON_LogUtils::WriteToStream(const std::string& Caption, const std::string& Body)
+void AYON_LogUtils::WriteToStream(const std::string& Caption, const std::string& Body)
 {
     std::cerr << std::endl
         << SEPARATOR << std::endl

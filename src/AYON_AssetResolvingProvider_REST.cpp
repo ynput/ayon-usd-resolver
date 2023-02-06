@@ -1,12 +1,12 @@
-﻿#include "YON_AssetResolvingProvider_REST.h"
+﻿#include "AYON_AssetResolvingProvider_REST.h"
 #include <boost/exception/diagnostic_information.hpp> 
 #include <iostream>
-#include "Logging/YON_Logging.h"
+#include "Logging/AYON_Logging.h"
 
 
-YON_AssetResolveResult YON_AssetResolvingProvider_REST::Resolve(const std::string& AssetPath) {
+AYON_AssetResolveResult AYON_AssetResolvingProvider_REST::Resolve(const std::string& AssetPath) {
 
-    YON_AssetResolveResult Result;
+    AYON_AssetResolveResult Result;
     try 
     {
         //TCP
@@ -28,7 +28,7 @@ YON_AssetResolveResult YON_AssetResolvingProvider_REST::Resolve(const std::strin
         boost::beast::flat_buffer buffer;
         boost::beast::http::response<boost::beast::http::dynamic_body> res;
         boost::beast::http::read(stream, buffer, res);
-        YON_LOG_INFO("Response", res);
+        AYON_LOG_INFO("Response", res);
 
         // Gracefully close the socket
         boost::beast::error_code ec;
@@ -41,39 +41,39 @@ YON_AssetResolveResult YON_AssetResolvingProvider_REST::Resolve(const std::strin
     }
     catch (const boost::exception& Ex) 
     {
-        Result.ErrorMsg = YON_LOG_EXCEPTION("boost exception", Ex, boost::current_exception_diagnostic_information());
+        Result.ErrorMsg = AYON_LOG_EXCEPTION("boost exception", Ex, boost::current_exception_diagnostic_information());
     }
     catch (std::exception const& Ex) 
     {
-        Result.ErrorMsg = YON_LOG_EXCEPTION("std::exception", Ex, Ex.what());
+        Result.ErrorMsg = AYON_LOG_EXCEPTION("std::exception", Ex, Ex.what());
     }
 
     return Result;
 }
 
-boost::beast::http::request<boost::beast::http::string_body> YON_AssetResolvingProvider_REST::Request_Create(const std::string& AssetPath)
+boost::beast::http::request<boost::beast::http::string_body> AYON_AssetResolvingProvider_REST::Request_Create(const std::string& AssetPath)
 {
     boost::beast::http::request<boost::beast::http::string_body> req{ boost::beast::http::verb::get, ResolvingUrlEndpointPath, Version };
     req.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
     req.set("unresolved_path", AssetPath);
-    YON_LOG_INFO("Request", req);
+    AYON_LOG_INFO("Request", req);
 
     return req;
 }
 
-std::string YON_AssetResolvingProvider_REST::Response_Parse(const boost::beast::http::response<boost::beast::http::dynamic_body>& Response)
+std::string AYON_AssetResolvingProvider_REST::Response_Parse(const boost::beast::http::response<boost::beast::http::dynamic_body>& Response)
 {
     auto pt = GetPropertyTreeFromResponse(Response);
     auto resolved_path = pt.get<std::string>("resolved_path");
-    YON_LOG_INFO("Resolved Path", resolved_path);
+    AYON_LOG_INFO("Resolved Path", resolved_path);
 
     return resolved_path;
 }
 
-boost::property_tree::ptree YON_AssetResolvingProvider_REST::GetPropertyTreeFromResponse(const boost::beast::http::response<boost::beast::http::dynamic_body>& Response)
+boost::property_tree::ptree AYON_AssetResolvingProvider_REST::GetPropertyTreeFromResponse(const boost::beast::http::response<boost::beast::http::dynamic_body>& Response)
 {
     auto body_str = boost::beast::buffers_to_string(Response.body().data());
-    YON_LOG_INFO("Response body", body_str);
+    AYON_LOG_INFO("Response body", body_str);
 
     std::stringstream ss;
     ss << body_str;

@@ -11,11 +11,11 @@
 
 
 
-class YON_AssetResolver final : public PXR_NS::ArResolver
+class AYON_AssetResolver final : public PXR_NS::ArResolver
 {
 public:
-    YON_AssetResolver();
-    virtual ~YON_AssetResolver();
+    AYON_AssetResolver();
+    virtual ~AYON_AssetResolver();
 
 protected:
 

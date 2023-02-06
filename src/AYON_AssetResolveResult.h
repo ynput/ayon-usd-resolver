@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-class YON_AssetResolveResult
+class AYON_AssetResolveResult
 {
 public:
 	std::string ResolvedPath = "___UNRESOLVED_PATH___";

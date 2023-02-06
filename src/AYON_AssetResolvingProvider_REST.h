@@ -7,12 +7,12 @@
 #include <boost/beast/version.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include "YON_AssetResolvingProvider.h"
+#include "AYON_AssetResolvingProvider.h"
 
-class YON_AssetResolveResult;
+class AYON_AssetResolveResult;
 
 
-class YON_AssetResolvingProvider_REST : public YON_AssetResolvingProvider {
+class AYON_AssetResolvingProvider_REST : public AYON_AssetResolvingProvider {
 
 public:
     //Version of HTTP protocol, value 11 equals to 1.1
@@ -33,7 +33,7 @@ public:
     /// </summary>
     /// <param name="AssetPath">Unresolved path</param>
     /// <returns>Result object with resolved path when everything is ok, in case of problems there should be filled error message too.</returns>
-    YON_AssetResolveResult Resolve(const std::string& AssetPath) override;
+    AYON_AssetResolveResult Resolve(const std::string& AssetPath) override;
 
 private:
     /// <summary>

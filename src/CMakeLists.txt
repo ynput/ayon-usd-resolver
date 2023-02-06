@@ -1,4 +1,4 @@
-set(PLUGIN_NAME YON_AssetResolverPlugin)
+set(PLUGIN_NAME AYON_AssetResolverPlugin)
 
 # .dll on Windows, .so on Linux
 add_library(${PLUGIN_NAME} 
@@ -39,16 +39,16 @@ target_include_directories(${PLUGIN_NAME}
 # internal c++ files
 target_sources(${PLUGIN_NAME}
 	PUBLIC		
-		YON_AssetResolver.h		
-		YON_AssetResolvingProvider_REST.h
-		YON_AssetResolveResult.h
-		YON_AssetResolvingProvider.h
-		Logging/YON_Logging.h
+		AYON_AssetResolver.h		
+		AYON_AssetResolvingProvider_REST.h
+		AYON_AssetResolveResult.h
+		AYON_AssetResolvingProvider.h
+		Logging/AYON_Logging.h
 	PRIVATE
-		YON_AssetResolver.cpp
-		YON_AssetResolvingProvider_REST.cpp
-		YON_AssetResolveResult.cpp
-		Logging/YON_Logging.cpp
+		AYON_AssetResolver.cpp
+		AYON_AssetResolvingProvider_REST.cpp
+		AYON_AssetResolveResult.cpp
+		Logging/AYON_Logging.cpp
 )
 
 

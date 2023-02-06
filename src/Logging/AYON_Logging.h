@@ -8,13 +8,13 @@ constexpr bool LOG_EXCEPTION = true;
 const std::string SEPARATOR = "==============================================================================";
 const std::string SEPARATOR_INTERNAL = "---------------------------------------------------------------------";
 
-#define YON_LOG_EXCEPTION(Realm, Ex, Message)\
-    YON_LogUtils::Log_Exception(Realm, Ex, Message)
+#define AYON_LOG_EXCEPTION(Realm, Ex, Message)\
+    AYON_LogUtils::Log_Exception(Realm, Ex, Message)
 
-#define YON_LOG_INFO(Category, Message)\
-    YON_LogUtils::Log_Info(Category, Message)
+#define AYON_LOG_INFO(Category, Message)\
+    AYON_LogUtils::Log_Info(Category, Message)
 
-class YON_LogUtils 
+class AYON_LogUtils 
 {
 public:
 	template<typename ExceptionInstance, typename ExceptionMessage>
@@ -28,7 +28,7 @@ private:
 };
 
 template<typename ExceptionInstance, typename ExceptionMessage>
-inline std::string YON_LogUtils::Log_Exception(const std::string& Realm, const ExceptionInstance& Ex, const ExceptionMessage& Message)
+inline std::string AYON_LogUtils::Log_Exception(const std::string& Realm, const ExceptionInstance& Ex, const ExceptionMessage& Message)
 {
     if (!LOG_EXCEPTION) {
         std::ostringstream StringStream;
@@ -51,7 +51,7 @@ inline std::string YON_LogUtils::Log_Exception(const std::string& Realm, const E
 }
 
 template<typename T>
-inline void YON_LogUtils::Log_Info(const std::string& Caption, const T& Message)
+inline void AYON_LogUtils::Log_Info(const std::string& Caption, const T& Message)
 {
     if (!LOG_INFO)
         return;
