@@ -10,10 +10,10 @@
           }
         }
       },
-      "LibraryPath": "@PLUG_INFO_LIBRARY_PATH@",
+      "LibraryPath": "./libAYON_AssetResolverPlugin.so",
       "Name": "AYON_AssetResolverPlugin",
       "ResourcePath": "resources",
-      "Root": "..",
+      "Root": ".",
       "Type": "library"
     }
   ]

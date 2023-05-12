@@ -1,5 +1,5 @@
-project(AYON_integration_for_USD)
 cmake_minimum_required(VERSION 3.13.0)
+project(AYON_integration_for_USD)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -34,7 +34,7 @@ if(MSVC)
 endif()
 
 find_package(Boost REQUIRED)
-find_package(PythonLibs)
+find_package(FindPython)
 
 # USD environment variable and variables extracted from the value
 message("Environment variable USD = $ENV{USD}")
