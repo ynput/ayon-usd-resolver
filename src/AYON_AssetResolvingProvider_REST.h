@@ -2,10 +2,11 @@
 
 #include <string>
 
+#include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
-#include <boost/asio/ip/tcp.hpp>
+#include <boost/json.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include "AYON_AssetResolvingProvider.h"
 
@@ -24,9 +25,11 @@ public:
     //DNS name
     std::string Host = "localhost";
     //Port where is listening server
-    int Port = 3000;
+    int Port = 5000;
+
+
     //Path where is endpoint on webserver
-    std::string ResolvingUrlEndpointPath = "/api/resolve";
+    std::string UsdApiEndpoint = "/api/usd";
 
     /// <summary>
     /// Inside this method is written main logic for calling REST API.
@@ -44,18 +47,11 @@ private:
     boost::beast::http::request<boost::beast::http::string_body> Request_Create(const std::string& AssetPath);
 
     /// <summary>
-    /// This method returns property tree from body/json of response.
-    /// </summary>
-    /// <param name="Response">Object of response</param>
-    /// <returns>Parsed json to property tree</returns>
-    boost::property_tree::ptree GetPropertyTreeFromResponse(const boost::beast::http::response<boost::beast::http::dynamic_body>& Response);
-
-    /// <summary>
     /// This method parses value for key "resolved_path" from response.
     /// </summary>
     /// <param name="Response">Object of response</param>
     /// <returns>Value of resolved_path</returns>
-    std::string Response_Parse(const boost::beast::http::response<boost::beast::http::dynamic_body>& Response);
+    std::string Response_Parse(const boost::beast::http::response<boost::beast::http::dynamic_body>& Response, const std::string& AssetPath);
 };
 
 
