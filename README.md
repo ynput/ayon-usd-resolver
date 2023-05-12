@@ -58,6 +58,14 @@ Upon completion, the plugin files will be found int `build/src/`:
  * `pluginInfo.json`.
  * `libAYON_AssetResolverPlugin(.so|.dll)` (Depending on the platform you are building).
 
+## Testing Instructions
+In order to test this plugin you got to options:
+ A) Spin up an AYON instance (or use an existing one) where you have published assets with disk representations
+ B) Use the provided `mock_server.py` - Which you can start with `python mock_server.py`
+ 
+In any case, you should specify the environment variable `AYON_SERVER_URL` which the plugin will read to know ther to do the REST call.
+
+Then you can do `usdresolve ayon://foo/bar/bar_010_0010?subset=model?version=v017` this is a hardcoded URI in the `mock_server.py` if you are using a live instance, you can get an asset URI by clicking the "copy" icon at the top bar in the AYON website, when viewing an asset.
 
 ## The CMake build explained
 This plugin communicates with the AYON REST API through [Boost.Beast](https://github.com/boostorg/beast) included in `Boost` and is inspired by the following commit <https://github.com/PixarAnimationStudios/USD/commit/f482550ecc87d5b7df7dc672af6206ac4e97e55a> in official [**USD**](https://github.com/PixarAnimationStudios/USD) repository.
