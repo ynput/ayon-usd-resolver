@@ -2,6 +2,8 @@
 The AYON USD Resolver is a [Pixar's USD](https://openusd.org) [ArResolver URI Resolver Plugin](https://openusd.org/release/api/ar_page_front.html#ar_uri_resolvers) that resolves URIs with the schema `ayon://` found in a USD file into actual filepaths.
 
 The plugins relies on a [Ayon instance running](https://github.com/ynput/ayon-docker), which will provide the file path of the URI via the `/api/usd` endpoint, at a high level it works as portrayed below:
+
+```
  ┌──────────────────────────────┐
  │                              │
  │ Open USD file.               │
@@ -27,6 +29,7 @@ The plugins relies on a [Ayon instance running](https://github.com/ynput/ayon-do
  │ the actual file path.        │
  │                              │
  └──────────────────────────────┘
+```
 
 ## Usage Instructions
 To Register the plugin you can either:
