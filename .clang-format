@@ -1,0 +1,125 @@
+
+---
+# We'll use defaults from the LLVM style, but with 4 columns indentation.
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 120
+SpacesBeforeTrailingComments: 3
+UseTab: false
+#
+SpacesInAngles: Never
+SpacesInContainerLiterals: false
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false
+AlignOperands: true
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 2
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: Never
+
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: Inline
+AllowShortLoopsOnASingleLine: true
+AlwaysBreakAfterReturnType: AllDefinitions
+AlwaysBreakBeforeMultilineStrings: true
+AlwaysBreakTemplateDeclarations: MultiLine
+BinPackArguments: true
+BinPackParameters: false
+BitFieldColonSpacing: Both
+
+BreakBeforeBinaryOperators: All
+BreakArrays: true
+BreakBeforeConceptDeclarations: Never
+BreakBeforeInlineASMColon: OnlyMultiline
+BreakBeforeTernaryOperators: false
+BreakConstructorInitializers: AfterColon
+BreakInheritanceList: AfterColon
+BreakStringLiterals: true
+BreakAfterAttributes: Never
+EmptyLineBeforeAccessModifier: LogicalBlock
+IncludeBlocks: Regroup
+IndentAccessModifiers: true
+
+IndentCaseBlocks: true
+IndentCaseLabels: true
+IndentExternBlock: Indent
+
+IndentGotoLabels: true
+
+IndentPPDirectives: BeforeHash
+
+IndentRequiresClause: false
+
+IndentWrappedFunctionNames: false
+#
+#
+KeepEmptyLinesAtTheStartOfBlocks: false
+LambdaBodyIndentation: Signature
+
+NamespaceIndentation: None
+PPIndentWidth: -1
+PackConstructorInitializers: CurrentLine
+
+ReferenceAlignment: Right
+ReflowComments: true
+
+SortIncludes: Never
+SortUsingDeclarations: LexicographicNumeric
+
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: false
+#
+SpaceAroundPointerQualifiers: After
+PointerAlignment: Right
+
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+
+SpaceBeforeCtorInitializerColon: false
+SpaceBeforeInheritanceColon: false
+#
+SpaceBeforeRangeBasedForLoopColon: false
+SpaceBeforeSquareBrackets: false
+SpaceInEmptyBlock: false
+#
+#
+InsertNewlineAtEOF: true
+#
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: false
+  AfterClass: false
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeLambdaBody: false
+  BeforeWhile: true
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+---
+
+Language: Cpp
+DerivePointerAlignment: false
+PointerAlignment: Left
+SpaceBeforeCpp11BracedList: false
+Standard: C++11
+
+
+---
+

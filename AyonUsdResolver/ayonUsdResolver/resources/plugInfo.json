@@ -1,0 +1,19 @@
+{
+    "Plugins": [
+        {
+            "Info": {
+                "Types": {
+                    "AyonUsdResolver": {
+                        "bases": ["ArResolver"],
+                        "implementsContexts" : true
+                    }
+                }
+            },
+            "LibraryPath": "../lib/ayonUsdResolver.so",
+            "Name": "ayonUsdResolver",
+            "Root": ".",
+            "Type": "library"
+        }
+    ]
+}
+
