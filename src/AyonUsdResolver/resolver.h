@@ -15,15 +15,12 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-// static std::map<std::string, AyonUsdResolverContextRecord> _sharedContexts;
-
 class AyonUsdResolver final: public ArResolver {
     public:
         AR_AYONUSDRESOLVER_API
         AyonUsdResolver();
         AR_AYONUSDRESOLVER_API
         virtual ~AyonUsdResolver();
-
         AR_AYONUSDRESOLVER_API
         std::string _CreateIdentifier(const std::string &assetPath, const ArResolvedPath &anchorAssetPath) const final;
         AR_AYONUSDRESOLVER_API
@@ -37,7 +34,6 @@ class AyonUsdResolver final: public ArResolver {
         ArResolverContext _CreateDefaultContext() const final;
         AR_AYONUSDRESOLVER_API
         ArResolverContext _CreateDefaultContextForAsset(const std::string &assetPath) const final;
-
         AR_AYONUSDRESOLVER_API
         bool _IsContextDependentPath(const std::string &assetPath) const final;
         AR_AYONUSDRESOLVER_API

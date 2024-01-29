@@ -22,7 +22,10 @@ notifications to the stages.
 > See for more info:
 https://groups.google.com/g/usd-interest/c/9JrXGGbzBnQ/m/_f3oaqBdAwAJ
 */
-
+struct AyonUsdResolverContextInternalData {
+        std::string mappingFilePath;
+        std::map<std::string, std::string> cachingPairs;
+};
 
 class AyonUsdResolverContext {
     public:
@@ -31,8 +34,6 @@ class AyonUsdResolverContext {
         AyonUsdResolverContext();
         AR_AYONUSDRESOLVER_API
         AyonUsdResolverContext(const AyonUsdResolverContext &ctx);
-
-
         // Standard Ops
         AR_AYONUSDRESOLVER_API
         bool operator<(const AyonUsdResolverContext &ctx) const;
@@ -49,10 +50,9 @@ class AyonUsdResolverContext {
         AR_AYONUSDRESOLVER_API
         void ClearAndReinitialize();
 
-
-
     private:
-
+        std::shared_ptr<AyonUsdResolverContextInternalData> data
+            = std::make_shared<AyonUsdResolverContextInternalData>();
 };
 
 PXR_NAMESPACE_OPEN_SCOPE

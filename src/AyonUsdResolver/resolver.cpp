@@ -70,8 +70,6 @@ _ResolveAnchored(const std::string &anchorPath, const std::string &path) {
     return TfPathExists(resolvedPath) ? ArResolvedPath(TfAbsPath(resolvedPath)) : ArResolvedPath();
 }
 
-//------------------------ IMPL Resolver ------------------------
-
 AyonUsdResolver::AyonUsdResolver(){};
 
 AyonUsdResolver::~AyonUsdResolver() = default;
@@ -107,9 +105,6 @@ AyonUsdResolver::_CreateIdentifierForNewAsset(const std::string &assetPath,
     if (assetPath.empty()) {
         return assetPath;
     }
-    if (!anchorAssetPath) {
-        return TfNormPath(assetPath);
-    }
 
     if (_IsRelativePath(assetPath)) {
         return TfNormPath(anchorAssetPath ? _AnchorRelativePath(anchorAssetPath, assetPath) : TfAbsPath(assetPath));
@@ -122,7 +117,31 @@ ArResolvedPath
 AyonUsdResolver::_Resolve(const std::string &assetPath) const {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_Resolve ( '%s' ) \n", assetPath.c_str());
 
-    return ArResolvedPath(TfAbsPath(assetPath));
+    const std::string assetIdentifier = assetPath;
+
+    if (assetPath.empty()) {
+        return ArResolvedPath();
+    }
+    if (SdfLayer::IsAnonymousLayerIdentifier(assetPath)) {
+        return ArResolvedPath(assetPath);
+    }
+    if (this->_IsContextDependentPath(assetPath)) {
+        const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
+
+        for (const AyonUsdResolverContext* ctx: contexts) {
+            if (ctx) {
+                ArResolvedPath resolvedPath = ArResolvedPath("/home/workh/Ynput/dev/dell/test.usd");
+
+                if (resolvedPath) {
+                    return resolvedPath;
+                }
+                // Only try the first valid context.
+                break;
+            }
+        }
+        return ArResolvedPath();
+    }
+    return ArResolvedPath(ArchAbsPath(TfNormPath(assetPath)));
 }
 
 ArResolvedPath
@@ -139,13 +158,25 @@ AyonUsdResolver::_CreateDefaultContext() const {
 
 ArResolverContext
 AyonUsdResolver::_CreateDefaultContextForAsset(const std::string &assetPath) const {
-    return ArResolverContext();
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_CreateDefaultContextForAsset\n");
+
+    return ArResolverContext(AyonUsdResolverContext());
 }
 
 bool
 AyonUsdResolver::_IsContextDependentPath(const std::string &assetPath) const {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_IsContextDependentPath()\n");
     return _IsNotFilePath(assetPath);
+}
+
+void
+AyonUsdResolver::_RefreshContext(const ArResolverContext &context) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_RefreshContext()\n");
+    const AyonUsdResolverContext* ctx = this->_GetCurrentContextPtr();
+    if (!ctx) {
+        return;
+    }
+    ArNotice::ResolverChanged(*ctx).Send();
 }
 
 ArTimestamp

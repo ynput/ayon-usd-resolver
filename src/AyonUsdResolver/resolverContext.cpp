@@ -5,6 +5,7 @@
 
 #include "resolver.h"
 #include "resolverContext.h"
+#include "resolverTokens.h"
 
 #include "pxr/base/tf/getenv.h"
 #include "pxr/base/tf/pathUtils.h"
@@ -15,8 +16,6 @@
 #include <mutex>
 #include <thread>
 #include <vector>
-
-static std::mutex g_resolver_query_mutex;
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -41,34 +40,15 @@ getStringEndswithStrings(const std::string &value, const std::vector<std::string
     return false;
 }
 
-size_t
-hash_value(const AyonUsdResolverContext &ctx) {
-    return TfHash()(ctx);
-}
-
-//------------------------------ IMPL Context ------------------------------
-
 AyonUsdResolverContext::AyonUsdResolverContext() {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
     this->Initialize();
 }
 
 AyonUsdResolverContext::AyonUsdResolverContext(const AyonUsdResolverContext &ctx) = default;
 
-// convinience init function that gets called by the construcktors
-void
-AyonUsdResolverContext::Initialize() {
-}
-
-void
-AyonUsdResolverContext::ClearAndReinitialize() {
-    // Clear all the things
-
-    this->Initialize();
-}
-
 bool
 AyonUsdResolverContext::operator<(const AyonUsdResolverContext &ctx) const {
-    // This is a no-op for now, as it doesn't get used for now.
     return true;
 }
 
@@ -79,5 +59,20 @@ AyonUsdResolverContext::operator==(const AyonUsdResolverContext &ctx) const {
 
 bool
 AyonUsdResolverContext::operator!=(const AyonUsdResolverContext &ctx) const {
-    return this != &ctx;
+    return !(*this == ctx);
+}
+
+size_t
+hash_value(const AyonUsdResolverContext &ctx) {
+    return TfHash()(&ctx);
+}
+void
+AyonUsdResolverContext::Initialize() {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("testing init without python\n");
+}
+
+void
+AyonUsdResolverContext::ClearAndReinitialize() {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ClearAndReinitialize()\n");
+    this->Initialize();
 }

@@ -2,19 +2,19 @@
 # Preprocessor Defines (Same as #define)
 # This is a hacky way of preprocessing the class name to a custom name.
 # It is not advised to do this in a production setup! (https://stackoverflow.com/questions/20979584)
-# add_compile_definitions(AYONUSDRESOLVER=${AR_AYONUSDRESOLVER_USD_CXX_CLASS_NAME})
+# add_compile_definitions(CachedResolver=${AR_AYONUSDRESOLVER_USD_CXX_CLASS_NAME})
 if (WIN32)
     add_compile_definitions(AR_AYONUSDRESOLVER_EXPORTS)
 endif()
 
 ### Targets ###
-## Target library > ayonUsdResolver ##
+## Target library > cachedResolver ##
 add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
     SHARED
         debugCodes.cpp
         resolver.cpp
         resolverContext.cpp
-        #resolverTokens.cpp
+        resolverTokens.cpp
         # Since when our resolver calls into Python it passes the ResolverContext,
         # we need to ensure that Python has loaded the ResolverContext C++ representation.
         # While we do have duplicate compiled code by adding the below, this allows us to not do hacky workarounds like
@@ -24,7 +24,7 @@ add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
         moduleDeps.cpp
         wrapResolver.cpp
         wrapResolverContext.cpp
-        # wrapResolverTokens.cpp
+        wrapResolverTokens.cpp
 )
 set_boost_namespace(${AR_AYONUSDRESOLVER_TARGET_LIB})
 # Libs
@@ -63,17 +63,17 @@ configure_file(plugInfo.json.in plugInfo.json)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/plugInfo.json DESTINATION ${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}/resources)
 install(TARGETS ${AR_AYONUSDRESOLVER_TARGET_LIB} DESTINATION ${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}/lib)
 
-## Target library > ayonUsdResolver Python ##
+## Target library > cachedResolver Python ##
 add_library(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     SHARED
         module.cpp
         moduleDeps.cpp
         # resolver.cpp
-        #resolverTokens.cpp
+        resolverTokens.cpp
         resolverContext.cpp
         wrapResolver.cpp
         wrapResolverContext.cpp
-        # wrapResolverTokens.cpp
+        wrapResolverTokens.cpp
 )
 add_dependencies(${AR_AYONUSDRESOLVER_TARGET_PYTHON} ${AR_AYONUSDRESOLVER_TARGET_LIB})
 set_boost_namespace(${AR_AYONUSDRESOLVER_TARGET_PYTHON})

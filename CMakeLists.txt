@@ -9,8 +9,8 @@
 
 
 
-set(AR_PROJECT_NAME AyonUsdAssetResolver)
-set(AR_RESOLVER_USD_PYTHON_MODULE_NAME ayonUsdAssetResolver)
+set(AR_PROJECT_NAME UsdAssetResolver)
+set(AR_RESOLVER_USD_PYTHON_MODULE_NAME usdAssetResolver)
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/dist" CACHE PATH "Default install dir")
 
 cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
@@ -18,9 +18,6 @@ project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
 
 set(BUILD_SHARED_LIBS ON)
 
-
-
-set(AR_HOUDINI_ROOT $ENV{HFS} CACHE PATH "Houdini install directory")
 
 
 # ---------------------- Developer Convenience Commands 
@@ -52,9 +49,15 @@ set(AR_AYONUSDRESOLVER_INSTALL_PREFIX ${AR_PROJECT_NAME}/${AR_AYONUSDRESOLVER_US
 
 
 
+set(AR_HOUDINI_ROOT $ENV{HFS} CACHE PATH "Houdini install directory")
+
+
 
 # Preprocessor Defines (Same as #define)
-add_compile_definitions(HBOOST_ALL_NO_LIB BOOST_ALL_NO_LIB)
+
+
+add_compile_definitions(BOOST_ALL_NO_LIB)
+
 if (WIN32)
     add_compile_definitions(NOMINMAX)
 else()
@@ -81,6 +84,7 @@ endif()
 # Houdini
 
 
+add_compile_definitions(HBOOST_ALL_NO_LIB)
 if (WIN32)
     set(AR_HOUDINI_LIB_DIR ${AR_HOUDINI_ROOT}/custom/houdini/dsolib)
 else()
@@ -125,9 +129,9 @@ else()
 endif()
 set(AR_PYTHON_INCLUDE_DIR ${AR_HOUDINI_INCLUDE_DIR}/${AR_PYTHON_LIB})
 
+set(AR_BOOST_NAMESPACE hboost)
 
 # Boost
-set(AR_BOOST_NAMESPACE hboost)
 if (WIN32)
     set(AR_BOOST_PYTHON_LIB ${AR_BOOST_NAMESPACE}_${AR_PYTHON_LIB_NUMBER}-mt-x64)
 else()
