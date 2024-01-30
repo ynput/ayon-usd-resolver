@@ -8,24 +8,12 @@
 #include "pxr/usd/ar/defineResolverContext.h"
 #include "pxr/usd/ar/resolverContext.h"
 
+#include "resolverContextCache.h"
+
 #include <map>
 #include <memory>
 #include <regex>
 #include <string>
-
-/* Data Model
-We use an internal data struct that is accessed via a shared pointer
-as Usd currently creates resolver context copies when exposed via python
-instead of passing thru the pointer. This way we can send
-> ArNotice::ResolverChanged(*ctx).Send();
-notifications to the stages.
-> See for more info:
-https://groups.google.com/g/usd-interest/c/9JrXGGbzBnQ/m/_f3oaqBdAwAJ
-*/
-struct AyonUsdResolverContextInternalData {
-        std::string mappingFilePath;
-        std::map<std::string, std::string> cachingPairs;
-};
 
 class AyonUsdResolverContext {
     public:
@@ -34,6 +22,7 @@ class AyonUsdResolverContext {
         AyonUsdResolverContext();
         AR_AYONUSDRESOLVER_API
         AyonUsdResolverContext(const AyonUsdResolverContext &ctx);
+
         // Standard Ops
         AR_AYONUSDRESOLVER_API
         bool operator<(const AyonUsdResolverContext &ctx) const;
@@ -50,9 +39,11 @@ class AyonUsdResolverContext {
         AR_AYONUSDRESOLVER_API
         void ClearAndReinitialize();
 
+        AR_AYONUSDRESOLVER_API
+        pxr::ArResolvedPath cacheFind(const std::string &key) const;
+
     private:
-        std::shared_ptr<AyonUsdResolverContextInternalData> data
-            = std::make_shared<AyonUsdResolverContextInternalData>();
+        std::shared_ptr<resolverContextCache> cache = std::make_shared<resolverContextCache>();
 };
 
 PXR_NAMESPACE_OPEN_SCOPE

@@ -2,7 +2,8 @@
 # https://github.com/LucaScheller/VFX-UsdAssetResolver/blob/main/CMakeLists.txt
 
 
-
+#--------------------------- Define Varibles to be used in the Script for Preprocessor statments 
+add_compile_definitions(DEV=${DEV})
 
 
 # ---------------------- Project

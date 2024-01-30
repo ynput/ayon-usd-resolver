@@ -32,7 +32,6 @@ wrapResolverContext() {
 
     class_<This>("ResolverContext", no_init)
         .def(init<>())
-        .def(init<const std::string &>(args("mappingFile")))
         .def(self == self)
         .def(self != self)
         .def("__hash__", _Hash)

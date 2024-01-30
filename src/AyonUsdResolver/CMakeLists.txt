@@ -14,7 +14,8 @@ add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
         debugCodes.cpp
         resolver.cpp
         resolverContext.cpp
-        resolverTokens.cpp
+        resolverTokens.cpp 
+        resolverContextCache.cpp
         # Since when our resolver calls into Python it passes the ResolverContext,
         # we need to ensure that Python has loaded the ResolverContext C++ representation.
         # While we do have duplicate compiled code by adding the below, this allows us to not do hacky workarounds like
@@ -68,6 +69,7 @@ add_library(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     SHARED
         module.cpp
         moduleDeps.cpp
+        resolverContextCache.cpp
         # resolver.cpp
         resolverTokens.cpp
         resolverContext.cpp

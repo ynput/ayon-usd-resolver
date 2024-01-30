@@ -1,3 +1,5 @@
+#include <cstdlib>
+#include <string_view>
 #include "debugCodes.h"
 #include "pxr/base/tf/debug.h"
 #include "pxr/usd/ar/resolvedPath.h"
@@ -6,6 +8,8 @@
 
 #include "resolver.h"
 #include "resolverContext.h"
+#include "config.h"
+#include "devMacros.h"
 
 #include "pxr/base/arch/fileSystem.h"
 #include "pxr/base/arch/systemInfo.h"
@@ -39,6 +43,16 @@ _IsRelativePath(const std::string &path) {
 static bool
 _IsFileRelativePath(const std::string &path) {
     return path.find("./") == 0 || path.find("../") == 0;
+}
+
+static bool
+_IsAyonPath(const std::string &assetPath) {
+    std::string_view ayonIdent(assetPath.data(), Config::ayonUriIdentSize);
+
+    if (Config::ayonUriIdent == ayonIdent) {
+        return true;
+    }
+    return false;
 }
 
 static bool
@@ -117,21 +131,26 @@ ArResolvedPath
 AyonUsdResolver::_Resolve(const std::string &assetPath) const {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_Resolve ( '%s' ) \n", assetPath.c_str());
 
-    const std::string assetIdentifier = assetPath;
-
     if (assetPath.empty()) {
         return ArResolvedPath();
     }
     if (SdfLayer::IsAnonymousLayerIdentifier(assetPath)) {
         return ArResolvedPath(assetPath);
     }
-    if (this->_IsContextDependentPath(assetPath)) {
+    const AyonUsdResolverContext* pt = this->_GetCurrentContextPtr();
+    if (pt) {
+        ArResolvedPath path = pt->cacheFind(assetPath);
+        if (!path.empty()) {
+            return path;
+        }
+    }
+    if (_IsAyonPath(assetPath)) {
         const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
-
         for (const AyonUsdResolverContext* ctx: contexts) {
             if (ctx) {
-                ArResolvedPath resolvedPath = ArResolvedPath("/home/workh/Ynput/dev/dell/test.usd");
-
+                ArResolvedPath resolvedPath = ArResolvedPath(DEV_SWITCH(AYON_LOCAL_TEST_POINT, assetPath));
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                    .Msg("testing {%s}", DEV_SWITCH(AYON_LOCAL_TEST_POINT, assetPath.c_str()));
                 if (resolvedPath) {
                     return resolvedPath;
                 }

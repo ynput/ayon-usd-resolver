@@ -1,5 +1,6 @@
 #include <string>
 #include <utility>
+#include "debugCodes.h"
 #define CONVERT_STRING(string) #string
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
 
@@ -68,7 +69,7 @@ hash_value(const AyonUsdResolverContext &ctx) {
 }
 void
 AyonUsdResolverContext::Initialize() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("testing init without python\n");
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::Initialize \n");
 }
 
 void
@@ -76,3 +77,9 @@ AyonUsdResolverContext::ClearAndReinitialize() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ClearAndReinitialize()\n");
     this->Initialize();
 }
+
+ArResolvedPath
+AyonUsdResolverContext::cacheFind(const std::string &key) const {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("cache Called\n");
+    return cache->Find(key);
+};
