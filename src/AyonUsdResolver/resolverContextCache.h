@@ -2,12 +2,23 @@
 
 #include <cstddef>
 #include <string>
+#include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "pxr/usd/ar/resolvedPath.h"
+#include "AyonCppApi.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
+
+struct assetIdent {
+        ArResolvedPath resolvedAssetPath;
+        std::string assetIdentifier;
+        bool empty();
+};
+
+enum cacheName { AYONCACHE, COMMONCACHE };
 
 class resolverContextCache {
     public:
@@ -34,13 +45,6 @@ class resolverContextCache {
          * @brief moves the precache into the AyonCache in order to free the precache
          */
         void migratePreCacheIntoAyonCache();
-        /**
-         * @brief this function tests if the precache can store the data you want to add
-         * if it cant store the data it will move the PreCache into the AyonCache
-         *
-         * @return true if you can add data
-         */
-        bool preCacheCheck(const size_t &newEntries);
 
         // TODO change this function to write out to an asset path and to be an bool function
         /**
@@ -51,10 +55,28 @@ class resolverContextCache {
          */
         ArResolvedPath Find(const std::string &key) const;
 
+        /**
+         * @brief returns a struct by first searching true the selected cacheName if no cache hit. then the function
+         * will resolve the path against ayon if even that dosnt work it will return an empty path
+         *
+         * @param assetIdentifier
+         * @return
+         */
+        assetIdent getAsset(const std::string &assetIdentifier, const cacheName &selectedCache, const bool &isAyonPath);
+
+        /**
+         * @brief this function sets up the cache from a pinning file
+         *
+         * @param pinningFilePath
+         */
+        void setCacheFromPinningFile(const std::string &pinningFilePath);
+
     private:
         std::unordered_map<std::string, pxr::ArResolvedPath> AyonCache;
         std::unordered_map<std::string, pxr::ArResolvedPath> CommonCache;
 
         std::unordered_map<std::string, pxr::ArResolvedPath> PreCache;
-        size_t PreCacheSize;
+        size_t PreCacheFreeItemSlots;
+
+        AyonApi ayon;
 };

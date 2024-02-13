@@ -54,6 +54,15 @@ set(AR_HOUDINI_ROOT $ENV{HFS} CACHE PATH "Houdini install directory")
 
 
 
+
+#------------------------- Ayon Cpp Api 
+
+
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
+
+
+
 # Preprocessor Defines (Same as #define)
 
 
@@ -191,7 +200,7 @@ endif()
 if (WIN32)
     add_compile_options(/Zc:inline- /w)
 else()
-    add_compile_options(-fPIC -Wno-deprecated -Wno-deprecated-declarations -Wno-changes-meaning)
+    add_compile_options(-fPIC   -Wno-changes-meaning)
 endif()
 
 

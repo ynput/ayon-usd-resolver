@@ -1,8 +1,12 @@
 #include <cstdlib>
+#include <ostream>
 #include <string_view>
+#include <utility>
 #include "debugCodes.h"
 #include "pxr/base/tf/debug.h"
 #include "pxr/usd/ar/resolvedPath.h"
+#include "resolverContextCache.h"
+#include "reseutionFunctions.h"
 #define CONVERT_STRING(string) #string
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
 
@@ -10,7 +14,7 @@
 #include "resolverContext.h"
 #include "config.h"
 #include "devMacros.h"
-
+#include "AyonCppApi.h"
 #include "pxr/base/arch/fileSystem.h"
 #include "pxr/base/arch/systemInfo.h"
 #include "pxr/base/tf/fileUtils.h"
@@ -35,55 +39,6 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 AR_DEFINE_RESOLVER(AyonUsdResolver, ArResolver);
 
-static bool
-_IsRelativePath(const std::string &path) {
-    return (!path.empty() && TfIsRelativePath(path));
-}
-
-static bool
-_IsFileRelativePath(const std::string &path) {
-    return path.find("./") == 0 || path.find("../") == 0;
-}
-
-static bool
-_IsAyonPath(const std::string &assetPath) {
-    std::string_view ayonIdent(assetPath.data(), Config::ayonUriIdentSize);
-
-    if (Config::ayonUriIdent == ayonIdent) {
-        return true;
-    }
-    return false;
-}
-
-static bool
-_IsNotFilePath(const std::string &path) {
-    return _IsRelativePath(path) && !_IsFileRelativePath(path);
-}
-
-static std::string
-_AnchorRelativePath(const std::string &anchorPath, const std::string &path) {
-    if (TfIsRelativePath(anchorPath) || !_IsRelativePath(path)) {
-        return path;
-    }
-    // Ensure we are using forward slashes and not back slashes.
-    std::string forwardPath = anchorPath;
-    std::replace(forwardPath.begin(), forwardPath.end(), '\\', '/');
-    // If anchorPath does not end with a '/', we assume it is specifying
-    // a file, strip off the last component, and anchor the path to that
-    // directory.
-    const std::string anchoredPath = TfStringCatPaths(TfStringGetBeforeSuffix(forwardPath, '/'), path);
-    return TfNormPath(anchoredPath);
-}
-
-static ArResolvedPath
-_ResolveAnchored(const std::string &anchorPath, const std::string &path) {
-    std::string resolvedPath = path;
-    if (!anchorPath.empty()) {
-        resolvedPath = TfStringCatPaths(anchorPath, path);
-    }
-    return TfPathExists(resolvedPath) ? ArResolvedPath(TfAbsPath(resolvedPath)) : ArResolvedPath();
-}
-
 AyonUsdResolver::AyonUsdResolver(){};
 
 AyonUsdResolver::~AyonUsdResolver() = default;
@@ -94,6 +49,22 @@ AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolve
         .Msg("Resolver::_CreateIdentifier('%s', '%s')\n", assetPath.c_str(), anchorAssetPath.GetPathString().c_str());
 
     if (assetPath.empty()) {
+        return assetPath;
+    }
+
+    if (_IsPinningFile(assetPath)) {
+        // check if the pinning file is set to enable
+        // check if its a farm job pinning file
+        // check if the pinning file exists
+
+        // reset cache
+        // set cache to pinning file
+        // get the actual usd file path from the pinning file
+        // open the actual usd file
+        std::cout << "is pinning file " << std::endl;
+    }
+
+    if (_IsAyonPath(assetPath, Config::ayonUriIdent, Config::ayonUriIdentSize)) {
         return assetPath;
     }
     if (!anchorAssetPath) {
@@ -134,23 +105,24 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
     if (assetPath.empty()) {
         return ArResolvedPath();
     }
+
     if (SdfLayer::IsAnonymousLayerIdentifier(assetPath)) {
         return ArResolvedPath(assetPath);
     }
-    const AyonUsdResolverContext* pt = this->_GetCurrentContextPtr();
-    if (pt) {
-        ArResolvedPath path = pt->cacheFind(assetPath);
-        if (!path.empty()) {
-            return path;
-        }
-    }
-    if (_IsAyonPath(assetPath)) {
+
+    if (_IsAyonPath(assetPath, Config::ayonUriIdent, Config::ayonUriIdentSize)) {
         const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
         for (const AyonUsdResolverContext* ctx: contexts) {
             if (ctx) {
-                ArResolvedPath resolvedPath = ArResolvedPath(DEV_SWITCH(AYON_LOCAL_TEST_POINT, assetPath));
-                TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
-                    .Msg("testing {%s}", DEV_SWITCH(AYON_LOCAL_TEST_POINT, assetPath.c_str()));
+                std::pair<std::string, std::string> test;
+                assetIdent asset;
+
+                std::shared_ptr<resolverContextCache> resolverCache = ctx->getCachePtr();
+
+                asset = resolverCache->getAsset(assetPath, cacheName::AYONCACHE, true);
+
+                ArResolvedPath resolvedPath(asset.resolvedAssetPath);
+
                 if (resolvedPath) {
                     return resolvedPath;
                 }
@@ -160,6 +132,18 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         }
         return ArResolvedPath();
     }
+
+    // we also cache non ayon paths for performance this will check the non ayon paths
+    // TODO make it so that this calls the non ayon cache function so that ayon cache isnt searched
+    const AyonUsdResolverContext* pt = this->_GetCurrentContextPtr();
+    if (pt) {
+        ArResolvedPath path;
+        path = pt->getCachePtr()->getAsset(assetPath, cacheName::COMMONCACHE, false).resolvedAssetPath;
+        if (!path.empty()) {
+            return path;
+        }
+    }
+
     return ArResolvedPath(ArchAbsPath(TfNormPath(assetPath)));
 }
 

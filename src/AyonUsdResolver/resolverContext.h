@@ -42,8 +42,11 @@ class AyonUsdResolverContext {
         AR_AYONUSDRESOLVER_API
         pxr::ArResolvedPath cacheFind(const std::string &key) const;
 
+        std::shared_ptr<resolverContextCache> getCachePtr() const;
+
     private:
         std::shared_ptr<resolverContextCache> cache = std::make_shared<resolverContextCache>();
+        ArResolvedPath rootPath;
 };
 
 PXR_NAMESPACE_OPEN_SCOPE

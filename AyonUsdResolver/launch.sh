@@ -10,13 +10,19 @@ export PXR_PLUGINPATH_NAME=$SCRIPT_DIR/ayonUsdResolver/resources:$PXR_PLUGINPATH
 export PYTHONPATH=$SCRIPT_DIR/ayonUsdResolver/lib/python:
 
 
+
+export AYON_API_KEY="d82bec00053c5905a931728dc2c866a9372b5177eefb16bb3907b7e7259d68f1"
+export AYON_SERVER_URL="http://192.168.178.42:5000"
+
+
+
 pushd /opt/hfs20.0 && source houdini_setup && popd
 # houdini -foreground --desktop=solaris
 
 export HOUDINI_DEFAULT_DESKTOP=solaris
 
-houdini -foreground
+# houdini -foreground
 
-#houdini -foreground /home/lyonh/Documents/dell/test.hiplc
+houdini -foreground /home/workh/Desktop/test.hiplc
 #houdini -foreground -desktop solaris /home/lyonh/Documents/resolver_test_usd_things/resolver_testing.hiplc
 

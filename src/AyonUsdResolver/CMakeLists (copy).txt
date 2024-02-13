@@ -16,7 +16,6 @@ add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
         resolverContext.cpp
         resolverTokens.cpp 
         resolverContextCache.cpp
-        reseutionFunctions.cpp 
         # Since when our resolver calls into Python it passes the ResolverContext,
         # we need to ensure that Python has loaded the ResolverContext C++ representation.
         # While we do have duplicate compiled code by adding the below, this allows us to not do hacky workarounds like
@@ -60,22 +59,17 @@ target_compile_definitions(${AR_AYONUSDRESOLVER_TARGET_LIB}
         AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME=${AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME}
 
 )
-
-target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_LIB} AyonCppApi)
-
-
-
 # Install
 configure_file(plugInfo.json.in plugInfo.json)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/plugInfo.json DESTINATION ${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}/resources)
 install(TARGETS ${AR_AYONUSDRESOLVER_TARGET_LIB} DESTINATION ${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}/lib)
 
+## Target library > cachedResolver Python ##
 add_library(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     SHARED
         module.cpp
         moduleDeps.cpp
         resolverContextCache.cpp
-        reseutionFunctions.cpp
         # resolver.cpp
         resolverTokens.cpp
         resolverContext.cpp

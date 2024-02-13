@@ -1,3 +1,4 @@
+#include <memory>
 #include <string>
 #include <utility>
 #include "debugCodes.h"
@@ -12,6 +13,7 @@
 #include "pxr/base/tf/pathUtils.h"
 #include "pxr/pxr.h"
 #include "pxr/usd/sdf/layer.h"
+#include "pxr/usd/usd/collectionMembershipQuery.h"
 
 #include <iostream>
 #include <mutex>
@@ -70,6 +72,7 @@ hash_value(const AyonUsdResolverContext &ctx) {
 void
 AyonUsdResolverContext::Initialize() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::Initialize \n");
+    std::cout << "------------------------------------------ init ------------------------" << std::endl;
 }
 
 void
@@ -82,4 +85,9 @@ ArResolvedPath
 AyonUsdResolverContext::cacheFind(const std::string &key) const {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("cache Called\n");
     return cache->Find(key);
+};
+
+std::shared_ptr<resolverContextCache>
+AyonUsdResolverContext::getCachePtr() const {
+    return cache;
 };

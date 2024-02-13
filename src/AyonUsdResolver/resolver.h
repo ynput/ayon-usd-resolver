@@ -2,14 +2,13 @@
 #define AR_AYONUSDRESOLVER_RESOLVER_H
 
 #include "api.h"
-#include "debugCodes.h"
-#include "pxr/base/tf/getenv.h"
+
 #include "pxr/pxr.h"
 #include "pxr/usd/ar/resolvedPath.h"
 #include "pxr/usd/ar/resolver.h"
 #include "resolverContext.h"
+#include "reseutionFunctions.h"
 
-#include <map>
 #include <memory>
 #include <string>
 

@@ -1,3 +1,9 @@
 [submodule "ext/ayon-cpp-api"]
 	path = ext/ayon-cpp-api
 	url = git@github.com:ynput/ayon-cpp-api.git
+[submodule "ext/OpenUSD"]
+	path = ext/OpenUSD
+	url = git@github.com:PixarAnimationStudios/OpenUSD.git
+[submodule "ext/boost"]
+	path = ext/boost
+	url = git@github.com:boostorg/boost.git
