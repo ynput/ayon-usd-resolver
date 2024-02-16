@@ -3904,3 +3904,82 @@
 {"timestamp":"2024-02-13 10:38:32.005","level":"info","Thread Id":"322206","Process Id":"322206","message":"SiteID is not availa{"timestamp":"2024-02-13 16:24:28.424","level":"info","Thread Id":"353622","Process Id":"353622","message":"AYON_API_KEY and AYON_SERVER_URL have been loaded"}
 {"timestamp":"2024-02-13 16:24:28.424","level":"info","Thread Id":"353622","Process Id":"353622","message":"SiteID is not available as an ENV varible"}
 {"timestamp":"2024-02-13 16:24:28.424","level":"info","Thread Id":"353622","Process Id":"353622","message":"All Env varibles have been loaded"}
+{"timestamp":"2024-02-16 09:23:18.644","level":"info","Thread Id":"10425","Process Id":"10425","message":"AYON_API_KEY and AYON_SERVER_URL have been loaded"}
+{"timestamp":"2024-02-16 09:23:18.644","level":"info","Thread Id":"10425","Process Id":"10425","message":"SiteID is not available as an ENV varible"}
+{"timestamp":"2024-02-16 09:23:18.645","level":"info","Thread Id":"10425","Process Id":"10425","message":"All Env varibles have been loaded"}
+{"timestamp":"2024-02-16 09:24:02.265","level":"info","Thread Id":"10537","Process Id":"10425","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:24:03.067","level":"warning","Thread Id":"10537","Process Id":"10425","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:24:03.069","level":"info","Thread Id":"10537","Process Id":"10425","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:24:03.869","level":"warning","Thread Id":"10537","Process Id":"10425","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:24:03.872","level":"info","Thread Id":"10537","Process Id":"10425","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:24:04.672","level":"warning","Thread Id":"10537","Process Id":"10425","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:24:04.674","level":"info","Thread Id":"10537","Process Id":"10425","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:24:05.474","level":"warning","Thread Id":"10537","Process Id":"10425","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:24:05.476","level":"info","Thread Id":"10537","Process Id":"10425","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:24:06.276","level":"warning","Thread Id":"10537","Process Id":"10425","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:24:06.279","level":"info","Thread Id":"10537","Process Id":"10425","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:24:07.079","level":"warning","Thread Id":"10537","Process Id":"10425","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:24:07.081","level":"info","Thread Id":"10537","Process Id":"10425","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:24:07.881","level":"warning","Thread Id":"10537","Process Id":"10425","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:24:07.884","level":"info","Thread Id":"10537","Process Id":"10425","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:24:08.684","level":"warning","Thread Id":"10537","Process Id":"10425","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:24:08.686","level":"info","Thread Id":"10537","Process Id":"10425","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:24:09.486","level":"warning","Thread Id":"10537","Process Id":"10425","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:24:09.486","level":"warning","Thread Id":"10537","Process Id":"10425","message":"SPOST cant phrease json // response empty"}
+{"timestamp":"2024-02-16 09:24:09.487","level":"warning","Thread Id":"10537","Process Id":"10425","message":"asset identification cant be generated null"}
+{"timestamp":"2024-02-16 09:24:09.489","level":"info","Thread Id":"10545","Process Id":"10425","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:24:10.289","level":"warning","Thread Id":"10545","Process Id":"10425","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:24:10.291","level":"info","Thread Id":"10545","Process Id":"10425","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:24:11.091","level":"warning{"timestamp":"2024-02-16 09:28:27.076","level":"info","Thread Id":"12673","Process Id":"12673","message":"AYON_API_KEY and AYON_SERVER_URL have been loaded"}
+{"timestamp":"2024-02-16 09:28:27.076","level":"info","Thread Id":"12673","Process Id":"12673","message":"SiteID is not available as an ENV varible"}
+{"timestamp":"2024-02-16 09:28:27.077","level":"info","Thread Id":"12673","Process Id":"12673","message":"All Env varibles have been loaded"}
+{"timestamp":"2024-02-16 09:28:32.051","level":"info","Thread Id":"12673","Process Id":"12673","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:28:32.852","level":"warning","Thread Id":"12673","Process Id":"12673","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:28:32.854","level":"info","Thread Id":"12673","Process Id":"12673","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:28:33.654","level":"warning","Thread Id":"12673","Process Id":"12673","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:28:33.657","level":"info","Thread Id":"12673","Process Id":"12673","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:28:34.457","level":"warning","Thread Id":"12673","Process Id":"12673","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:28:34.459","level":"info","Thread Id":"12673","Process Id":"12673","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:28:35.259","level":"warning","Thread Id":"12673","Process Id":"12673","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:28:35.261","level":"info","Thread Id":"12673","Process Id":"12673","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:28:36.062","level":"warning","Thread Id":"12673","Process Id":"12673","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:28:36.064","level":"info","Thread Id":"12673","Process Id":"12673","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:28:36.864","level":"warning","Thread Id":"12673","Process Id":"12673","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:28:36.867","level":"info","Thread Id":"12673","Process Id":"12673","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:28:37.667","level":"warning","Thread Id":"12673","Process Id":"12673","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:28:37.669","level":"info","Thread Id":"12673","Process Id":"12673","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:28:38.469","level":"warning","Thread Id":"12673","Process Id":"12673","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:28:38.472","level":"info","Thread Id":"12673","Process Id":"12673","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:28:39.272","level":"warning","Thread Id":"12673","Process Id":"12673","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:28:39.272","level":"warning","Thread Id":"12673","Process Id":"12673","message":"SPOST cant phrease json // response empty"}
+{"timestamp":"2024-02-16 09:28:39.272","level":"warning","Thread Id":"12673","Process Id":"12673","message":"asset identification cant be generated null"}
+{"timestamp":"2024-02-16 09:28:39.274","level":"info","Thread Id":"12673","Process Id":"12673","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:28:40.074","level":"warning","Thread Id":"12673","Process Id":"12673","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:28:40.077","level":"info","Thread Id":"12673","Process Id":"12673","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:28:40.877","level":"warning{"timestamp":"2024-02-16 09:34:57.653","level":"info","Thread Id":"13499","Process Id":"13499","message":"AYON_API_KEY and AYON_SERVER_URL have been loaded"}
+{"timestamp":"2024-02-16 09:34:57.653","level":"info","Thread Id":"13499","Process Id":"13499","message":"SiteID is not available as an ENV varible"}
+{"timestamp":"2024-02-16 09:34:57.653","level":"info","Thread Id":"13499","Process Id":"13499","message":"All Env varibles have been loaded"}
+{"timestamp":"2024-02-16 09:35:02.336","level":"info","Thread Id":"13499","Process Id":"13499","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:35:03.136","level":"warning","Thread Id":"13499","Process Id":"13499","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:35:03.139","level":"info","Thread Id":"13499","Process Id":"13499","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:35:03.939","level":"warning","Thread Id":"13499","Process Id":"13499","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:35:03.941","level":"info","Thread Id":"13499","Process Id":"13499","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:35:04.741","level":"warning","Thread Id":"13499","Process Id":"13499","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:35:04.744","level":"info","Thread Id":"13499","Process Id":"13499","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:35:05.544","level":"warning","Thread Id":"13499","Process Id":"13499","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:35:05.546","level":"info","Thread Id":"13499","Process Id":"13499","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:35:06.346","level":"warning","Thread Id":"13499","Process Id":"13499","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:35:06.348","level":"info","Thread Id":"13499","Process Id":"13499","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:35:07.149","level":"warning","Thread Id":"13499","Process Id":"13499","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:35:07.151","level":"info","Thread Id":"13499","Process Id":"13499","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:35:07.951","level":"warning","Thread Id":"13499","Process Id":"13499","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:35:07.953","level":"info","Thread Id":"13499","Process Id":"13499","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:35:08.753","level":"warning","Thread Id":"13499","Process Id":"13499","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:35:08.756","level":"info","Thread Id":"13499","Process Id":"13499","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:35:09.556","level":"warning","Thread Id":"13499","Process Id":"13499","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:35:09.556","level":"warning","Thread Id":"13499","Process Id":"13499","message":"SPOST cant phrease json // response empty"}
+{"timestamp":"2024-02-16 09:35:09.556","level":"warning","Thread Id":"13499","Process Id":"13499","message":"asset identification cant be generated null"}
+{"timestamp":"2024-02-16 09:35:09.558","level":"info","Thread Id":"13499","Process Id":"13499","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:35:10.358","level":"warning","Thread Id":"13499","Process Id":"13499","message":"Connection failed Rety now"}
+{"timestamp":"2024-02-16 09:35:10.361","level":"info","Thread Id":"13499","Process Id":"13499","message":"AyonApi::GenerativeCorePost wrong status code: 401 expected: 200"}
+{"timestamp":"2024-02-16 09:35:11.161","level":"warning
