@@ -22,11 +22,11 @@ add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
         # While we do have duplicate compiled code by adding the below, this allows us to not do hacky workarounds like
         # LD_PRELOAD-ing the lib. See https://github.com/LucaScheller/VFX-UsdAssetResolver/issues/3 for more information.
         # If you know a better way around this please file a PR :)
-        module.cpp
-        moduleDeps.cpp
-        wrapResolver.cpp
-        wrapResolverContext.cpp
-        wrapResolverTokens.cpp
+        # module.cpp
+        # moduleDeps.cpp
+        # wrapResolver.cpp
+        # wrapResolverContext.cpp
+        # wrapResolverTokens.cpp
 )
 set_boost_namespace(${AR_AYONUSDRESOLVER_TARGET_LIB})
 # Libs
@@ -54,10 +54,10 @@ target_compile_definitions(${AR_AYONUSDRESOLVER_TARGET_LIB}
     PRIVATE
         # USD Plugin Internal Namings
         MFB_PACKAGE_NAME=${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}
-        AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME=${AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME}
-        AR_AYONUSDRESOLVER_USD_PLUGIN_NAME=${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}
-        AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME=${AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME}
-        AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME=${AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME}
+        # AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME=${AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME}
+        # AR_AYONUSDRESOLVER_USD_PLUGIN_NAME=${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}
+        # AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME=${AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME}
+        # AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME=${AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME}
 
 )
 
@@ -74,11 +74,11 @@ add_library(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     SHARED
         module.cpp
         moduleDeps.cpp
-        resolverContextCache.cpp
-        reseutionFunctions.cpp
+        # resolverContextCache.cpp
+        # reseutionFunctions.cpp
         # resolver.cpp
         resolverTokens.cpp
-        resolverContext.cpp
+        # resolverContext.cpp
         wrapResolver.cpp
         wrapResolverContext.cpp
         wrapResolverTokens.cpp
@@ -111,7 +111,7 @@ target_compile_definitions(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
         MFB_PACKAGE_MODULE=${AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_NAME}
         AR_AYONUSDRESOLVER_USD_PLUGIN_NAME=${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}
         AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME=${AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME}
-        AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME=${AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME}
+        # AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME=${AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME}
 )
 # Install
 install (

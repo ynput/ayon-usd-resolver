@@ -21,8 +21,9 @@ pushd /opt/hfs20.0 && source houdini_setup && popd
 
 export HOUDINI_DEFAULT_DESKTOP=solaris
 
-houdini -foreground
+# houdini -foreground
 
-# houdini -foreground /home/workh/Desktop/test.hiplc
+
+houdini -foreground /home/workh/Desktop/test.hiplc
 #houdini -foreground -desktop solaris /home/lyonh/Documents/resolver_test_usd_things/resolver_testing.hiplc
 
