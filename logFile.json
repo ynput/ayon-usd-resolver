@@ -38,3 +38,6 @@
 {"timestamp":"2024-02-19 13:04:07.641","level":"warning","Thread Id":"44514","Process Id":"44514","message":"SPOST cant phrease json // response empty"}
 {"timestamp":"2024-02-19 13:04:07.641","level":"warning","Thread Id":"44514","Process Id":"44514","message":"asset identification cant be generated null"{"timestamp":"2024-02-19 14:14:56.436","level":"info","Thread Id":"54497","Process Id":"54497","message":"AYON_API_KEY and AYON_SERVER_URL have been loaded"}
 {"timestamp":"2024-02-19 14:14:56.436","level":"info","Thread Id":"54497","Process Id":"54497","message":"All Env varibles have been loaded"}
+{"timestamp":"2024-02-19 14:55:14.245","level":"info","Thread Id":"60685","Process Id":"60685","message":"AYON_API_KEY and AYON_SERVER_URL have been loaded"}
+{"timestamp":"2024-02-19 14:55:14.246","level":"info","Thread Id":"60685","Process Id":"60685","message":"SiteID is not available as an ENV varible"}
+{"timestamp":"2024-02-19 14:55:14.246","level":"info","Thread Id":"60685","Process Id":"60685","message":"All Env varibles have been loaded"}
