@@ -4,7 +4,7 @@
 
 #--------------------------- Define Varibles to be used in the Script for Preprocessor statments 
 add_compile_definitions(DEV=${DEV})
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 
 # ---------------------- Project
@@ -55,13 +55,7 @@ else()
     message(STATUS "AR_ARCH_LIB_SUFFIX so")
 endif()
 
-# Compiler Options
-# This is the same as set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHBOOST_ALL_NO_LIB -D_GLIBCXX_USE_CXX11_ABI=0")
-if (WIN32)
-    add_compile_options(/Zc:inline- /w)
-else()
-    add_compile_options(-fPIC  )
-endif()
+
 
 
 
@@ -88,7 +82,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
 # Preprocessor Defines (Same as #define)
 
 
-add_compile_definitions(BOOST_ALL_NO_LIB)
+add_compile_definitions(HBOOST_ALL_NO_LIB BOOST_ALL_NO_LIB)
 
 if (WIN32)
     add_compile_definitions(NOMINMAX)
@@ -116,7 +110,7 @@ endif()
 # Houdini
 
 
-add_compile_definitions(HBOOST_ALL_NO_LIB)
+#add_compile_definitions(HBOOST_ALL_NO_LIB)
 if (WIN32)
     set(AR_HOUDINI_LIB_DIR ${AR_HOUDINI_ROOT}/custom/houdini/dsolib)
 else()
@@ -174,7 +168,13 @@ set(AR_BOOST_INCLUDE_DIR ${AR_HOUDINI_INCLUDE_DIR}/${AR_BOOST_NAMESPACE})
 
 
 
-
+# Compiler Options
+# This is the same as set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHBOOST_ALL_NO_LIB -D_GLIBCXX_USE_CXX11_ABI=0")
+if (WIN32)
+    add_compile_options(/Zc:inline- /w)
+else()
+    add_compile_options(-fPIC  -Wno-deprecated -Wno-deprecated-declarations)
+endif()
 
 
 
