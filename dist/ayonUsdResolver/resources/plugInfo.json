@@ -3,14 +3,14 @@
     {
       "Info": {
         "Types": {
-          "@AR_AYONUSDRESOLVER_USD_CXX_CLASS_NAME@": {
+          "AyonUsdResolver": {
             "bases": ["ArResolver"],
             "implementsContexts": true
           }
         }
       },
-      "LibraryPath": "../lib/@AR_AYONUSDRESOLVER_TARGET_LIB@.@AR_ARCH_LIB_SUFFIX@",
-      "Name": "@AR_AYONUSDRESOLVER_USD_PLUGIN_NAME@",
+      "LibraryPath": "../lib/ayonUsdResolver.",
+      "Name": "ayonUsdResolver",
       "Root": ".",
       "Type": "library"
     }
