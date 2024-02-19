@@ -12,10 +12,10 @@ set "LD_LIBRARY_PATH=%SCRIPT_DIR%\ayonUsdResolver\lib;%LD_LIBRARY_PATH%"
 set "PXR_PLUGINPATH_NAME=%SCRIPT_DIR%\ayonUsdResolver\resources;%PXR_PLUGINPATH_NAME%"
 set "PYTHONPATH=%SCRIPT_DIR%\ayonUsdResolver\lib\python;%PYTHONPATH%"
 
-
-set "AYON_SITE_ID=groovy-amiable-reindeer"
-set "AYON_API_KEY=f2edece31ee8376292c4d545d711ca36cf6a7f47485f565bf356512b7963bec1"
-set "AYON_SERVER_URL=http://192.168.178.42:5000"
+REM use those lines to set the right env varibles if your not using ayon launcher
+REM set "AYON_SITE_ID=groovy-amiable-reindeer"
+REM set "AYON_API_KEY=f2edece31ee8376292c4d545d711ca36cf6a7f47485f565bf356512b7963bec1"
+REM set "AYON_SERVER_URL=http://192.168.178.42:5000"
 
 REM Print environment variables
 echo USD_ASSET_RESOLVER=%USD_ASSET_RESOLVER%
@@ -28,7 +28,7 @@ echo AYON_SITE_ID=%AYON_SITE_ID%
 echo AYON_SERVER_URL=%AYON_SERVER_URL%
 
 REM Command to execute
-"C:\Program Files\Side Effects Software\Houdini 20.0.590\bin\hython.exe" test.py
+"C:\Program Files\Side Effects Software\Houdini 20.0.590\bin\houdini.exe"
 
 
 endlocal
