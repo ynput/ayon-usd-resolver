@@ -24,9 +24,17 @@ no your resolver is compiled
 - the dist foulder will now contain the ayonUsdResolver foulder. ( this is the compiled resolver ) 
 - there is a launchHouWithResolver.bat point the last command to your install directory for houdini and execute the script inside off a shell 
 	this will setup the environment varibles needed for the Resolver and then start houdini
+	- there are allso options to set env varibles for AYON server, if you start from inside AYON Launcher this will not be nened. 
 optional
 - in the launchHouWithResolver.bat you have the option to disable TF_DEBUG by commenting out the line. 
 ```
 ```
-Linux 
+Linux
+- set the houdini install directory inside off the build.sh file
+- run build.sh Clean
+no your resolver is compiled
+- the dist foulder will now contain the ayonUsdResolver foulder. ( this is the compiled resolver ) 
+- there is a launchHouWithResolver.sh point the last command to your install directory for houdini and execute the script inside off a shell 
+	this will setup the environment varibles needed for the Resolver and then start houdini
+	- there are allso options to set env varibles for AYON server, if you start from inside AYON Launcher this will not be nened. 
 ```
