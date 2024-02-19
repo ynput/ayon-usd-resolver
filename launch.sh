@@ -1,5 +1,6 @@
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR=$SCRIPT_DIR/dist
 
 #---------- Set Usd/Python Varibles for Resolver Load
 export USD_ASSET_RESOLVER=$SCRIPT_DIR

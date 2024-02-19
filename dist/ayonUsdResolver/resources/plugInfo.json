@@ -9,7 +9,7 @@
           }
         }
       },
-      "LibraryPath": "../lib/ayonUsdResolver.",
+      "LibraryPath": "../lib/ayonUsdResolver.so",
       "Name": "ayonUsdResolver",
       "Root": ".",
       "Type": "library"

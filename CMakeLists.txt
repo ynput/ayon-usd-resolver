@@ -45,6 +45,27 @@ set(AR_AYONUSDRESOLVER_INSTALL_PREFIX ${AR_PROJECT_NAME}/${AR_AYONUSDRESOLVER_US
 
 
 
+# Arch
+if (WIN32)
+    set(AR_ARCH_LIB_SUFFIX "dll")
+    message(STATUS "AR_ARCH_LIB_SUFFIX dll")
+else()
+    set(AR_ARCH_LIB_SUFFIX "so")
+    message(STATUS "AR_ARCH_LIB_SUFFIX so")
+endif()
+
+# Compiler Options
+# This is the same as set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHBOOST_ALL_NO_LIB -D_GLIBCXX_USE_CXX11_ABI=0")
+if (WIN32)
+    add_compile_options(/Zc:inline- /w)
+else()
+    add_compile_options(-fPIC  )
+endif()
+
+
+
+
+
 
 # ---------------------------- Platform commands 
 
@@ -185,23 +206,6 @@ add_subdirectory("src/AyonUsdResolver")
 
 
 
-
-# -------------------------- Build automatisation commands 
-
-# Arch
-if (WIN32)
-    set(AR_ARCH_LIB_SUFFIX "dll")
-else()
-    set(AR_ARCH_LIB_SUFFIX "so")
-endif()
-
-# Compiler Options
-# This is the same as set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHBOOST_ALL_NO_LIB -D_GLIBCXX_USE_CXX11_ABI=0")
-if (WIN32)
-    add_compile_options(/Zc:inline- /w)
-else()
-    add_compile_options(-fPIC  )
-endif()
 
 
 

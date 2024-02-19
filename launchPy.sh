@@ -1,5 +1,6 @@
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR=$SCRIPT_DIR/dist
 
 #---------- Set Usd/Python Variables for Resolver Load
 export USD_ASSET_RESOLVER=$SCRIPT_DIR
@@ -8,7 +9,7 @@ export LD_LIBRARY_PATH=$SCRIPT_DIR/ayonUsdResolver/lib:$LD_LIBRARY_PATH
 export PXR_PLUGINPATH_NAME=$SCRIPT_DIR/ayonUsdResolver/resources:$PXR_PLUGINPATH_NAME
 export PYTHONPATH=$SCRIPT_DIR/ayonUsdResolver/lib/python:
 
-export AYON_API_KEY="0d3d1ac3d275db81808059e8782dc40bdb15b44cef09d32ce576d1febc0bcb82"
+export AYON_API_KEY="f2edece31ee8376292c4d545d711ca36cf6a7f47485f565bf356512b7963bec1"
 export AYON_SERVER_URL="http://192.168.178.42:5000"
 
 # Source Houdini setup script
