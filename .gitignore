@@ -10,6 +10,6 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 build*
-dist
+dist*
 *pluginInfo.json
 .cache
