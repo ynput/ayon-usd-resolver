@@ -4,6 +4,7 @@
 
 #--------------------------- Define Varibles to be used in the Script for Preprocessor statments 
 add_compile_definitions(DEV=${DEV})
+set(CMAKE_CXX_STANDARD 20)
 
 
 # ---------------------- Project

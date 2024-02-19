@@ -7,3 +7,5 @@
 {"timestamp":"2024-02-19 09:11:26.734","level":"info","Thread Id":"19669","Process Id":"19669","message":"AYON_API_KEY and AYON_SERVER_URL have been loaded"}
 {"timestamp":"2024-02-19 09:11:26.734","level":"info","Thread Id":"19669","Process Id":"19669","message":"SiteID is not available as an ENV varible"}
 {"timestamp":"2024-02-19 09:11:26.735","level":"info","Thread Id":"19669","Process Id":"19669","message":"All Env varibles have been loaded"}
+{"timestamp":"2024-02-19 10:37:08.120","level":"info","Thread Id":"2000","Process Id":"8600","message":"AYON_API_KEY and AYON_SERVER_URL have been loaded"}
+{"timestamp":"2024-02-19 10:37:08.121","level":"info","Thread Id":"2000","Process Id":"8600","message":"All Env varibles have been loaded"}
