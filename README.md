@@ -1,13 +1,13 @@
 Ayon OpenUsd Resolver (uses Ayon cpp Api)
 
 requiered:
-  C++ Compiler
-  Cmake
-  GitHub public key setup ( this is because the submodules are linked via git@ )
-  Houdini Install
-Tested Platforms:
-	Alma Linux 9 
-	Windows 10
+  C++ Compiler \n
+  Cmake \n
+  GitHub public key setup ( this is because the submodules are linked via git@ ) \n
+  Houdini Install \n
+Tested Platforms: \n
+	Alma Linux 9 \n
+	Windows 10 \n
 
 
 Prebuild / Self Compiled
