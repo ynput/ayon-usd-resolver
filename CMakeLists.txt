@@ -24,10 +24,8 @@ set(BUILD_SHARED_LIBS ON)
 
 # ---------------------- Developer Convenience Commands 
 
-
 # this command exports a file to the build fouler that nvim clangd can use to understand the project dependencies. 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 
 
 
@@ -57,17 +55,11 @@ endif()
 
 
 
-
-
-
-
-
 # ---------------------------- Platform commands 
 
 
 
 set(AR_HOUDINI_ROOT $ENV{HFS} CACHE PATH "Houdini install directory")
-
 
 
 
@@ -102,13 +94,7 @@ endif()
 
 
 
-
-
-
-
-
 # Houdini
-
 
 #add_compile_definitions(HBOOST_ALL_NO_LIB)
 if (WIN32)
@@ -167,7 +153,6 @@ set(AR_BOOST_INCLUDE_DIR ${AR_HOUDINI_INCLUDE_DIR}/${AR_BOOST_NAMESPACE})
 
 
 
-
 # Compiler Options
 # This is the same as set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHBOOST_ALL_NO_LIB -D_GLIBCXX_USE_CXX11_ABI=0")
 if (WIN32)
@@ -178,15 +163,7 @@ endif()
 
 
 
-
-
-
-
-
-
 # --------------------------- Includes / Linking
-
-
 
 ### Packages ###
 # Defaults
@@ -207,11 +184,5 @@ add_subdirectory("src/AyonUsdResolver")
 
 
 
-
-
-
 # ------------------------ Install
-
-
-
 
