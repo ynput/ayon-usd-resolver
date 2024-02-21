@@ -113,6 +113,6 @@ There is a DoxyGen file in the root of this repository.
 If you have Doxygen installed, you can simply generate the code documentation on your local machine. 
 It might give a better overview of the functions and what they are supposed to do.
 2.
-there is cureently no option to disable or controle the log output off the AyonCppApi ( this will follow as an option soon )
-- also the AyonCppApi will create a LogFile.json int the work root directory. this is ussually where every the work file off houdini is located ( if you set the work dir manually then its not there )
-- in the near future there will be an option for disableling logging to the logFile.json and for setting its locaton. 
+there is currently no option to disable or control the log output of the AyonCppApi (this will be implemented soon)
+- The AyonCppApi will create a `LogFile.json` in the work root directory. Usually where the work file off houdini is located (if you set the work dir manually then its not there)
+    - in the near future there will be an option for disabling logging to the `logFile.json` and for setting its location. 
