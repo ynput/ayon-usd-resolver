@@ -63,6 +63,18 @@ Building and testing is currently done against Houdini 19 and Houdini 20. Other 
   PYTHONPATH
 	- this is yet again a path for Usd that allows you to acces the python wrapper functons from the resolver from inside off Usd
  
+  AYONLOGGERLOGLVL  
+  	- This Environment variable allows you to set the log level for the CppApi.  
+		- INFO,ERROR,WARN,CRITICAL,OFF
+  	  
+  AYONLOGGERFILELOGGING  
+  	- This Environment variable allows you to enable or disable file login in CppApi.  
+		- OFF,ON
+  	  
+  AYONLOGGERFILEPOS  
+  	- This Environment variable allows you to set a file path for the CppApi logging.  
+		- /path/to or relPath  
+ 
  ### Inside off Ayon you can use the Environment Field off your software versoin to define what resolver you want to use
  here is an excample how that might look 
  ```
@@ -71,7 +83,10 @@ Building and testing is currently done against Houdini 19 and Houdini 20. Other 
 "TF_DEBUG":"",
 "LD_LIBRARY_PATH":"/path/to/ayon-usd-resolver/dist/ayonUsdResolver/lib:$LD_LIBRARY_PATH",
 "PXR_PLUGINPATH_NAME":"/path/to/ayon-usd-resolver/dist/ayonUsdResolver/resources:$PXR_PLUGINPATH_NAME",
-"PYTHONPATH":["{PYTHONPATH}","/path/to/ayon-usd-resolver/dist/ayonUsdResolver/lib/python"]
+"PYTHONPATH":["{PYTHONPATH}","/path/to/ayon-usd-resolver/dist/ayonUsdResolver/lib/python"],
+"AYONLOGGERLOGLVL":"WARN",
+"AYONLOGGERFILELOGGING":"ON",
+"AYONLOGGERFILEPOS":"LoggingFiles"
 }
 ```
 
