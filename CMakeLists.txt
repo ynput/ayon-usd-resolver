@@ -1,4 +1,4 @@
-# manny off those settings are based on Luca Shellers Resolver // also manny off those settings are subject to change 
+# many off the settings are based on Luca Scheller's Resolver and many are subject to change 
 # https://github.com/LucaScheller/VFX-UsdAssetResolver/blob/main/CMakeLists.txt
 
 
