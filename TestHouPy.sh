@@ -12,6 +12,10 @@ export PYTHONPATH=$SCRIPT_DIR/ayonUsdResolver/lib/python:
 export AYON_API_KEY="f2edece31ee8376292c4d545d711ca36cf6a7f47485f565bf356512b7963bec1"
 export AYON_SERVER_URL="http://192.168.178.42:5000"
 
+export AYONLOGGERLOGLVL="OFF"
+export AYONLOGGERFILELOGGING="ON"
+export AYONLOGGERFILEPOS="LoggingFiles"
+
 # Source Houdini setup script
 pushd /opt/hfs20.0 && source houdini_setup && popd
 
