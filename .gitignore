@@ -14,4 +14,4 @@ dist/
 docs/
 *pluginInfo.json
 .cache
-logFile.json
+logFile*
