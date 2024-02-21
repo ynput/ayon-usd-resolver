@@ -105,7 +105,8 @@ All together you will get an asset path like this. This asset path can be used i
 `ayon://{ProjectName}/{pathToYourFile}?product={FileName}&version=*&representation=usd`
 
 
-## Good To Knows
+## Good To Know
+
 
 1.
 There is a DoxyGen file in the root of this repository. 
