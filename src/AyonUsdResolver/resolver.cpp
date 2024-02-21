@@ -52,18 +52,6 @@ AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolve
         return assetPath;
     }
 
-    if (_IsPinningFile(assetPath)) {
-        // check if the pinning file is set to enable
-        // check if its a farm job pinning file
-        // check if the pinning file exists
-
-        // reset cache
-        // set cache to pinning file
-        // get the actual usd file path from the pinning file
-        // open the actual usd file
-        std::cout << "is pinning file " << std::endl;
-    }
-
     if (_IsAyonPath(assetPath, Config::ayonUriIdent, Config::ayonUriIdentSize)) {
         return assetPath;
     }

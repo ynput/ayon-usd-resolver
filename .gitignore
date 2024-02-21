@@ -11,5 +11,7 @@ CTestTestfile.cmake
 _deps
 build/
 dist/
+docs/
 *pluginInfo.json
 .cache
+logFile.json

@@ -37,7 +37,7 @@ resolverContextCache::~resolverContextCache(){};
 
 void
 resolverContextCache::insert(std::pair<std::string, pxr::ArResolvedPath> &&sourcePair) {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("resolverContextCache::insert \n");
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::insert \n");
 
     if (PreCacheFreeItemSlots < 1) {
         AyonCache.reserve(AyonCache.size() + PreCache.size());
@@ -55,7 +55,7 @@ void resolverContextCache::insert(std::vector<std::pair<std::string, pxr::ArReso
 
 void
 resolverContextCache::migratePreCacheIntoAyonCache() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("resolverContextCache::migratePreCacheIntoAyonCache \n");
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::migratePreCacheIntoAyonCache \n");
     AyonCache.insert(std::make_move_iterator(PreCache.begin()), std::make_move_iterator(PreCache.end()));
 };
 
@@ -63,7 +63,7 @@ ArResolvedPath
 resolverContextCache::Find(const std::string &key) const {
     auto hit = PreCache.find(key);
     if (hit != PreCache.end()) {
-        TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("resolverContextCache::Find cache hit (key: %s // path: %s) \n", hit->first.c_str(),
                  hit->second.GetPathString().c_str());
         return hit->second;
@@ -76,7 +76,7 @@ assetIdent
 resolverContextCache::getAsset(const std::string &assetIdentifier,
                                const cacheName &selectedCache,
                                const bool &isAyonPath) {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("resolverContextCache::getAsset: (%s) \n", assetIdentifier.c_str());
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::getAsset: (%s) \n", assetIdentifier.c_str());
 
     assetIdent asset;
     if (assetIdentifier.empty()) {
@@ -133,4 +133,84 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
     }
 
     return asset;
+};
+
+void
+resolverContextCache::removeCachedObject(const std::string &key) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::removeCachedObject (%s) \n", key.c_str());
+
+    std::unordered_map<std::string, pxr::ArResolvedPath>::iterator hit;
+
+    hit = PreCache.find(key);
+    if (hit != PreCache.end()) {
+        PreCache.erase(hit);
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("resolverContextCache::removeCachedObject removed object from PreCache");
+        return;
+    }
+
+    hit = AyonCache.find(key);
+    if (hit != AyonCache.end()) {
+        AyonCache.erase(hit);
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("resolverContextCache::removeCachedObject removed object from AyonCache");
+        return;
+    }
+
+    hit = CommonCache.find(key);
+    if (hit != CommonCache.end()) {
+        CommonCache.erase(hit);
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("resolverContextCache::removeCachedObject removed object from CommonCache");
+        return;
+    }
+
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("resolverContextCache::removeCachedObject the object could not be found");
+};
+
+void
+resolverContextCache::removeCachedObject(const std::string &key, const cacheName &selectedCache) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::removeCachedObject (%s) \n", key.c_str());
+
+    std::unordered_map<std::string, pxr::ArResolvedPath>::iterator hit;
+
+    hit = PreCache.find(key);
+    if (hit != PreCache.end()) {
+        PreCache.erase(hit);
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("resolverContextCache::removeCachedObject removed object from PreCache");
+        return;
+    }
+
+    if (hit != PreCache.end()) {
+        PreCache.erase(hit);
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("resolverContextCache::removeCachedObject removed object from PreCache");
+        return;
+    }
+    else {
+        switch (selectedCache) {
+            case AYONCACHE:
+                hit = AyonCache.find(key);
+                if (hit != AyonCache.end()) {
+                    PreCache.erase(hit);
+                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                        .Msg("resolverContextCache::removeCachedObject removed object from PreCache");
+                    return;
+                }
+
+            case COMMONCACHE:
+                hit = CommonCache.find(key);
+                if (hit != CommonCache.end()) {
+                    PreCache.erase(hit);
+                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                        .Msg("resolverContextCache::removeCachedObject removed object from PreCache");
+                    return;
+                }
+        }
+    }
+
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("resolverContextCache::removeCachedObject the object could not be found");
 };

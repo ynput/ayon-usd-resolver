@@ -29,7 +29,7 @@ echo AYON_SITE_ID=%AYON_SITE_ID%
 echo AYON_SERVER_URL=%AYON_SERVER_URL%
 
 REM Command to execute
-"C:\Program Files\Side Effects Software\Houdini 20.0.590\bin\hython.exe" test.py
+"C:\Program Files\Side Effects Software\Houdini 20.0.590\bin\hython.exe" test\test.py
 
 
 endlocal

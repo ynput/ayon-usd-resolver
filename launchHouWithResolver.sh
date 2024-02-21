@@ -12,9 +12,9 @@ export PYTHONPATH=$SCRIPT_DIR/ayonUsdResolver/lib/python:
 
 
 #set those env varibles if your not starting the resolver form ayon env. 
-#export "AYON_SITE_ID=groovy-amiable-reindeer"
-#export AYON_API_KEY="ba61cfadf9955e8bce5c986260ae709c9c005b1aa2ea8c543866368bedd1663a"
-#export AYON_SERVER_URL="http://192.168.178.42:5000"
+export "AYON_SITE_ID=groovy-amiable-reindeer"
+export AYON_API_KEY="ba61cfadf9955e8bce5c986260ae709c9c005b1aa2ea8c543866368bedd1663a"
+export AYON_SERVER_URL="http://192.168.178.42:5000"
 
 
 
