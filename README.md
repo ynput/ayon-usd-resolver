@@ -1,14 +1,13 @@
-# Ayon OpenUsd Resolver (uses Ayon cpp Api)
+# AYON USD Resolver  
+The AYON USD Resolver is a [Pixar's USD](https://openusd.org) [ArResolver Usd Resolver Plugin](https://openusd.org/release/api/ar_page_front.html#ar_uri_resolvers)  
+that resolves URIs with the schema `ayon://` found in a USD file into local filepaths.  
+The resolver implements local caching and resolves the AYON compatible entity URIs against the Ayon Server using the `AyonCppApi`.  
 
-This Reposetory holds the code for the AyonUsdResolver.  
-this is a cached uri resolver taht allows to resolve Ayon paths directly from inside off Pixar Open Usd  
-This resolver uses the AyonCppApi to doo the reselution against AyonServer ( AyonCppApi is linked via gitSubmodule )  
-There will be pre build binarys available for the AyonUsdResolver but for now self compilation is requiered. 
+> [!IMPORTANT]  
+> This repository is a _development_ repository and uses Git Submodules. Make sure to use the right `git clone` commands accordingly.  
 
-This reposetory allso Serves as an development reposetory. 
-most dependecys are linked as GitSubmodules so make shure to use the right Git Clone commands. 
-
-Further more. The current build off the resolver is created for Houdini 19 to 20 other software packages will follow shortly. 
+> [!NOTE]  
+Building and testing is currently done against Houdini 19 and Houdini 20. Other packages will follow shortly.
 
 
 ## Required:
