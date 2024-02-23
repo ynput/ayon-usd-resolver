@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(AR_PROJECT_NAME UsdAssetResolver)
 set(AR_RESOLVER_USD_PYTHON_MODULE_NAME usdAssetResolver)
-set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/dist" CACHE PATH "Default install dir")
+set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/Resolvers" CACHE PATH "install dir")
 
 cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
@@ -74,23 +74,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
 # Preprocessor Defines (Same as #define)
 
 
-add_compile_definitions(HBOOST_ALL_NO_LIB BOOST_ALL_NO_LIB)
 
-if (WIN32)
-    add_compile_definitions(NOMINMAX)
-else()
-    # Notes:
-    # Houdini 20 - Switched to the new C++11 ABI for Linux https://www.sidefx.com/docs/houdini/news/20/platforms.html
-    # For Houdini versions that use gcc 9.3, please set this to _GLIBCXX_USE_CXX11_ABI=0
-    file(REAL_PATH ${AR_HOUDINI_ROOT} AR_HOUDINI_ROOT_RESOLVED)
-    string(FIND ${AR_HOUDINI_ROOT_RESOLVED} "19.5" AR_HOUDINI_ROOT_IS_H195)
-    if (${AR_HOUDINI_ROOT_IS_H195} STREQUAL "-1")
-        add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=1)
-    else()
-        message("Houdini 19.5 detected, switching to _GLIBCXX_USE_CXX11_ABI=0")
-        add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
-    endif()
-endif()
 
 
 
@@ -103,6 +87,7 @@ else()
     set(AR_HOUDINI_LIB_DIR ${AR_HOUDINI_ROOT}/dsolib)
 endif()
 set(AR_HOUDINI_INCLUDE_DIR ${AR_HOUDINI_ROOT}/toolkit/include)
+
 # Usd
 if (WIN32)
     set(AR_PXR_LIB_DIR ${AR_HOUDINI_ROOT}/custom/houdini/dsolib)
@@ -152,6 +137,22 @@ endif()
 set(AR_BOOST_INCLUDE_DIR ${AR_HOUDINI_INCLUDE_DIR}/${AR_BOOST_NAMESPACE})
 
 
+add_compile_definitions(HBOOST_ALL_NO_LIB BOOST_ALL_NO_LIB)
+if (WIN32)
+    add_compile_definitions(NOMINMAX)
+else()
+    # Houdini 20 - Switched to the new C++11 ABI for Linux https://www.sidefx.com/docs/houdini/news/20/platforms.html
+    # For Houdini versions that use gcc 9.3, please set this to _GLIBCXX_USE_CXX11_ABI=0
+    file(REAL_PATH ${AR_HOUDINI_ROOT} AR_HOUDINI_ROOT_RESOLVED)
+    string(FIND ${AR_HOUDINI_ROOT_RESOLVED} "19.5" AR_HOUDINI_ROOT_IS_H195)
+    if (${AR_HOUDINI_ROOT_IS_H195} STREQUAL "-1")
+        add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=1)
+        target_compile_definitions(AyonCppApi PUBLIC _GLIBCXX_USE_CXX11_ABI=1)
+    else()
+        add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
+        target_compile_definitions(AyonCppApi PUBLIC _GLIBCXX_USE_CXX11_ABI=0)
+    endif()
+endif()
 
 # Compiler Options
 # This is the same as set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHBOOST_ALL_NO_LIB -D_GLIBCXX_USE_CXX11_ABI=0")

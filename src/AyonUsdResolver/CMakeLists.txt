@@ -1,14 +1,9 @@
 ### CPP Settings ###
-# Preprocessor Defines (Same as #define)
-# This is a hacky way of preprocessing the class name to a custom name.
-# It is not advised to do this in a production setup! (https://stackoverflow.com/questions/20979584)
-# add_compile_definitions(CachedResolver=${AR_AYONUSDRESOLVER_USD_CXX_CLASS_NAME})
 if (WIN32)
     add_compile_definitions(AR_AYONUSDRESOLVER_EXPORTS)
 endif()
 
 ### Targets ###
-## Target library > cachedResolver ##
 add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
     SHARED
         debugCodes.cpp
@@ -17,17 +12,8 @@ add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
         resolverTokens.cpp 
         resolverContextCache.cpp
         reseutionFunctions.cpp 
-        # Since when our resolver calls into Python it passes the ResolverContext,
-        # we need to ensure that Python has loaded the ResolverContext C++ representation.
-        # While we do have duplicate compiled code by adding the below, this allows us to not do hacky workarounds like
-        # LD_PRELOAD-ing the lib. See https://github.com/LucaScheller/VFX-UsdAssetResolver/issues/3 for more information.
-        # If you know a better way around this please file a PR :)
-        # module.cpp
-        # moduleDeps.cpp
-        # wrapResolver.cpp
-        # wrapResolverContext.cpp
-        # wrapResolverTokens.cpp
 )
+
 set_boost_namespace(${AR_AYONUSDRESOLVER_TARGET_LIB})
 # Libs
 target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_LIB}
@@ -54,11 +40,6 @@ target_compile_definitions(${AR_AYONUSDRESOLVER_TARGET_LIB}
     PRIVATE
         # USD Plugin Internal Namings
         MFB_PACKAGE_NAME=${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}
-        # AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME=${AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME}
-        # AR_AYONUSDRESOLVER_USD_PLUGIN_NAME=${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}
-        # AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME=${AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME}
-        # AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME=${AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME}
-
 )
 
 target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_LIB} AyonCppApi)
@@ -74,11 +55,7 @@ add_library(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     SHARED
         module.cpp
         moduleDeps.cpp
-        # resolverContextCache.cpp
-        # reseutionFunctions.cpp
-        # resolver.cpp
         resolverTokens.cpp
-        # resolverContext.cpp
         wrapResolver.cpp
         wrapResolverContext.cpp
         wrapResolverTokens.cpp
@@ -118,10 +95,7 @@ install (
     FILES __init__.py
     DESTINATION ${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}/lib/python/${AR_RESOLVER_USD_PYTHON_MODULE_NAME}/${AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_NAME}
 )
-# install (
-#     FILES ${AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME}.py
-#     DESTINATION ${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}/lib/python
-# )
+
 install(
     TARGETS ${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     DESTINATION ${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}/lib/python/${AR_RESOLVER_USD_PYTHON_MODULE_NAME}/${AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_NAME}

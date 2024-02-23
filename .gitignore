@@ -12,6 +12,7 @@ _deps
 build/
 dist/
 docs/
+Resolvers/
 *pluginInfo.json
 .cache
 logFile*
