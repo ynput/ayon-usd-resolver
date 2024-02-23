@@ -70,12 +70,7 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
 
 
-
 # Preprocessor Defines (Same as #define)
-
-
-
-
 
 
 # Houdini
