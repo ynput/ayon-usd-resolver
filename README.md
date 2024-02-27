@@ -108,7 +108,8 @@ When a USD file is opened:
 
 The AssetIdentifier or AssetPath is always used by the resolver to convert an AYON path to a path on disk. The resolver needs some information in the path to figure out what asset you want.
 1. `ayon:` is used in the `_resolve()` function in order to know if your asset is an AYON asset or not (we do this via a string view comparison).
-2. `//{ProjectName}/{pathToYourFile}?product={FileName}` This is a classic AYON path that defines what asset you want, e.g., name, ayonPath, etc.
+2. `//{ProjectName}/{path/to/ayon/folder}?product={FileName}` This is a classic AYON path that defines what ayon folder you want, e.g., sequences/sh010, assets/characters/bob, etc.
+
 3. `version=latest` version has multiple options:
     - `latest`: Will tell the resolver to use the latest version no matter what.
     - `hero`: Will tell the resolver to find the pinned hero version (you should know that you have the option to set up your AYON server without hero versions, in this case, the resolver will not be able to find your asset).
