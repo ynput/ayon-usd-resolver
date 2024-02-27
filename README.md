@@ -112,7 +112,8 @@ The AssetIdentifier or AssetPath is always used by the resolver to convert an AY
 
 3. `version=latest` version has multiple options:
     - `latest`: Will tell the resolver to use the latest version no matter what.
-    - `hero`: Will tell the resolver to find the pinned hero version (you should know that you have the option to set up your AYON server without hero versions, in this case, the resolver will not be able to find your asset).
+    - `hero`: Will tell the resolver to find the pinned hero version (you should know that you have the option to set up your AYON server without hero versions, in this case, the resolver will not be able to find your product version).
+
     - `v001` (Or whatever you put into your template): Will allow you to pin a specific version of the asset.
 4. `representation=usd` this part off the path is very important it sets the file "extention" that the resolver will search for. you can use everything that you can uploade to the server.
 
