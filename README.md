@@ -1,7 +1,7 @@
-# AYON USD Resolver  
-The AYON USD Resolver is a [Pixar's USD](https://openusd.org) [ArResolver Usd Resolver Plugin](https://openusd.org/release/api/ar_page_front.html#ar_uri_resolvers)  
+# [AYON](https://ynput.io/ayon/) USD Resolver  
+The [AYON](https://ynput.io/ayon/) USD Resolver is a [Pixar's USD](https://openusd.org) [ArResolver Usd Resolver Plugin](https://openusd.org/release/api/ar_page_front.html#ar_uri_resolvers)  
 that resolves URIs with the schema `ayon://` found in a USD file into local file paths.   
-The resolver implements local caching and resolves the AYON compatible entity URIs against the Ayon Server using the `AyonCppApi`.   
+The resolver implements local caching and resolves the [AYON](https://ynput.io/ayon/) compatible entity URIs against the AYON-Server using the [AyonCppApi](https://github.com/ynput/ayon-cpp-api/).   
 
 > [!IMPORTANT]  
 > This repository is a _development_ repository and uses Git Submodules. Make sure to use the correct `git clone` commands accordingly.  
@@ -47,7 +47,7 @@ The resolver implements local caching and resolves the AYON compatible entity UR
 - The `Resolvers` folder will now contain the `ayonUsdResolver` folder (this is the compiled resolver).  
 - There is a `launchHouWithResolver.sh`, point the last command to your Houdini install directory and execute the script inside a shell. This will set up the environment variables needed for the Resolver and then start Houdini.  
 
-## How to get the resolver working with Houdini and AYON
+## How to get the resolver working with Houdini and [AYON](https://ynput.io/ayon/)
 ### General. 
 - tThe Resolver needs a few Env variables to work, namely:  
   USD_ASSET_RESOLVER
