@@ -22,6 +22,9 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
+// TODO find a better way off makeing the cache Global, this is not optimal at all.
+std::shared_ptr<resolverContextCache> GlobaleCahce = std::make_shared<resolverContextCache>();
+
 bool
 getStringEndswithString(const std::string &value, const std::string &compareValue) {
     if (compareValue.size() > value.size()) {
@@ -45,6 +48,7 @@ getStringEndswithStrings(const std::string &value, const std::vector<std::string
 
 AyonUsdResolverContext::AyonUsdResolverContext() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
+    cache = GlobaleCahce;
     this->Initialize();
 }
 
@@ -77,6 +81,7 @@ AyonUsdResolverContext::Initialize() {
 void
 AyonUsdResolverContext::ClearAndReinitialize() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ClearAndReinitialize()\n");
+    dropCache();
     this->Initialize();
 }
 
@@ -89,7 +94,18 @@ AyonUsdResolverContext::cacheFind(const std::string &key) const {
 void
 AyonUsdResolverContext::dropCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::dropCache() \n");
-    cache.reset(new resolverContextCache());
+};
+
+void
+AyonUsdResolverContext::deletFromCache(const std::string &key) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::deletIdentFromCache(%s) \n", key.c_str());
+    cache->removeCachedObject(key);
+};
+
+void
+AyonUsdResolverContext::clearCache() {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::clearCache \n");
+    cache->clearCache();
 };
 
 std::shared_ptr<resolverContextCache>

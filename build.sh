@@ -46,7 +46,7 @@ if [[ " $@ " =~ " Debug " && " $@ " =~ " Clean " ]]; then
 fi
 
 #------------------- Houdini Config ------------------------
-HOU_VER=19.5.805 # Set the houdini version // needs to be the same as the hfs foulder version in your install
+HOU_VER=20.0.590 # Set the houdini version // needs to be the same as the hfs foulder version in your install
 
 #19.5.805
 #20.0.590

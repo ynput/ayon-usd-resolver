@@ -165,8 +165,10 @@ AyonUsdResolver::_RefreshContext(const ArResolverContext &context) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_RefreshContext()\n");
     const AyonUsdResolverContext* ctx = this->_GetCurrentContextPtr();
     if (!ctx) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_RefreshContext no ctx()\n");
         return;
     }
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_RefreshContext ctx()\n");
     ArNotice::ResolverChanged(*ctx).Send();
 }
 

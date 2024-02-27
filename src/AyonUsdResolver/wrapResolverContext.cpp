@@ -38,6 +38,11 @@ wrapResolverContext() {
         .def("__repr__", _Repr)
         .def("ClearAndReinitialize", &This::ClearAndReinitialize,
              "Clear mapping and cache pairs and re-initialize context (with "
-             "mapping file path)");
+             "mapping file path)")
+
+        .def("dropCache", &This::dropCache, "dropts the cache ")
+        .def("deletFromCache", &This::deletFromCache, "delets from cache ")
+        .def("clearCache", &This::clearCache, "delets all chaced objects ");
+
     ArWrapResolverContextForPython<This>();
 }

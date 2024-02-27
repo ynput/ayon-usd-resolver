@@ -1,6 +1,8 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -95,11 +97,21 @@ class resolverContextCache {
          */
         void removeCachedObject(const std::string &key, const cacheName &selectedCache);
 
-    private:
-        std::unordered_map<std::string, pxr::ArResolvedPath> AyonCache;
-        std::unordered_map<std::string, pxr::ArResolvedPath> CommonCache;
+        /**
+         * @brief this function clears the complate cache
+         */
+        void clearCache();
 
-        std::unordered_map<std::string, pxr::ArResolvedPath> PreCache;
+        /**
+         * @brief a simple function that prints out every object in the cache purly for debugging
+         */
+        void printCache();
+
+    private:
+        std::unique_ptr<std::unordered_map<std::string, pxr::ArResolvedPath>> AyonCache;
+        std::unique_ptr<std::unordered_map<std::string, pxr::ArResolvedPath>> CommonCache;
+
+        std::unique_ptr<std::unordered_map<std::string, pxr::ArResolvedPath>> PreCache;
         size_t PreCacheFreeItemSlots;
 
         AyonApi ayon;
