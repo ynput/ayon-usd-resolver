@@ -51,6 +51,10 @@ HOU_VER=20.0.590 # Set the houdini version // needs to be the same as the hfs fo
 #19.5.805
 #20.0.590
 
+#export INSTALLNAME="LinuxPy310Houdini20"
+export COMPILEPLUGIN="LinuxPy310Houdini20"
+
+#houdini
 
 if [ "$OS" == "Linux" ]; then 
   export HFS="/opt/hfs${HOU_VER}"

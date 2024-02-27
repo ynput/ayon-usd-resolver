@@ -1,6 +1,6 @@
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SCRIPT_DIR=$SCRIPT_DIR/Resolvers
+SCRIPT_DIR=$SCRIPT_DIR/Resolvers/LinuxPy310Houdini20
 
 #---------- Set Usd/Python Variables for Resolver Load
 export USD_ASSET_RESOLVER=$SCRIPT_DIR
