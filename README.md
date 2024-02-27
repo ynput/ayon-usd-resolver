@@ -97,7 +97,7 @@ When a USD file is opened:
 - Resolver Context creates ResolverContextCache.
     - ResolverContextCache will be linked to Resolver Context via a shared pointer. This allows USD to have one Cache on multiple resolvers. Also, if you want to explicitly construct a resolver from another resolver, you can carry the cache with you.
 - USD [AssetIdentifier](https://openusd.org/release/glossary.html#usdglossary-assetinfo) is found.
-- `_Resolve()` gets called with the data between the `@` symbols.
+- `_Resolve()` gets called with the data between the [@](https://openusd.org/release/glossary.html#usdglossary-asset) symbols.
 - `_Resolve()` checks if the path is an AYON URI path.
     - Yes?: Then we get the current context (because in this resolver the resolver context interacts with the AyonCppApi and not the Resolver).  
         - We ask the ResolverContext to return the path to us and the ResolverContext calls the `getAsset()` function in the cache.
