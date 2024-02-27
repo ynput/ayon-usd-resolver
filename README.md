@@ -99,7 +99,7 @@ When a USD file is opened:
 - USD [AssetIdentifier](https://openusd.org/release/glossary.html#usdglossary-assetinfo) is found.
 - `_Resolve()` gets called with the data between the [@](https://openusd.org/release/glossary.html#usdglossary-asset) symbols.
 - `_Resolve()` checks if the path is an AYON URI path.
-    - Yes?: Then we get the current context (because in this resolver the resolver context interacts with the AyonCppApi and not the Resolver).  
+    - Yes?: Then we get the current context (because in this resolver the resolver context interacts with the [AyonCppApi](https://github.com/ynput/ayon-cpp-api/) and not the Resolver).  
         - We ask the ResolverContext to return the path to us and the ResolverContext calls the `getAsset()` function in the cache.
         - The ResolverContextCache will then first check the PreCache and then the Responsible cache. If the ResolverContextCache found the asset, it will be returned as a struct. If the ResolverContextCache did not find an asset, it will call the AyonCppApi and request the asset information from the server.
     - No?: Then we check if the AssetIdentifier was already registered in the CommonCache and if so, we will return the cached entry. If not, we will simply resolve the path against the operating system file system the same way that USD Default Resolver Does it.
