@@ -10,6 +10,8 @@ else()
 endif()
 
 add_compile_definitions(DEV=${DEV})
+add_compile_definitions(CPPHTTPLIB_OPENSSL_SUPPORT) #we need to define this var here because ayon cpp api needs it to enable open sll suport for https 
+#(read ayon cpp api main CMakeLists.txt for more info)
 
 set(AR_PROJECT_NAME UsdAssetResolver)
 set(AR_RESOLVER_USD_PYTHON_MODULE_NAME usdAssetResolver)
@@ -67,13 +69,24 @@ endif()
 if(NOT DEFINED AR_PXR_LIB_DIR)
     message(FATAL_ERROR "AR_PXR_LIB_DIR is not defined. Please set it before continuing.")
 endif()
+if(NOT DEFINED AR_PXR_LIB_PREFIX)
+    message(FATAL_ERROR "AR_PXR_LIB_PREFIX is not defined. Please set it before continuing.")
+endif()
 if(NOT DEFINED AR_PYTHON_LIB_NUMBER)
     message(FATAL_ERROR "AR_PYTHON_LIB_NUMBER is not defined. Please set it before continuing.")
+endif()
+if(NOT DEFINED AR_PYTHON_LIB_DIR)
+    message(FATAL_ERROR "AR_PYTHON_LIB_DIR is not defined. Please set it before continuing.")
+endif()
+if(NOT DEFINED AR_PYTHON_INCLUDE_DIR)
+    message(FATAL_ERROR "AR_PYTHON_INCLUDE_DIR is not defined. Please set it before continuing.")
 endif()
 if(NOT DEFINED AR_BOOST_INCLUDE_DIR)
     message(FATAL_ERROR "AR_BOOST_INCLUDE_DIR is not defined. Please set it before continuing.")
 endif()
-
+if(NOT DEFINED BOOST_LIB_DIR)
+    message(FATAL_ERROR "BOOST_LIB_DIR is not defined. Please set it before continuing.")
+endif()
 
 
 
@@ -116,8 +129,7 @@ link_directories(${AR_PXR_LIB_DIR})
 # Python
 link_directories(${AR_PYTHON_LIB_DIR})
 
-### Targets ###
-## Maintained in this repo
+# Resolver Code
 add_subdirectory("src/AyonUsdResolver")
 
 

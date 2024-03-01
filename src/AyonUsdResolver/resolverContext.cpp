@@ -54,6 +54,10 @@ AyonUsdResolverContext::AyonUsdResolverContext() {
 
 AyonUsdResolverContext::AyonUsdResolverContext(const AyonUsdResolverContext &ctx) = default;
 
+AyonUsdResolverContext::~AyonUsdResolverContext() {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::~ResolverContext() - Destructed Context \n");
+}
+
 bool
 AyonUsdResolverContext::operator<(const AyonUsdResolverContext &ctx) const {
     return true;

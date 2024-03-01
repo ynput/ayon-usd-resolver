@@ -48,11 +48,15 @@ fi
 #------------------- Houdini Config ------------------------
 HOU_VER=20.0.590 # Set the houdini version // needs to be the same as the hfs foulder version in your install
 
+#19.0.720
 #19.5.805
+#19.5.805
+#19.5.900
 #20.0.590
+#20.0.630
 
 #export INSTALLNAME="LinuxPy310Houdini20"
-export COMPILEPLUGIN="LinuxPy310Houdini20"
+export COMPILEPLUGIN="HouLinux/LinuxPy310Houdini20"
 
 #houdini
 

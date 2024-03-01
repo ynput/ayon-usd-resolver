@@ -121,8 +121,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         return ArResolvedPath();
     }
 
-    // we also cache non ayon paths for performance this will check the non ayon paths
-    // TODO make it so that this calls the non ayon cache function so that ayon cache isnt searched
+    // we also cache non ayon paths for performance this will check the non ayon path
     const AyonUsdResolverContext* pt = this->_GetCurrentContextPtr();
     if (pt) {
         ArResolvedPath path;
@@ -156,7 +155,7 @@ AyonUsdResolver::_CreateDefaultContextForAsset(const std::string &assetPath) con
 
 bool
 AyonUsdResolver::_IsContextDependentPath(const std::string &assetPath) const {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_IsContextDependentPath()\n");
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_IsContextDependentPath()\n");
     return _IsNotFilePath(assetPath);
 }
 
@@ -196,6 +195,7 @@ AyonUsdResolver::_OpenAssetForWrite(const ArResolvedPath &resolvedPath, WriteMod
 
 const AyonUsdResolverContext*
 AyonUsdResolver::_GetCurrentContextPtr() const {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_GetCurrentContextPtr \n");
     return _GetCurrentContextObject<AyonUsdResolverContext>();
 }
 
