@@ -1,1 +1,0 @@
-usdresolve yon://tested_path > resolved.txt 2> log.txt

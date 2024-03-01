@@ -1,116 +1,131 @@
-# AYON USD Resolver
-The AYON USD Resolver is a [Pixar's USD](https://openusd.org) [ArResolver URI Resolver Plugin](https://openusd.org/release/api/ar_page_front.html#ar_uri_resolvers) that resolves URIs with the schema `ayon://` found in a USD file into actual filepaths.
+# [AYON](https://ynput.io/ayon/) USD Resolver  
+The [AYON](https://ynput.io/ayon/) USD Resolver is a [Pixar's USD](https://openusd.org) [ArResolver Usd Resolver Plugin](https://openusd.org/release/api/ar_page_front.html#ar_uri_resolvers)  
+that resolves URIs with the schema `ayon://` found in a USD file into local file paths.   
+The resolver implements local caching and resolves the [AYON](https://ynput.io/ayon/) compatible entity URIs against the AYON-Server using the [AyonCppApi](https://github.com/ynput/ayon-cpp-api/).   
 
-The plugins relies on a [Ayon instance running](https://github.com/ynput/ayon-docker), which will provide the file path of the URI via the `/api/usd` endpoint, at a high level it works as portrayed below:
+> [!IMPORTANT]  
+> This repository is a _development_ repository and uses Git Submodules. Make sure to use the correct `git clone` commands accordingly.  
 
-```
- ┌──────────────────────────────┐
- │                              │
- │ Open USD file.               │
- │                              │
- │            │                 │
- │            ▼                 │
- │                              │
- │ USD's ArResolver finds       │
- │ `ayon://` URI.               │
- │                              │
- │            │                 │
- │            ▼                 │
- │                              │
- │ AYON USD Resolver queries    │
- │ the AYON Instance `/api/usd` │
- │ with the URI and receives a  │
- │ filepath.                    │
- │                              │
- │            │                 │
- │            ▼                 │
- │                              │
- │ USD replaces URI with actual │
- │ the actual file path.        │
- │                              │
- └──────────────────────────────┘
-```
+> [!NOTE]  
+> Building and testing are currently done against Houdini 19 and Houdini 20. Other packages will follow shortly.
 
-## Usage Instructions
-To Register the plugin you can either:
- * Set the environment variable `PXR_PLUGINPATH_NAME` to the path to `pluginInfo.json`.
- * Copy both `pluginInfo.json` and `libAYON_AssetResolverPlugin(.so|.dll)` into the `/plugin/usd` subfolder in the USD install.
 
-## Building Instructions
-In order to build this project you'll need:
- * A C/C++ compiler.
- * [Cmake](https://cmake.org/) minimum version 3.13.0, tested 3.25.1 on Windows and 3.25.2 on Ubuntu 22.04.1 LTS.
- * The USD binaries, **with an environment variable `USD` that points to these** to get USD you can:
-    - Build it from source: https://github.com/PixarAnimationStudios/USD/blob/release/BUILDING.md
-    - Download NVIDIA's pre-built binaries: https://developer.nvidia.com/usd#bin
- * [Boost](https://boost.org/) which is normally vendored in USD.
- * [Python](https://python.org/) with the Development headers.
+## Required:
+- C++ Compiler
+- Cmake
+- GitHub public key setup (this is because the submodules are linked via git@)
+- Houdini Install
 
-From the top level of the project do:
- ```bash
- cmake build
- make -C build
- ```
+## Tested Platforms:
+- Alma Linux 9
+- Windows 10
 
-If the build fails at finding the `pyconfig.h` file, you can specify the path of the Python headers with:
- ```bash
- CPLUS_INCLUDE_PATH=${CPLUS_INCLUDE_PATH}:<path-to-the-python-install>/include/pythonX.Y make -C build
- ```
+## Prebuild / Self Compiled  
 
-Upon completion, the plugin files will be found int `build/src/`:
- * `pluginInfo.json`.
- * `libAYON_AssetResolverPlugin(.so|.dll)` (Depending on the platform you are building).
+### Self Compiled:
+1. Download the repo and its submodule:  
+    ```
+    git clone --recurse-submodules git@github.com:ynput/ayon-usd-resolver.git
+    git submodule update --init --recursive
+    ```
+   
+### Windows:
+- Set the Houdini install directory inside the `build.bat` file.
+- Run `build.bat`.
+- Now your resolver is compiled.  
+- The `Resolvers`  folder will now contain the `ayonUsdResolver` folder (this is the compiled resolver).   
+#### For testing  
+- There is a `launchHouWithResolver.bat`; point the last command to your Houdini install directory and execute the script inside a shell. This will set up the environment variables needed for the Resolver and then start Houdini.  
+- Optional: In the `launchHouWithResolver.bat`, you have the option to disable `TF_DEBUG` by commenting out the line.  
 
-## Testing Instructions
-In order to test this plugin you got to options:
- A) Spin up an AYON instance (or use an existing one) where you have published assets with disk representations
- B) Use the provided `mock_server.py` - Which you can start with `python mock_server.py`
+### Linux:
+- Set the Houdini install directory inside the `build.sh` file.
+- Run `build.sh Clean`.
+- Now your resolver is compiled.   
+- The `Resolvers` folder will now contain the `ayonUsdResolver` folder (this is the compiled resolver). (Ignore all folders except `ayonUsdResolver`, they are not important to you).   
+#### For testing
+- The `Resolvers` folder will now contain the `ayonUsdResolver` folder (this is the compiled resolver).  
+- There is a `launchHouWithResolver.sh`, point the last command to your Houdini install directory and execute the script inside a shell. This will set up the environment variables needed for the Resolver and then start Houdini.  
+
+## How to get the resolver working with Houdini and [AYON](https://ynput.io/ayon/)
+### General. 
+- tThe Resolver needs a few Env variables to work, namely:  
+  USD_ASSET_RESOLVER
+  	- This variable tells Usd what resolver to use and where to find it (this will not overwrite the default resolver as a fallback).  
+  TF_DEBUG
+	- This variable allows you to choose what Debug messages will be printed.
+ 		- In the CPP files, you might find TF_DEBUG().Msg();  and one of the two Enum Values AYONUSDRESOLVER_RESOLVER or AYONUSDRESOLVER_RESOLVER_CONTEXT these allow you to select what debug messages will be printed.
+   		- If you want the resolver to be silent, then you can just leave this value empty. It's best practice to keep it in your env variable setup just in case.   
+  LD_LIBRARY_PATH
+	- it describes where the C++ dynamic library files can be found for the resolver. 
+  PXR_PLUGINPATH_NAME
+	- This is also a variable for Usd, and it might look like you're supposed to place the AyonUsdResolver name in here, but you're actually putting the path to the PluginInfo.json folder into this variable.  
+  PYTHONPATH
+	- This is yet again a path for Usd that allows you to access the Python wrapper functions from the resolver from inside Usd.
+
+  AYONLOGGERLOGLVL  
+  	- TThis Environment variable allows you to set the log level for the CppApi.  
+		- INFO,ERROR,WARN,CRITICAL,OFF
+  	  
+  AYONLOGGERFILELOGGING  
+  	- This Environment variable allows you to enable or disable file logging in CppApi.  
+		- OFF,ON
+  	  
+  AYONLOGGERFILEPOS  
+  	-  This Environment variable allows you to set a file path for the CppApi logging.  
+		- /path/to or relPath  
  
-In any case, you should specify the environment variable `AYON_SERVER_URL` which the plugin will read to know ther to do the REST call.
+ ### Inside Ayon, you can use the Environment Field of your software version to define what resolver you want to use. Here is an example of how that might look:
+ here is an excample how that might look 
+ ```
+{
+"USD_ASSET_RESOLVER":"/path/to/ayon-usd-resolver/dist",
+"TF_DEBUG":"",
+"LD_LIBRARY_PATH":"/path/to/ayon-usd-resolver/dist/ayonUsdResolver/lib:$LD_LIBRARY_PATH",
+"PXR_PLUGINPATH_NAME":"/path/to/ayon-usd-resolver/dist/ayonUsdResolver/resources:$PXR_PLUGINPATH_NAME",
+"PYTHONPATH":["{PYTHONPATH}","/path/to/ayon-usd-resolver/dist/ayonUsdResolver/lib/python"],
+"AYONLOGGERLOGLVL":"WARN",
+"AYONLOGGERFILELOGGING":"ON",
+"AYONLOGGERFILEPOS":"LoggingFiles"
+}
+```
 
-Then you can do `usdresolve ayon://foo/bar/bar_010_0010?subset=model?version=v017` this is a hardcoded URI in the `mock_server.py` if you are using a live instance, you can get an asset URI by clicking the "copy" icon at the top bar in the AYON website, when viewing an asset.
+## Resolver Behavior:
 
-## The CMake build explained
-This plugin communicates with the AYON REST API through [Boost.Beast](https://github.com/boostorg/beast) included in `Boost` and is inspired by the following commit <https://github.com/PixarAnimationStudios/USD/commit/f482550ecc87d5b7df7dc672af6206ac4e97e55a> in official [**USD**](https://github.com/PixarAnimationStudios/USD) repository.
+When a USD file is opened:  
+- Resolver Context is Created.
+- Resolver Context creates ResolverContextCache.
+    - ResolverContextCache will be linked to Resolver Context via a shared pointer. This allows USD to have one Cache on multiple resolvers. Also, if you want to explicitly construct a resolver from another resolver, you can carry the cache with you.
+- USD [AssetIdentifier](https://openusd.org/release/glossary.html#usdglossary-assetinfo) is found.
+- `_Resolve()` gets called with the data between the [@](https://openusd.org/release/glossary.html#usdglossary-asset) symbols.
+- `_Resolve()` checks if the path is an AYON URI path.
+    - Yes?: Then we get the current context (because in this resolver the resolver context interacts with the [AyonCppApi](https://github.com/ynput/ayon-cpp-api/) and not the Resolver).  
+        - We ask the ResolverContext to return the path to us and the ResolverContext calls the `getAsset()` function in the cache.
+        - The ResolverContextCache will then first check the PreCache and then the Responsible cache. If the ResolverContextCache found the asset, it will be returned as a struct. If the ResolverContextCache did not find an asset, it will call the AyonCppApi and request the asset information from the server.
+    - No?: Then we check if the AssetIdentifier was already registered in the CommonCache and if so, we will return the cached entry. If not, we will simply resolve the path against the operating system file system the same way that USD Default Resolver Does it.
 
-There are two `CMakeLists.txt` files:
+## Asset Identifier / Behavior:
 
-At the project root:
- 1) Set up project name and C++ version and print debugging info.
- 2) Set up CMAKE flags based on platform (`/Zc:inline-` and `/DHAVE_SNPRINTF` when using `msvc`).
- 3) Find `Boost` and `Python` installs.
- 4) Set `USD` related variables, this relies on a `USD` environment variable being set: `USD_GENSCHEMA`, `USD_INCLUDE_DIR` and `USD_LIBRARY_DIR` used in the next `CMakeLists/txt`.
- 5) Add the `src` sub-directory.
+The AssetIdentifier or AssetPath is always used by the resolver to convert an AYON path to a path on disk. The resolver needs some information in the path to figure out what asset you want.
+1. `ayon:` is used in the `_resolve()`  function to know if your asset is an AYON asset or not (this is done via a string view comparison).
+2. `//{ProjectName}/{path/to/ayon/folder}?product={FileName}` This is a classic AYON path that defines what Ayon folder you want, e.g., sequences/sh010, assets/characters/bob, etc.
+3. `version=latest` version has multiple options:
+    - `latest`: Will tell the resolver to use the latest version no matter what.
+    - `hero`: Will tell the resolver to find the pinned hero version (you should know that you have the option to set up your AYON server without hero versions, in this case, the resolver will not be able to find your product version).
+    - `v001`  (Or whatever you put into your template): Will allow you to use a specific version of the product.
+4. `representation=usd` this part of the path is very important as it defines the AYON representation the resolver will search for. This usually corresponds to the file extension, but it is not a rule.
 
-Inside the `src` directory:
- 1) Create shared library (**.dll** in Windows, **.so** in Unix/Linux).
- 2) Settings of **linking paths** where **to search libraries** to link in.
- 3) **Linking to the USD libraries**: `usd/ar`, `usd/arch`, `usd/sdf`, `usd/tf`, `usd/js`.
- 4) **Linking Python library**, wrapped in condition **for MSVC only**.
- 5) **Including external directories** (for Python, USD and Boost) to include for compiler.
- 6) **Including internal source files** of plugin.
- 7) **Passing exported name** of library **to plugInfo.json**.
- 8) **Installation instructions** for library and plugInfo.json.
-
-
-## What does the AYON USD Resolver exactly does
-
-All the actual code is found in the `src` sub-directory:
- * `AYON_AssetResolver(.h/.cpp)` - This class **implements** methods from USD class `PXR_NS::ArResolver`.
- * `AYON_AssetResolveResult(.h/.cpp)` - This class holds information about **resolved path**, **error message** and **boolean** information if **path was resolved**.
- * `AYON_AssetResolvingProvider.h` - This class has only one pure virtual method virtual `AYON_AssetResolveResult Resolve(const std::string& AssetPath)`. This method is used as glue for future implementations of resolvers (another REST provider based on differrent logic than Boost.Beast, another type of provider, eg. direct access to database, etc.)
- * `AYON_AssetResolveResult(.h/.cpp)` - This class is written logic for communication with REST endpoint.
- * `AYON_Logging(.h/.cpp)` - In these files are declared/defined `AYON_LogUtils` class and macros for logging, **Logging** is flushed to `std::cerr stream`, so do not be startled by console output, where is flushed result output for calling and logs in one pile. To log exception call `AYON_LOG_EXCEPTION`, to log information call `AYON_LOG_INFO`.
- * `plugInfo.json` - Plugin Plugin handles schema `ayon://`. Variable `@PLUG_INFO_LIBRARY_PATH@` is replaced by output library name (`.dll` on Windows, `.so` on Unix), value is created in CMakeLists.txt (in subfolder src). 
+All together you will get an asset path like this. This asset path can be used inside of USD and will be resolved by the asset Resolver.
+`ayon://{ProjectName}/{path/to/ayon/folder}?product={FileName}&version=latest&representation=usd`
 
 
-## Tested environments
-- Windows 10, Visual Studio Community 2019, USD 0.22.11, CMake 3.25.1
-- Ubuntu 22.04.1 LTS, USD 0.23.02, CMake 3.25.2
-- Rocky Linux 8, USD 23.05, CMake 3.26.3
+## Good To Know
 
-## TODO
-* Read the `AYON_SERVER_URL` and `AYON_API_KEY` environment variables for the REST API Authentication.
-* Remove the `node_test_server` and mock the REST API.
-* Implement contexts and anchors (requirements: mini research + testing file).
 
+1.
+There is a DoxyGen file in the root of this repository. 
+If you have Doxygen installed, you can simply generate the code documentation on your local machine. 
+It might give a better overview of the functions and what they are supposed to do.
+2.
+There is currently no option to disable or control the log output of the AyonCppApi (this will be implemented soon).
+- The AyonCppApi will create a `LogFile.json` in the work root directory. Usually where the work file of Houdini is located (if you set the work dir manually then it's not there).
