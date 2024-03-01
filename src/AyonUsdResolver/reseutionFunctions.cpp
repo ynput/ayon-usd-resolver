@@ -27,25 +27,12 @@ bool
 _IsFileRelativePath(const std::string &path) {
     return path.find("./") == 0 || path.find("../") == 0;
 }
-// TODO the next 2 functions can be one function with an option to start at end or begin
 bool
 _IsAyonPath(const std::string &assetPath, const std::string_view &uriIdent, const uint8_t &uriIdentSize) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_IsAyonPath (%s) \n", assetPath.c_str());
     std::string_view ayonIdent(assetPath.data(), uriIdentSize);
 
     if (uriIdent == ayonIdent) {
-        return true;
-    }
-    return false;
-}
-
-bool
-_IsPinningFile(const std::string &assetPath) {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_IsAyonPath (%s) \n", assetPath.c_str());
-    std::string_view ayonPinningFileExt(".pin");
-    std::string_view fileExtention(assetPath.data() + std::max<int>(0, assetPath.size() - 4),
-                                   std::min<int>(4, assetPath.size()));
-    if (ayonPinningFileExt == fileExtention) {
         return true;
     }
     return false;

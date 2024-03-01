@@ -52,7 +52,8 @@ AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolve
         return assetPath;
     }
 
-    if (_IsAyonPath(assetPath, Config::ayonUriIdent, Config::ayonUriIdentSize)) {
+    if (_IsAyonPath(assetPath, Config::ayonUriIdent, Config::ayonUriIdentSize)
+        || _IsAyonPath(assetPath, Config::ayonEntetyUriIdent, Config::ayonEntetyUriIdentSize)) {
         return assetPath;
     }
     if (!anchorAssetPath) {
@@ -98,7 +99,8 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         return ArResolvedPath(assetPath);
     }
 
-    if (_IsAyonPath(assetPath, Config::ayonUriIdent, Config::ayonUriIdentSize)) {
+    if (_IsAyonPath(assetPath, Config::ayonUriIdent, Config::ayonUriIdentSize)
+        || _IsAyonPath(assetPath, Config::ayonEntetyUriIdent, Config::ayonEntetyUriIdentSize)) {
         const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
         for (const AyonUsdResolverContext* ctx: contexts) {
             if (ctx) {
