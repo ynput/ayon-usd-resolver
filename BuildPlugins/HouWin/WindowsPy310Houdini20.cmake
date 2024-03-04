@@ -19,8 +19,6 @@ if (NOT DEFINED ENV{HFS})
 endif()
 
 set(AR_HOUDINI_LIB_DIR ${AR_HOUDINI_ROOT}/custom/houdini/dsolib)
-
-
 set(AR_HOUDINI_INCLUDE_DIR ${AR_HOUDINI_ROOT}/toolkit/include)
 
 set(AR_PXR_LIB_DIR ${AR_HOUDINI_ROOT}/custom/houdini/dsolib)
@@ -30,8 +28,6 @@ set(AR_PXR_INCLUDE_DIR ${AR_HOUDINI_INCLUDE_DIR})
 # setting up python 
 set(AR_PYTHON_LIB_NUMBER python310)
 set(AR_PYTHON_LIB_DIR ${AR_HOUDINI_ROOT}/${AR_PYTHON_LIB_NUMBER}/libs)
-
-
 set(AR_PYTHON_INCLUDE_DIR ${AR_HOUDINI_INCLUDE_DIR}/python3.10)
 #set(AR_PYTHON_LIB_SITEPACKAGES ${AR_PYTHON_LIB_DIR}/${AR_PYTHON_LIB}/site-packages)
 
@@ -41,7 +37,6 @@ add_compile_definitions(HBOOST_ALL_NO_LIB)
 set(AR_BOOST_NAMESPACE hboost) # overwriting boost name space because Houdini renamed it to hboost internally
 set(AR_BOOST_INCLUDE_DIR ${AR_HOUDINI_INCLUDE_DIR}/${AR_BOOST_NAMESPACE})
 set(BOOST_LIB_DIR ${AR_HOUDINI_INCLUDE_DIR})
-
 
 
 # Houdini include dir (might shadow some other library but that's what we want)
