@@ -1,39 +1,25 @@
 import random
+import hou
 from pxr import Ar
-
-print("Resolver General Test")
-
-
-
-num_random_numbers = 5
-
-Ar.SetPreferredResolver("AyonUsdResolver")
-resolver = Ar.GetResolver()
-
-
-
-
-
-# Generate and print random numbers
-for i in range(num_random_numbers):
-	rpath = f"ayon://Usd_Base/trees?product=usdtree_{i}&version=*&representation=usd"
-	print("Requested Path:")
-	print(rpath)
-	
-	resolved_path = resolver.Resolve(rpath)
-	print("Resolved Path:")
-	print(resolved_path)
-	
-	
-	
-import random
-from pxr import Ar
+resolver = Ar.GetResolver() # under windows its nesecery to trigger usd initialiastion in houdini before you import AyonUsdResolver
 from usdAssetResolver import AyonUsdResolver
 
-rpath = f"ayon://Usd_Base/trees?product=usdtree_4&version=*&representation=usd"
 
-Ar.SetPreferredResolver("AyonUsdResolver")
-resolver = Ar.GetResolver()
+rpath = f"ayon://Usd_Base/UsdTesting?product=usdUsdTest_214&version=latest&representation=usd"
+print("Requested Path:")
+print(rpath)
 
-ctx = AyonUsdResolver.ResolverContext()
+resolved_path = resolver.Resolve(rpath)
+print("Resolved Path:")
+print(resolved_path)
 
+resolved_path = resolver.Resolve(rpath)
+print("Resolved Path:")
+print(resolved_path)
+
+context = AyonUsdResolver.ResolverContext()
+print("Resolving after Deleting Cache Entry: ")
+context.deletFromCache(rpath)
+resolved_path = resolver.Resolve(rpath)
+print("Resolved Path:")
+print(resolved_path)

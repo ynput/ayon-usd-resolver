@@ -3,20 +3,20 @@ setlocal
 
 REM Get the directory of the script
 for %%I in ("%~dp0.") do set "SCRIPT_DIR=%%~fI"
-set "SCRIPT_DIR=%SCRIPT_DIR%\dist"
+set "SCRIPT_DIR=%SCRIPT_DIR%\Resolvers\HouWin\WindowsPy310Houdini20"
 
 REM Set Usd/Python Variables for Resolver Load
 set "USD_ASSET_RESOLVER=%SCRIPT_DIR%"
-set "TF_DEBUG=AYONUSDRESOLVER_RESOLVER"
+set "TF_DEBUG=AYONUSDRESOLVER_RESOLVER_CONTEXT"
 set "LD_LIBRARY_PATH=%SCRIPT_DIR%\ayonUsdResolver\lib;%LD_LIBRARY_PATH%"
 set "PXR_PLUGINPATH_NAME=%SCRIPT_DIR%\ayonUsdResolver\resources;%PXR_PLUGINPATH_NAME%"
 set "PYTHONPATH=%SCRIPT_DIR%\ayonUsdResolver\lib\python;%PYTHONPATH%"
 
 
 REM use those lines to set the right env varibles if your not using ayon launcher
-REM set "AYON_SITE_ID=groovy-amiable-reindeer"
-REM set "AYON_API_KEY=f2edece31ee8376292c4d545d711ca36cf6a7f47485f565bf356512b7963bec1"
-REM set "AYON_SERVER_URL=http://192.168.178.42:5000"
+set "AYON_SITE_ID=groovy-amiable-reindeer"
+set "AYON_API_KEY=7d2b717473e48a8b219103096472dc07c1103c575cb1dd24eccbece73e87c721"
+set "AYON_SERVER_URL=http://192.168.178.42:5000"
 
 REM Print environment variables
 echo USD_ASSET_RESOLVER=%USD_ASSET_RESOLVER%

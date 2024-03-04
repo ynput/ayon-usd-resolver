@@ -52,6 +52,18 @@ endif()
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
 
+
+
+if(WIN32)
+  set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api/ext/opensslW")
+else()
+  set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api/ext/opensslL")
+endif()
+
+
+include_directories(${OPENSSL_ROOT_DIR}/include)
+find_package(OpenSSL REQUIRED)
+
 # setting default boost namespace 
 set(AR_BOOST_NAMESPACE boost)
 add_compile_definitions(BOOST_ALL_NO_LIB)
@@ -131,8 +143,4 @@ link_directories(${AR_PYTHON_LIB_DIR})
 
 # Resolver Code
 add_subdirectory("src/AyonUsdResolver")
-
-
-
-# ------------------------ Install
 
