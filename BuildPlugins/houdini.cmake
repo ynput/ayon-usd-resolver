@@ -8,6 +8,8 @@ if (WIN32)
 else()
     set(AR_HOUDINI_LIB_DIR ${AR_HOUDINI_ROOT}/dsolib)
 endif()
+
+
 set(AR_HOUDINI_INCLUDE_DIR ${AR_HOUDINI_ROOT}/toolkit/include)
 
 # setting up usd lib dirs so that main cmakeLists can pick it up 
