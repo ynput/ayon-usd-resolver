@@ -39,11 +39,11 @@ The resolver implements local caching and resolves the [AYON](https://ynput.io/a
 
 # -------------------------- Prebuild / Self Compiled  --------------------------
 - We will deliver some prebuild versoins off the resolver in the future.
-- but it's important to know that those versions will be the prebuilt binaries that our tests created, so you might not find the software version or the OS version you want.  
-- It 's also to be expected that resolver prebuilds are behind new software releases.  
+- but it's essential to know that those versions will be the prebuilt binaries that our tests created, so you might not find the software or OS version you want.  
+- It's also to be expected that resolver prebuilds are behind new software releases.  
 
 # ---------------------------------- Prebuild ----------------------------------
-- Prebuilds arent available as of right now.
+- Prebuilds aren't available as of right now.
   
 # ------------------------------- Self Compiled -------------------------------
 
@@ -52,29 +52,29 @@ The resolver implements local caching and resolves the [AYON](https://ynput.io/a
 2. Currently, building the Resolver centres around a build script .sh(Linux) .bat(windows). The Linux build script is more elaborate than the Windows script because resolver development is currently done on Linux, so the build.sh carries extra functionality around. 
 
 ### Linux Build Steps:
-- First you will have to set a few variables in the `build.sh` script. (they are all greyed out)
+- First, you must set a few variables in the `build.sh` script. (they are all greyed out)
 #### Varlibes:
 - `HOU_VER` = Set this to the number off your Houdini version.
-- `COMPILEPLUGIN` = In the Reop-root, you find a folder called `BuildPlugins` in this folder, there are .cmake scripts that we call BuildPlugins. You will have to set this variable to the path + name off this build plugin as a relative path
-starting from the `BuildPlugins` e.g `HouLinux/LinuxPy310Houdini20`
+- `COMPILEPLUGIN` = In the Reop-root, you find a folder called `BuildPlugins`. In this folder, there are .cmake scripts that we call BuildPlugins. You will have to set this variable to the path + name off this build plugin as a relative path
+starting from the `BuildPlugins` e.g. `HouLinux/LinuxPy310Houdini20`
 - `INSTALLNAME`{Optonal} = This is an optional variable that allows you to overwrite how the folder for the resolver will be named. 
 - `HOUDINI_INSTALL_DIR`{Optonal} = this is an overwrite for the instal directory off Houdini. If you don't set this, the script will assume that you installed Houdini in `opt/` with the base name of `hfs`
 
 #### Next Steps {in the Terminal}:
 - Run `build.sh Clean` / `Clean` = Will delete and recreate the build and Resolvers folder for a clean build setup. 
-- Now your resolver is compiled and will be located under Resolvers +BuildPluing Path. e.g `Resolvers/HouLinux/LinuxPy310Houdini20`
+- Your resolver is compiled and will be under Resolvers +BuildPluing Path. e.g. `Resolvers/HouLinux/LinuxPy310Houdini20`
 
 
-### Windows Build Setps:
+### Windows Build Steps:
 - First, you will have to set a few variables in the `build.bat` script.
 #### Varlibes:
 - `HFS` = this will be the Houdini install directory e.g `C:\Program Files\Side Effects Software\Houdini 20.0.590`
 - `COMPILEPLUGIN` = In the Reop-root, you find a folder called `BuildPlugins`. In this folder, there are .cmake scripts that we call BuildPlugins. You will have to set this variable to the path + name off this build plugin as a relative path
-starting from the `BuildPlugins` e.g `HouWin/WindowsPy310Houdini20`
+starting from the `BuildPlugins`, e.g. `HouWin/WindowsPy310Houdini20`
 
 #### Next Steps {in the Terminal}:
 - Run `build.bat`.
-- Now your resolver is compiled and will be located under Resolvers +BuildPluing Path. e.g `Resolvers/HouLinux/LinuxPy310Houdini20`
+- Your resolver is compiled and will be under Resolvers +BuildPluing Path. e.g. `Resolvers/HouLinux/LinuxPy310Houdini20`
 
 
 ## How to get the resolver working with Houdini and [AYON](https://ynput.io/ayon/)
@@ -87,7 +87,7 @@ USD_ASSET_RESOLVER:
 TF_DEBUG:  
 - This variable allows you to choose what Debug messages will be printed.  
  	- In the CPP files, you might find TF_DEBUG().Msg();  and one of the two Enum Values AYONUSDRESOLVER_RESOLVER or AYONUSDRESOLVER_RESOLVER_CONTEXT these allow you to select what debug messages will be printed.  
-   	- If you want the resolver to be silent, then you can just leave this value empty. It's best practice to keep it in your env variable setup, just in case.   
+   	- If you want the resolver to be silent, then you can leave this value empty. It's best practice to keep it in your env variable setup, just in case.   
 
 LD_LIBRARY_PATH:  
 - it describes where the C++ dynamic library files can be found for the resolver. 
@@ -96,7 +96,7 @@ PXR_PLUGINPATH_NAME:
 - This is also a variable for Usd, and it might look like you're supposed to place the AyonUsdResolver name in here, but you're actually putting the path to the PluginInfo.json folder into this variable.  
 
 PYTHONPATH:
-- This is yet again a path for Usd that allows you to access the Python wrapper functions from the resolver from inside Usd.
+- This is again a path for Usd that allows you to access the Python wrapper functions from the resolver inside Usd.
 
 AYONLOGGERLOGLVL:  
 - This Environment variable allows you to set the log level for the CppApi.  
@@ -142,19 +142,19 @@ USD [AssetIdentifier](https://openusd.org/release/glossary.html#usdglossary-asse
     - Yes?: Then we get the current context (because in this resolver, the resolver context interacts with the [AyonCppApi](https://github.com/ynput/ayon-cpp-api/) and not the Resolver).  
         - We ask the ResolverContext to return the path to us, and the ResolverContext calls the `getAsset()` function in the `ResolverContextCache`.
         - The `ResolverContextCache` will then first check the PreCache and then the Responsible cache. If the ResolverContextCache finds the asset, it will be returned as a struct. If the ResolverContextCache does not find an asset, it will call the AyonCppApi and request the asset information from the server.
-    - No?: Then we check if the AssetIdentifier was already registered in the CommonCache, and if so, we will return the cached entry. If not, we will simply resolve the path against the operating system file system the same way that USD Default Resolver Does it.
+    - No?: Then we check if the AssetIdentifier was already registered in the CommonCache, and if so, we will return the cached entry. If not, we will resolve the path against the operating system file system the same way that USD Default Resolver Does it.
 
 
 ## Asset Identifier / Behavior:
 
 The AssetIdentifier or AssetPath is always used by the resolver to convert an AYON path to a path on disk. The resolver needs some information in the path to figure out what asset you want.
-1. `ayon:` is used in the `_resolve()`  function to know if your asset is an AYON asset or not (this is done via a string view comparison).
+1. `ayon:` is used in the `_resolve()`  function to know whether your asset is an AYON asset or not (done via a string view comparison).
 2. `//{ProjectName}/{path/to/ayon/folder}?product={FileName}` This is a classic AYON path that defines what Ayon folder you want, e.g., sequences/sh010, assets/characters/bob, etc.
 3. `version=latest` version has multiple options:
     - `latest`: Will tell the resolver to use the latest version no matter what.
-    - `hero`: Will tell the resolver to find the pinned hero version (you should know that you have the option to set up your AYON server without hero versions; in this case, the resolver will not be able to find your product version).
+    - `hero`: This will tell the resolver to find the pinned hero version (you should know that you have the option to set up your AYON server without hero versions; in this case, the resolver will not be able to find your product version).
     - `v001`  (Or whatever you put into your template): Will allow you to use a specific version of the product.
-4. `representation=usd` This part of the path is very important; it sets the file "extension" that the resolver will search for. you can use everything that you can upload to the server.
+4. `representation=usd` This part of the path is very important; it sets the file "extension" that the resolver will search for. You can use everything that you can upload to the server.
 
 All together, you will get an asset path like this. This asset path can be used inside of USD and will be resolved by the asset Resolver.
 `ayon://{ProjectName}/{path/to/ayon/folder}?product={FileName}&version=latest&representation=usd`
