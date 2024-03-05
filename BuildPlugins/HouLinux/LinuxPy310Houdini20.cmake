@@ -1,6 +1,6 @@
 # LinuxPy310Houdini20
 
-#Varibles that need to be set by the plugin ( the env variables will be checked by the main cmakeLists script and an error will accrue if one ore more are missing )
+# Variables that need to be set by the plugin (the env variables will be checked by the main cmakeLists script and an error will accrue if one ore more are missing)
 #AR_PXR_INCLUDE_DIR
 #AR_PXR_LIB_DIR
 #AR_PYTHON_LIB_NUMBER
