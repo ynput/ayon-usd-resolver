@@ -45,7 +45,7 @@ class AyonUsdResolverContext {
         void dropCache();
 
         AR_AYONUSDRESOLVER_API
-        void deletFromCache(const std::string &key);
+        void deleteFromCache(const std::string &key);
 
         AR_AYONUSDRESOLVER_API
         void clearCache();

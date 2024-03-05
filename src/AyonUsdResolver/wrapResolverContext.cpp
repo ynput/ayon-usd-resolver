@@ -41,7 +41,7 @@ wrapResolverContext() {
              "mapping file path)")
 
         .def("dropCache", &This::dropCache, "dropts the cache ")
-        .def("deletFromCache", &This::deletFromCache, "delets from cache ")
+        .def("deleteFromCache", &This::deleteFromCache, "delets from cache ")
         .def("clearCache", &This::clearCache, "delets all chaced objects ");
 
     ArWrapResolverContextForPython<This>();

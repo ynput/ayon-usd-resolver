@@ -19,7 +19,7 @@ print(resolved_path)
 
 context = AyonUsdResolver.ResolverContext()
 print("Resolving after Deleting Cache Entry: ")
-context.deletFromCache(rpath)
+context.deleteFromCache(rpath)
 resolved_path = resolver.Resolve(rpath)
 print("Resolved Path:")
 print(resolved_path)

@@ -8,6 +8,7 @@
 #include "pxr/base/tf/debug.h"
 #include "pxr/usd/ar/resolvedPath.h"
 #include "reseutionFunctions.h"
+#include "config.h"
 
 #include "pxr/base/tf/fileUtils.h"
 #include "pxr/base/tf/pathUtils.h"
@@ -28,13 +29,16 @@ _IsFileRelativePath(const std::string &path) {
     return path.find("./") == 0 || path.find("../") == 0;
 }
 bool
-_IsAyonPath(const std::string &assetPath, const std::string_view &uriIdent, const uint8_t &uriIdentSize) {
+_IsAyonPath(const std::string &assetPath) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_IsAyonPath (%s) \n", assetPath.c_str());
-    std::string_view ayonIdent(assetPath.data(), uriIdentSize);
-
-    if (uriIdent == ayonIdent) {
-        return true;
+    Config::AyonUriConfigStruct config;
+    for (int i; i < config.ayonUriOptions.size(); i++) {
+        std::string_view assetPathTestPortion(assetPath.data(), config.ayonUriOptionsSize.at(i));
+        if (assetPathTestPortion == config.ayonUriOptions.at(i)) {
+            return true;
+        }
     }
+
     return false;
 }
 

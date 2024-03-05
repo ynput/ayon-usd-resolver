@@ -101,8 +101,8 @@ AyonUsdResolverContext::dropCache() {
 };
 
 void
-AyonUsdResolverContext::deletFromCache(const std::string &key) {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::deletIdentFromCache(%s) \n", key.c_str());
+AyonUsdResolverContext::deleteFromCache(const std::string &key) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::deleteFromCache(%s) \n", key.c_str());
     cache->removeCachedObject(key);
 };
 

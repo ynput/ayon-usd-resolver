@@ -15,7 +15,7 @@ bool _IsRelativePath(const std::string &path);
 
 bool _IsFileRelativePath(const std::string &path);
 
-bool _IsAyonPath(const std::string &assetPath, const std::string_view &uriIdent, const uint8_t &uriIdentSize);
+bool _IsAyonPath(const std::string &assetPath);
 
 bool _IsNotFilePath(const std::string &path);
 
