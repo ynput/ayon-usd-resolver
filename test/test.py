@@ -1,7 +1,7 @@
 import random
 import hou
 from pxr import Ar
-resolver = Ar.GetResolver() # under windows its nesecery to trigger usd initialiastion in houdini before you import AyonUsdResolver
+resolver = Ar.GetResolver()  # under windows it is necessary to trigger usd initialisation in Houdini before you import AyonUsdResolver
 from usdAssetResolver import AyonUsdResolver
 
 
