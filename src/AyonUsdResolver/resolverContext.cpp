@@ -22,7 +22,7 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-// TODO find a better way off makeing the cache Global, this is not optimal at all.
+// TODO find a better way to make the cache Global, this is not optimal at all.
 std::shared_ptr<resolverContextCache> GlobaleCahce = std::make_shared<resolverContextCache>();
 
 bool
