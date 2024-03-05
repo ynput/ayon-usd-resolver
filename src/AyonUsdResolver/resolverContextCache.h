@@ -98,7 +98,7 @@ class resolverContextCache {
         void removeCachedObject(const std::string &key, const cacheName &selectedCache);
 
         /**
-         * @brief this function clears the complate cache
+         * @brief this function clears the complete cache
          */
         void clearCache();
 
