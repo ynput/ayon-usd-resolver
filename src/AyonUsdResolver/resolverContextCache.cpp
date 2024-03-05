@@ -46,6 +46,10 @@ resolverContextCache::~resolverContextCache() {
 void
 resolverContextCache::printCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::printCache \n");
+
+    std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(PreCachesharedMutex);
+    std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(AyonCachesharedMutex);
+    std::unique_lock<std::shared_mutex> CommonCachesharedMutexLock(CommonCachesharedMutex);
     std::cout << "Printing out the Cache Entrys \n" << std::endl;
     std::cout << "PreCache size: " << PreCache->size() << "\n";
     for (const auto &item: *PreCache) {
@@ -60,12 +64,17 @@ resolverContextCache::printCache() {
         std::cout << item.first.c_str() << " // " << item.second.GetPathString().c_str() << "\n";
     }
     std::cout << "-----------------------------------------------------\n" << std::endl;
+    PreCachesharedMutex.unlock();
+    AyonCachesharedMutexLock.unlock();
+    CommonCachesharedMutex.unlock();
 };
 
 void
 resolverContextCache::insert(std::pair<std::string, pxr::ArResolvedPath> &&sourcePair) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::insert \n");
 
+    std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(PreCachesharedMutex);
+    std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(AyonCachesharedMutex);
     if (PreCacheFreeItemSlots < 1) {
         AyonCache->reserve(AyonCache->size() + PreCache->size());
         migratePreCacheIntoAyonCache();
@@ -83,20 +92,9 @@ void resolverContextCache::insert(std::vector<std::pair<std::string, pxr::ArReso
 void
 resolverContextCache::migratePreCacheIntoAyonCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::migratePreCacheIntoAyonCache \n");
+    std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(PreCachesharedMutex);
+    std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(AyonCachesharedMutex);
     AyonCache->insert(std::make_move_iterator(PreCache->begin()), std::make_move_iterator(PreCache->end()));
-};
-
-ArResolvedPath
-resolverContextCache::Find(const std::string &key) const {
-    auto hit = PreCache->find(key);
-    if (hit != PreCache->end()) {
-        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
-            .Msg("resolverContextCache::Find cache hit (key: %s // path: %s) \n", hit->first.c_str(),
-                 hit->second.GetPathString().c_str());
-        return hit->second;
-    }
-
-    return pxr::ArResolvedPath();
 };
 
 assetIdent
@@ -113,10 +111,11 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
     std::unordered_map<std::string, pxr::ArResolvedPath>::iterator hit;
 
     hit = PreCache->find(assetIdentifier);
-
     if (hit != PreCache->end()) {
+        std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(PreCachesharedMutex);
         asset.assetIdentifier = hit->first;
         asset.resolvedAssetPath = hit->second;
+        PreCachesharedMutexLock.unlock();
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("resolverContextCache::getAsset: PreCache Hit on (%s) with (%s) \n", asset.assetIdentifier.c_str(),
                  asset.resolvedAssetPath.GetPathString().c_str());
@@ -125,25 +124,35 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
     else {
         switch (selectedCache) {
             case AYONCACHE:
-                hit = AyonCache->find(assetIdentifier);
-                if (hit != AyonCache->end()) {
-                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
-                        .Msg("resolverContextCache::getAsset: AyonCache Hit on (%s) with (%s) \n",
-                             asset.assetIdentifier.c_str(), asset.resolvedAssetPath.GetPathString().c_str());
-                    asset.assetIdentifier = hit->first;
-                    asset.resolvedAssetPath = hit->second;
-                    return asset;
+                {
+                    std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(AyonCachesharedMutex);
+                    hit = AyonCache->find(assetIdentifier);
+                    if (hit != AyonCache->end()) {
+                        asset.assetIdentifier = hit->first;
+                        asset.resolvedAssetPath = hit->second;
+                        AyonCachesharedMutexLock.unlock();
+                        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                            .Msg("resolverContextCache::getAsset: AyonCache Hit on (%s) with (%s) \n",
+                                 asset.assetIdentifier.c_str(), asset.resolvedAssetPath.GetPathString().c_str());
+                        return asset;
+                    }
+                    break;
                 }
 
             case COMMONCACHE:
-                hit = CommonCache->find(assetIdentifier);
-                if (hit != CommonCache->end()) {
-                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
-                        .Msg("resolverContextCache::getAsset: CommonCache Hit on (%s) with (%s) \n",
-                             asset.assetIdentifier.c_str(), asset.resolvedAssetPath.GetPathString().c_str());
-                    asset.assetIdentifier = hit->first;
-                    asset.resolvedAssetPath = hit->second;
-                    return asset;
+                {
+                    std::unique_lock<std::shared_mutex> CommonCachesharedMutexLock(CommonCachesharedMutex);
+                    hit = CommonCache->find(assetIdentifier);
+                    if (hit != CommonCache->end()) {
+                        asset.assetIdentifier = hit->first;
+                        asset.resolvedAssetPath = hit->second;
+                        CommonCachesharedMutexLock.unlock();
+                        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                            .Msg("resolverContextCache::getAsset: CommonCache Hit on (%s) with (%s) \n",
+                                 asset.assetIdentifier.c_str(), asset.resolvedAssetPath.GetPathString().c_str());
+                        return asset;
+                    }
+                    break;
                 }
         }
     }
@@ -166,7 +175,9 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
         if (!asset.resolvedAssetPath.empty()) {
             asset.assetIdentifier = assetIdentifier;
 
+            std::unique_lock<std::shared_mutex> CommonCachesharedMutexLock(CommonCachesharedMutex);
             CommonCache->insert(std::make_pair(asset.assetIdentifier, asset.resolvedAssetPath));
+            CommonCachesharedMutexLock.unlock();
         }
     }
 
@@ -179,25 +190,31 @@ resolverContextCache::removeCachedObject(const std::string &key) {
 
     std::unordered_map<std::string, pxr::ArResolvedPath>::iterator hit;
 
+    std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(PreCachesharedMutex);
     hit = PreCache->find(key);
     if (hit != PreCache->end()) {
         PreCache->erase(hit);
+        PreCachesharedMutexLock.unlock();
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("resolverContextCache::removeCachedObject removed object from PreCache");
         return;
     }
 
+    std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(AyonCachesharedMutex);
     hit = AyonCache->find(key);
     if (hit != AyonCache->end()) {
         AyonCache->erase(hit);
+        AyonCachesharedMutexLock.unlock();
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("resolverContextCache::removeCachedObject removed object from AyonCache");
         return;
     }
 
+    std::unique_lock<std::shared_mutex> CommonCachesharedMutexLock(CommonCachesharedMutex);
     hit = CommonCache->find(key);
     if (hit != CommonCache->end()) {
         CommonCache->erase(hit);
+        CommonCachesharedMutexLock.unlock();
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("resolverContextCache::removeCachedObject removed object from CommonCache");
         return;
@@ -213,38 +230,43 @@ resolverContextCache::removeCachedObject(const std::string &key, const cacheName
 
     std::unordered_map<std::string, pxr::ArResolvedPath>::iterator hit;
 
+    std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(PreCachesharedMutex);
     hit = PreCache->find(key);
     if (hit != PreCache->end()) {
         PreCache->erase(hit);
+        PreCachesharedMutexLock.unlock();
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("resolverContextCache::removeCachedObject removed object from PreCache");
-        return;
-    }
 
-    if (hit != PreCache->end()) {
-        PreCache->erase(hit);
-        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
-            .Msg("resolverContextCache::removeCachedObject removed object from PreCache");
         return;
     }
     else {
         switch (selectedCache) {
             case AYONCACHE:
-                hit = AyonCache->find(key);
-                if (hit != AyonCache->end()) {
-                    PreCache->erase(hit);
-                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
-                        .Msg("resolverContextCache::removeCachedObject removed object from PreCache");
-                    return;
+                {
+                    std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(AyonCachesharedMutex);
+                    hit = AyonCache->find(key);
+                    if (hit != AyonCache->end()) {
+                        AyonCache->erase(hit);
+                        AyonCachesharedMutexLock.unlock();
+                        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                            .Msg("resolverContextCache::removeCachedObject removed object from AyonCache");
+                        return;
+                    }
+                    break;
                 }
-
             case COMMONCACHE:
-                hit = CommonCache->find(key);
-                if (hit != CommonCache->end()) {
-                    PreCache->erase(hit);
-                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
-                        .Msg("resolverContextCache::removeCachedObject removed object from PreCache");
-                    return;
+                {
+                    std::unique_lock<std::shared_mutex> CommonCachesharedMutexLock(CommonCachesharedMutex);
+                    hit = CommonCache->find(key);
+                    if (hit != CommonCache->end()) {
+                        CommonCache->erase(hit);
+                        CommonCachesharedMutexLock.unlock();
+                        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                            .Msg("resolverContextCache::removeCachedObject removed object from CommonCache");
+                        return;
+                    }
+                    break;
                 }
         }
     }
@@ -256,6 +278,10 @@ resolverContextCache::removeCachedObject(const std::string &key, const cacheName
 void
 resolverContextCache::clearCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::clearCache \n");
+
+    std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(PreCachesharedMutex);
+    std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(AyonCachesharedMutex);
+    std::unique_lock<std::shared_mutex> CommonCachesharedMutexLock(CommonCachesharedMutex);
     CommonCache->clear();
     AyonCache->clear();
     PreCache->clear();

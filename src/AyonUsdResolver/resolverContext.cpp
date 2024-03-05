@@ -89,12 +89,6 @@ AyonUsdResolverContext::ClearAndReinitialize() {
     this->Initialize();
 }
 
-ArResolvedPath
-AyonUsdResolverContext::cacheFind(const std::string &key) const {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::cacheFind \n");
-    return cache->Find(key);
-};
-
 void
 AyonUsdResolverContext::dropCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::dropCache() \n");

@@ -50,9 +50,6 @@ class AyonUsdResolverContext {
         AR_AYONUSDRESOLVER_API
         void clearCache();
 
-        AR_AYONUSDRESOLVER_API
-        pxr::ArResolvedPath cacheFind(const std::string &key) const;
-
         std::shared_ptr<resolverContextCache> getCachePtr() const;
 
     private:

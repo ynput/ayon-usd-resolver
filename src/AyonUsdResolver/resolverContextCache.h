@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -57,15 +59,6 @@ class resolverContextCache {
         void migratePreCacheIntoAyonCache();
 
         /**
-         * @brief this function returns the ArResolvedPath for the given assetIdentifier \n
-         * if the function is unable to find the assetIdentifier then it returns an empty ArResolvedPath \n
-         * this functon will use AyonApi to get a path from AyonServer if it cant be found in the local cache
-         *
-         * @param key
-         */
-        ArResolvedPath Find(const std::string &key) const;
-
-        /**
          * @brief returns a struct by first searching true the selected cacheName if no cache hit. then the function
          * will resolve the path against ayon if even that dosnt work it will return an empty path
          *
@@ -113,6 +106,9 @@ class resolverContextCache {
 
         std::unique_ptr<std::unordered_map<std::string, pxr::ArResolvedPath>> PreCache;
         size_t PreCacheFreeItemSlots;
+        std::shared_mutex AyonCachesharedMutex;
+        std::shared_mutex CommonCachesharedMutex;
+        std::shared_mutex PreCachesharedMutex;
 
         AyonApi ayon;
 };
