@@ -103,7 +103,7 @@ class resolverContextCache {
         void clearCache();
 
         /**
-         * @brief a simple function that prints out every object in the cache purly for debugging
+         * @brief a simple function that prints out every object in the cache purely for debugging
          */
         void printCache();
 
