@@ -1,0 +1,114 @@
+#pragma once
+
+#include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <mutex>
+#include <shared_mutex>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include "pxr/usd/ar/resolvedPath.h"
+#include "AyonCppApi.h"
+
+PXR_NAMESPACE_USING_DIRECTIVE
+
+struct assetIdent {
+        ArResolvedPath resolvedAssetPath;
+        std::string assetIdentifier;
+        bool empty();
+};
+
+enum cacheName { AYONCACHE, COMMONCACHE };
+
+/**
+ * @class resolverContextCache
+ * @brief this class handles everything related to asset caching \n
+ *
+ */
+class resolverContextCache {
+    public:
+        resolverContextCache();
+        resolverContextCache(const size_t &preCacheSize);
+        ~resolverContextCache();
+
+        /**
+         * @brief this function moves the pair into the precache by using the move operator it will also check if there
+         * is enought space in the precache and move the precache if needed
+         *
+         * @param sourcePair the data that you want to add to the cache as an std::pair
+         */
+        void insert(std::pair<std::string, pxr::ArResolvedPath> &&sourcePair);
+
+        /**
+         * @brief inserts a vector into the cache by using the move constructor
+         * if the vector is to big to fit into the preCache then the vector will be moved ito the ayon cache without
+         * touchgin the precache
+         *
+         * @param sourceVec the data you want to move into the cache
+         */
+        void insert(std::vector<std::pair<std::string, pxr::ArResolvedPath>> sourceVec);
+
+        /**
+         * @brief moves the precache into the AyonCache in order to free the precache \n
+         *
+         */
+        void migratePreCacheIntoAyonCache();
+
+        /**
+         * @brief returns a struct by first searching true the selected cacheName if no cache hit. then the function
+         * will resolve the path against ayon if even that dosnt work it will return an empty path
+         *
+         * @param assetIdentifier
+         * @return
+         */
+        assetIdent getAsset(const std::string &assetIdentifier, const cacheName &selectedCache, const bool &isAyonPath);
+
+        /**
+         * @brief this function sets up the cache from a pinning file
+         *
+         * @param pinningFilePath
+         */
+        void setCacheFromPinningFile(const std::string &pinningFilePath);
+
+        /**
+         * @brief this function allows the delation off an entry in the cache
+         *
+         * @param key the asset assetIdentifier / uri off the usd object.
+         */
+        void removeCachedObject(const std::string &key);
+
+        /**
+         * @brief this function allows the delation off an entry in a selected cache. the PreCache will allways we
+         * searched for the entry.
+         *
+         * @param key key the asset assetIdentifier / uri off the usd object.
+         * @param selectedCache enum that allows you to select the cache (cacheName enum)
+         */
+        void removeCachedObject(const std::string &key, const cacheName &selectedCache);
+
+        /**
+         * @brief this function clears the complete cache
+         */
+        void clearCache();
+
+        /**
+         * @brief a simple function that prints out every object in the cache purely for debugging
+         */
+        void printCache();
+
+    private:
+        std::unique_ptr<std::unordered_map<std::string, pxr::ArResolvedPath>> AyonCache;
+        std::unique_ptr<std::unordered_map<std::string, pxr::ArResolvedPath>> CommonCache;
+
+        std::unique_ptr<std::unordered_map<std::string, pxr::ArResolvedPath>> PreCache;
+        size_t PreCacheFreeItemSlots;
+        std::shared_mutex AyonCachesharedMutex;
+        std::shared_mutex CommonCachesharedMutex;
+        std::shared_mutex PreCachesharedMutex;
+
+        AyonApi ayon;
+};
