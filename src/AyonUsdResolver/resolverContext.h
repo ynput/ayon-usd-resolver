@@ -22,6 +22,8 @@ class AyonUsdResolverContext {
         AyonUsdResolverContext();
         AR_AYONUSDRESOLVER_API
         AyonUsdResolverContext(const AyonUsdResolverContext &ctx);
+        AR_AYONUSDRESOLVER_API
+        ~AyonUsdResolverContext();
 
         // Standard Ops
         AR_AYONUSDRESOLVER_API
@@ -43,12 +45,15 @@ class AyonUsdResolverContext {
         void dropCache();
 
         AR_AYONUSDRESOLVER_API
-        pxr::ArResolvedPath cacheFind(const std::string &key) const;
+        void deleteFromCache(const std::string &key);
+
+        AR_AYONUSDRESOLVER_API
+        void clearCache();
 
         std::shared_ptr<resolverContextCache> getCachePtr() const;
 
     private:
-        std::shared_ptr<resolverContextCache> cache = std::make_shared<resolverContextCache>();
+        std::shared_ptr<resolverContextCache> cache;
         ArResolvedPath rootPath;
 };
 

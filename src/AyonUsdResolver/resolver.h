@@ -7,7 +7,7 @@
 #include "pxr/usd/ar/resolvedPath.h"
 #include "pxr/usd/ar/resolver.h"
 #include "resolverContext.h"
-#include "reseutionFunctions.h"
+#include "resolutionFunctions.h"
 
 #include <memory>
 #include <string>
@@ -37,6 +37,7 @@ class AyonUsdResolver final: public ArResolver {
         bool _IsContextDependentPath(const std::string &assetPath) const final;
         AR_AYONUSDRESOLVER_API
         void _RefreshContext(const ArResolverContext &context) final;
+
         AR_AYONUSDRESOLVER_API
         ArTimestamp _GetModificationTimestamp(const std::string &assetPath,
                                               const ArResolvedPath &resolvedPath) const final;

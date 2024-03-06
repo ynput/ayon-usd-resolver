@@ -6,7 +6,7 @@
 #include "pxr/base/tf/debug.h"
 #include "pxr/usd/ar/resolvedPath.h"
 #include "resolverContextCache.h"
-#include "reseutionFunctions.h"
+#include "resolutionFunctions.h"
 #define CONVERT_STRING(string) #string
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
 
@@ -52,7 +52,7 @@ AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolve
         return assetPath;
     }
 
-    if (_IsAyonPath(assetPath, Config::ayonUriIdent, Config::ayonUriIdentSize)) {
+    if (_IsAyonPath(assetPath)) {
         return assetPath;
     }
     if (!anchorAssetPath) {
@@ -98,7 +98,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         return ArResolvedPath(assetPath);
     }
 
-    if (_IsAyonPath(assetPath, Config::ayonUriIdent, Config::ayonUriIdentSize)) {
+    if (_IsAyonPath(assetPath)) {
         const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
         for (const AyonUsdResolverContext* ctx: contexts) {
             if (ctx) {
@@ -121,8 +121,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         return ArResolvedPath();
     }
 
-    // we also cache non ayon paths for performance this will check the non ayon paths
-    // TODO make it so that this calls the non ayon cache function so that ayon cache isnt searched
+    // we also cache non ayon paths for performance this will check the non ayon path
     const AyonUsdResolverContext* pt = this->_GetCurrentContextPtr();
     if (pt) {
         ArResolvedPath path;
@@ -156,7 +155,7 @@ AyonUsdResolver::_CreateDefaultContextForAsset(const std::string &assetPath) con
 
 bool
 AyonUsdResolver::_IsContextDependentPath(const std::string &assetPath) const {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_IsContextDependentPath()\n");
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_IsContextDependentPath()\n");
     return _IsNotFilePath(assetPath);
 }
 
@@ -165,8 +164,10 @@ AyonUsdResolver::_RefreshContext(const ArResolverContext &context) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_RefreshContext()\n");
     const AyonUsdResolverContext* ctx = this->_GetCurrentContextPtr();
     if (!ctx) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_RefreshContext no ctx()\n");
         return;
     }
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_RefreshContext ctx()\n");
     ArNotice::ResolverChanged(*ctx).Send();
 }
 
@@ -194,6 +195,7 @@ AyonUsdResolver::_OpenAssetForWrite(const ArResolvedPath &resolvedPath, WriteMod
 
 const AyonUsdResolverContext*
 AyonUsdResolver::_GetCurrentContextPtr() const {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_GetCurrentContextPtr \n");
     return _GetCurrentContextObject<AyonUsdResolverContext>();
 }
 

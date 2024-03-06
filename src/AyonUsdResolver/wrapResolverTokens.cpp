@@ -36,5 +36,4 @@ _AddToken(T &cls, const char* name, const TfToken &token) {
 void
 wrapResolverTokens() {
     class_<AyonUsdResolverTokensType, AR_BOOST_NAMESPACE::noncopyable> cls("Tokens", no_init);
-    _AddToken(cls, "mappingPairs", AyonUsdResolverTokens->mappingPairs);
 }

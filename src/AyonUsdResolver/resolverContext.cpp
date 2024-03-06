@@ -22,6 +22,9 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
+// TODO find a better way to make the cache Global, this is not optimal at all.
+std::shared_ptr<resolverContextCache> GlobaleCahce = std::make_shared<resolverContextCache>();
+
 bool
 getStringEndswithString(const std::string &value, const std::string &compareValue) {
     if (compareValue.size() > value.size()) {
@@ -45,10 +48,15 @@ getStringEndswithStrings(const std::string &value, const std::vector<std::string
 
 AyonUsdResolverContext::AyonUsdResolverContext() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
+    cache = GlobaleCahce;
     this->Initialize();
 }
 
 AyonUsdResolverContext::AyonUsdResolverContext(const AyonUsdResolverContext &ctx) = default;
+
+AyonUsdResolverContext::~AyonUsdResolverContext() {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::~ResolverContext() - Destructed Context \n");
+}
 
 bool
 AyonUsdResolverContext::operator<(const AyonUsdResolverContext &ctx) const {
@@ -77,19 +85,25 @@ AyonUsdResolverContext::Initialize() {
 void
 AyonUsdResolverContext::ClearAndReinitialize() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ClearAndReinitialize()\n");
+    dropCache();
     this->Initialize();
 }
-
-ArResolvedPath
-AyonUsdResolverContext::cacheFind(const std::string &key) const {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::cacheFind \n");
-    return cache->Find(key);
-};
 
 void
 AyonUsdResolverContext::dropCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::dropCache() \n");
-    cache.reset(new resolverContextCache());
+};
+
+void
+AyonUsdResolverContext::deleteFromCache(const std::string &key) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::deleteFromCache(%s) \n", key.c_str());
+    cache->removeCachedObject(key);
+};
+
+void
+AyonUsdResolverContext::clearCache() {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::clearCache \n");
+    cache->clearCache();
 };
 
 std::shared_ptr<resolverContextCache>

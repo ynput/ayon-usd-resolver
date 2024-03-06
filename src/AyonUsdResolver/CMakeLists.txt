@@ -11,7 +11,7 @@ add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
         resolverContext.cpp
         resolverTokens.cpp 
         resolverContextCache.cpp
-        reseutionFunctions.cpp 
+        resolutionFunctions.cpp 
 )
 
 set_boost_namespace(${AR_AYONUSDRESOLVER_TARGET_LIB})
