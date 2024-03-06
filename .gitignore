@@ -13,6 +13,7 @@ build/
 dist/
 docs/
 Resolvers/
+test/TestingVenv/
 *pluginInfo.json
 .cache
 logFile*

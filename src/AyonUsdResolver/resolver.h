@@ -7,7 +7,7 @@
 #include "pxr/usd/ar/resolvedPath.h"
 #include "pxr/usd/ar/resolver.h"
 #include "resolverContext.h"
-#include "reseutionFunctions.h"
+#include "resolutionFunctions.h"
 
 #include <memory>
 #include <string>

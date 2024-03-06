@@ -1,4 +1,4 @@
-#include "reseutionFunctions.h"
+#include "resolutionFunctions.h"
 #include <cstdint>
 #include <iostream>
 #include <string_view>
@@ -7,7 +7,6 @@
 #include "debugCodes.h"
 #include "pxr/base/tf/debug.h"
 #include "pxr/usd/ar/resolvedPath.h"
-#include "reseutionFunctions.h"
 #include "config.h"
 
 #include "pxr/base/tf/fileUtils.h"

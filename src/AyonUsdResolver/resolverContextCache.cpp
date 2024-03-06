@@ -1,6 +1,6 @@
 #include "resolverContextCache.h"
 #include "debugCodes.h"
-#include "reseutionFunctions.h"
+#include "resolutionFunctions.h"
 #include "pxr/usd/ar/resolvedPath.h"
 #include "pxr/base/arch/systemInfo.h"
 #include "pxr/base/arch/fileSystem.h"
@@ -30,7 +30,7 @@ resolverContextCache::resolverContextCache() {
     CommonCache = std::make_unique<std::unordered_map<std::string, pxr::ArResolvedPath>>();
     PreCache = std::make_unique<std::unordered_map<std::string, pxr::ArResolvedPath>>();
 
-    PreCacheFreeItemSlots = 128;
+    PreCacheFreeItemSlots = 2;
     PreCache->reserve(PreCacheFreeItemSlots);
 };
 resolverContextCache::resolverContextCache(const size_t &preCacheSize) {
@@ -72,16 +72,11 @@ resolverContextCache::printCache() {
 void
 resolverContextCache::insert(std::pair<std::string, pxr::ArResolvedPath> &&sourcePair) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::insert \n");
-
+    if (PreCacheFreeItemSlots < 1) {
+        migratePreCacheIntoAyonCache();
+    }
     std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(PreCachesharedMutex);
     std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(AyonCachesharedMutex);
-    if (PreCacheFreeItemSlots < 1) {
-        AyonCache->reserve(AyonCache->size() + PreCache->size());
-        migratePreCacheIntoAyonCache();
-        PreCacheFreeItemSlots = PreCache->size();
-        PreCache->clear();
-    }
-
     PreCache->insert(std::move(sourcePair));
     PreCacheFreeItemSlots--;
 };
@@ -94,7 +89,11 @@ resolverContextCache::migratePreCacheIntoAyonCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::migratePreCacheIntoAyonCache \n");
     std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(PreCachesharedMutex);
     std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(AyonCachesharedMutex);
+
+    AyonCache->reserve(AyonCache->size() + PreCache->size());
     AyonCache->insert(std::make_move_iterator(PreCache->begin()), std::make_move_iterator(PreCache->end()));
+    PreCache->clear();
+    PreCacheFreeItemSlots = PreCache->size();
 };
 
 assetIdent

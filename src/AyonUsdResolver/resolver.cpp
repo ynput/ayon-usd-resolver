@@ -6,7 +6,7 @@
 #include "pxr/base/tf/debug.h"
 #include "pxr/usd/ar/resolvedPath.h"
 #include "resolverContextCache.h"
-#include "reseutionFunctions.h"
+#include "resolutionFunctions.h"
 #define CONVERT_STRING(string) #string
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
 
