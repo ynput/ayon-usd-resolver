@@ -4,7 +4,8 @@ This folder holds build plugins used in the resolver compile process to determin
 BuildPlugins are .cmake files the main Cmake script in the root directory pulls in at compile time.  
 
 Every build plugin needs to define variables that will be tested at compile time. 
-- Varbiles. For more info, look into one of the existing build scripts. They are annotated, so they serve as a reference for implementing more scripts in the future. 
+- Variables. For more info, look into one of the existing build scripts. They are annotated, so they serve as a reference for implementing more scripts in the future. 
+
   - AR_PXR_INCLUDE_DIR
   - AR_PXR_LIB_DIR
   - AR_PYTHON_LIB_NUMBER
