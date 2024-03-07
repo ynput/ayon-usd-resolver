@@ -1,5 +1,7 @@
+dir ../
+
 rmdir /s /q build
-rmdir /s /q Resolvers
+REM rmdir /s /q Resolvers
 
 REM set HFS={Houdini install directory}
 REM set COMPILEPLUGIN={Build Plugin Path / name starting at the BuildPlugins foulder dir}

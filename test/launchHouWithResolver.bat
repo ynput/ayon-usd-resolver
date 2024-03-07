@@ -1,6 +1,8 @@
 @echo off
 setlocal
 
+dir ../
+
 REM set "HOUDINI_BIN_DIR=C:\Program Files\Side Effects Software\Houdini 20.0.590\bin"
 
 REM Get the directory of the script

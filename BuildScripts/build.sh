@@ -1,8 +1,10 @@
 #!/bin/bash
+
+cd ../ #move to root dir
 #----------- Build Script Paths ------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-
+echo $SCRIPT_DIR
 #------------------- Houdini Config ------------------------
 #HOU_VER={Houdini-Version} # Set the Houdini version // needs to be the same as the hfs fouler version in your install e.g 20.0.630
 
@@ -49,7 +51,7 @@ fi
 if [ "$CLEAN_BUILD" -eq 1 ]; then
   echo "Clean build is activated"
   rm -rf build
-  rm -rf Resolvers
+  # rm -rf Resolvers
   mkdir build
   mkdir Resolvers
 fi
