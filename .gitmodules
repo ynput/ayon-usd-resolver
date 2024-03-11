@@ -4,6 +4,4 @@
 [submodule "ext/OpenUSD"]
 	path = ext/OpenUSD
 	url = git@github.com:PixarAnimationStudios/OpenUSD.git
-[submodule "ext/boost"]
-	path = ext/boost
-	url = git@github.com:boostorg/boost.git
+
