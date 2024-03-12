@@ -49,9 +49,9 @@ fi
 if [ "$CLEAN_BUILD" -eq 1 ]; then
   echo "Clean build is activated"
   rm -rf build
-  rm -rf Resolvers
+  #rm -rf Resolvers
   mkdir build
-  mkdir Resolvers
+  #mkdir Resolvers
 fi
 
 #----------------- cmake Commands ------------------
