@@ -10,8 +10,26 @@ add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
         resolver.cpp
         resolverContext.cpp
         resolverTokens.cpp 
+		
         resolverContextCache.cpp
         resolutionFunctions.cpp 
+		
+        module.cpp
+        moduleDeps.cpp
+		
+        wrapResolver.cpp
+        wrapResolverContext.cpp
+        wrapResolverTokens.cpp
+)
+
+target_compile_definitions(${AR_AYONUSDRESOLVER_TARGET_LIB}
+    PRIVATE
+        # USD Plugin Internal Namings
+        MFB_PACKAGE_NAME=${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}
+        MFB_PACKAGE_MODULE=${AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_NAME}
+        AR_AYONUSDRESOLVER_USD_PLUGIN_NAME=${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}
+        AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME=${AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME}
+        # AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME=${AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME}
 )
 
 set_boost_namespace(${AR_AYONUSDRESOLVER_TARGET_LIB})
@@ -51,11 +69,21 @@ configure_file(plugInfo.json.in plugInfo.json)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/plugInfo.json DESTINATION ${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}/resources)
 install(TARGETS ${AR_AYONUSDRESOLVER_TARGET_LIB} DESTINATION ${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}/lib)
 
+
 add_library(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     SHARED
+
+	
         module.cpp
         moduleDeps.cpp
-        resolverTokens.cpp
+		
+        # resolver.cpp
+        resolverContext.cpp
+        resolverTokens.cpp 
+        resolverContextCache.cpp
+        resolutionFunctions.cpp 
+
+
         wrapResolver.cpp
         wrapResolverContext.cpp
         wrapResolverTokens.cpp
@@ -67,6 +95,8 @@ target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     ${AR_AYONUSDRESOLVER_TARGET_LIB}
     ${AR_BOOST_PYTHON_LIB}
 )
+
+#target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_PYTHON} AyonCppApi)
 # Headers
 target_include_directories(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     PUBLIC
