@@ -1,9 +1,8 @@
 @echo off
 setlocal
 
-set LIBSSL_PATH=C:\Users\Rodin\Documents\test
-set "PATH=%LIBSSL_PATH%;%PATH%"
-echo PATH=%PATH%
+dir ../
+
 REM set "HOUDINI_BIN_DIR=C:\Program Files\Side Effects Software\Houdini 20.0.590\bin"
 set HOUDINI_BIN_DIR=C:/Program Files/Side Effects Software/Houdini 20.0.590/bin
 set COMPILEPLUGIN=HouWin/WindowsPy310Houdini20
@@ -35,6 +34,6 @@ echo AYON_API_KEY=%AYON_API_KEY%
 echo AYON_SITE_ID=%AYON_SITE_ID%
 echo AYON_SERVER_URL=%AYON_SERVER_URL%
 
-"%HOUDINI_BIN_DIR%\hython.exe" test\test.py
+"%HOUDINI_BIN_DIR%\hython.exe" test\HouWinTest.py
 
 endlocal

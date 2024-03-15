@@ -1,5 +1,7 @@
+dir ../
+
 rmdir /s /q build
-rmdir /s /q Resolvers
+REM rmdir /s /q Resolvers
 
 set HFS=C:/Program Files/Side Effects Software/Houdini 20.0.590
 set COMPILEPLUGIN=HouWin/WindowsPy310Houdini20
