@@ -8,4 +8,4 @@ set COMPILEPLUGIN=HouWin/WindowsPy310Houdini20
 
 cmake -S . -B build -DDEV=0 -DJTRACE=0 -DCMAKE_BUILD_TYPE=Release
 cmake --build build --clean-first --config Release
-cmake --install build   
+cmake --install build

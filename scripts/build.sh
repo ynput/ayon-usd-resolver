@@ -10,15 +10,15 @@ echo $SCRIPT_DIR
 
 #export INSTALLNAME="{CompilePlugin Name Overwrite}"
 #export COMPILEPLUGIN="{CompilePlugin Name and Path}" #e.g HouLinux/LinuxPy310Houdini20
-#HOUDINI_INSTALL_DIR="{Houdini install directory without Houdini number}" # on this variable you can set your Houdini install fouler. 
-#just remember that you want the fouler without the number so that the HFS export can construct it correctly. 
-# we do it this way to make batch building the resolver easier. 
+#HOUDINI_INSTALL_DIR="{Houdini install directory without Houdini number}" # on this variable you can set your Houdini install fouler.
+#just remember that you want the fouler without the number so that the HFS export can construct it correctly.
+# we do it this way to make batch building the resolver easier.
 
 if [ -z "$HOUDINI_INSTALL_DIR" ]; then
     HOUDINI_INSTALL_DIR="/opt/hfs" #if you didn't set the Install dir variable we assume your Houdini is installed in the default directory
 fi
 
-export HFS="${HOUDINI_INSTALL_DIR}${HOU_VER}" # this auto constructs the default install path for most Houdini installs under Linux. if you moved your 
+export HFS="${HOUDINI_INSTALL_DIR}${HOU_VER}" # this auto constructs the default install path for most Houdini installs under Linux. if you moved your
 #---------- Build Script Codes ---------------
 DEBUG=0
 CLEAN_BUILD=0
@@ -59,9 +59,9 @@ fi
 #----------------- cmake Commands ------------------
 set -e # Exit on error
 cmake . -B build -DDEV=$DEV -DJTRACE=$JTRACE
-if [ "$CLEAN_BUILD" -eq 1 ]; then 
+if [ "$CLEAN_BUILD" -eq 1 ]; then
   cmake --build build --clean-first
 else
   cmake --build build
 fi
-cmake --install build   
+cmake --install build

@@ -16,3 +16,7 @@ Resolvers/
 *pluginInfo.json
 .cache
 logFile*
+
+.poetry/
+.venv/
+.python-version
