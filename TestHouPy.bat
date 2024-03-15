@@ -15,7 +15,7 @@ set "PXR_PLUGINPATH_NAME=%SCRIPT_DIR%\ayonUsdResolver\resources;%PXR_PLUGINPATH_
 set "PYTHONPATH=%SCRIPT_DIR%\ayonUsdResolver\lib\python;%PYTHONPATH%"
 
 
-REM use those lines to set the right env varibles if your not using ayon launcher to launch houdini
+REM use those lines to set the right env variables if your not using ayon launcher to launch houdini
 REM set "AYON_SITE_ID={LocalSiteId}"
 REM set "AYON_API_KEY={AcountApiKey}"
 REM set "AYON_SERVER_URL={serverAdress}"

@@ -1,6 +1,6 @@
 
 
-# this line gets an env varible to add to the install dir so that we can batch build against multiple software packages 
+# this line gets an env variable to add to the install dir so that we can batch build against multiple software packages 
 set(SelectedCompilePlugin $ENV{COMPILEPLUGIN} CACHE PATH "install suffix for the resolver")
 
 if (NOT DEFINED ENV{INSTALLNAME})
@@ -10,7 +10,7 @@ else()
 endif()
 
 add_compile_definitions(DEV=${DEV})
-add_compile_definitions(CPPHTTPLIB_OPENSSL_SUPPORT) #we need to define this var here because ayon cpp api needs it to enable open sll suport for https 
+add_compile_definitions(CPPHTTPLIB_OPENSSL_SUPPORT) #we need to define this var here because ayon cpp api needs it to enable open sll support for https 
 #(read ayon cpp api main CMakeLists.txt for more info)
 
 set(AR_PROJECT_NAME UsdAssetResolver)
@@ -39,7 +39,7 @@ set(AR_AYONUSDRESOLVER_INSTALL_PREFIX ${AR_PROJECT_NAME}/${AR_AYONUSDRESOLVER_US
 
 
 
-# shared libary setup commands
+# shared library setup commands
 if (WIN32)
     set(AR_ARCH_LIB_SUFFIX "dll")
     message(STATUS "AR_ARCH_LIB_SUFFIX dll")
@@ -74,7 +74,7 @@ include(BuildPlugins/${SelectedCompilePlugin}.cmake)
 
 
 
-# check if the build plugin sets all the neded varibles 
+# check if the build plugin sets all the needed variables 
 if(NOT DEFINED AR_PXR_INCLUDE_DIR)
     message(FATAL_ERROR "AR_PXR_INCLUDE_DIR is not defined. Please set it before continuing.")
 endif()

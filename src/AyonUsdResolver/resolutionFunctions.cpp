@@ -51,10 +51,10 @@ _AnchorRelativePath(const std::string &anchorPath, const std::string &path) {
     if (TfIsRelativePath(anchorPath) || !_IsRelativePath(path)) {
         return path;
     }
-    // Ensure we are using forward slashes and not back slashes.
+    // Ensure we are using forward slashes and not backslashes.
     std::string forwardPath = anchorPath;
     std::replace(forwardPath.begin(), forwardPath.end(), '\\', '/');
-    // If anchorPath does not end with a '/', we assume it is specifying
+    // If anchorPath does not end with '/', we assume it is specifying
     // a file, strip off the last component, and anchor the path to that
     // directory.
     const std::string anchoredPath = TfStringCatPaths(TfStringGetBeforeSuffix(forwardPath, '/'), path);

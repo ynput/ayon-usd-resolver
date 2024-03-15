@@ -81,5 +81,5 @@ endif()
 set(BOOST_LIB_DIR ${AR_HOUDINI_INCLUDE_DIR})
 set(AR_PXR_INCLUDE_DIR ${AR_HOUDINI_INCLUDE_DIR})
 
-# Houdini include dir (might shadow some other libarys but thats what we want)
+# Houdini include dir (might shadow some other libraries but that's what we want)
 link_directories(${AR_HOUDINI_LIB_DIR})
