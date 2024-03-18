@@ -30,8 +30,9 @@ _IsFileRelativePath(const std::string &path) {
 bool
 _IsAyonPath(const std::string &assetPath) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_IsAyonPath (%s) \n", assetPath.c_str());
+	
     Config::AyonUriConfigStruct config;
-    for (int i; i < config.ayonUriOptions.size(); i++) {
+    for (uint8_t i=0; i < config.ayonUriOptions.size(); i++) {
         std::string_view assetPathTestPortion(assetPath.data(), config.ayonUriOptionsSize.at(i));
         if (assetPathTestPortion == config.ayonUriOptions.at(i)) {
             return true;

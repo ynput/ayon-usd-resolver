@@ -11,9 +11,12 @@ CTestTestfile.cmake
 _deps
 build/
 dist/
-docs/
+Docs/docs/
 Resolvers/
-test/TestingVenv/
 *pluginInfo.json
 .cache
 logFile*
+
+.poetry/
+.venv/
+.python-version

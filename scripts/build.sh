@@ -1,28 +1,29 @@
 #!/bin/bash
+
+cd ../ #move to root dir
 #----------- Build Script Paths ------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-
+echo $SCRIPT_DIR
 #------------------- Houdini Config ------------------------
 #HOU_VER={Houdini-Version} # Set the Houdini version // needs to be the same as the hfs fouler version in your install e.g 20.0.630
 
 #export INSTALLNAME="{CompilePlugin Name Overwrite}"
 #export COMPILEPLUGIN="{CompilePlugin Name and Path}" #e.g HouLinux/LinuxPy310Houdini20
-#HOUDINI_INSTALL_DIR="{Houdini install directory without Houdini number}" # on this variable you can set your Houdini install fouler. 
-#just remember that you want the fouler without the number so that the HFS export can construct it correctly. 
-# we do it this way to make batch building the resolver easier. 
+#HOUDINI_INSTALL_DIR="{Houdini install directory without Houdini number}" # on this variable you can set your Houdini install folder.
+# just remember that you want the folder without the number so that the HFS export can construct it correctly.
+# we do it this way to make batch building the resolver easier.
 
 if [ -z "$HOUDINI_INSTALL_DIR" ]; then
-    HOUDINI_INSTALL_DIR="/opt/hfs" #if you didn't set the Install dir variable we assume your Houdini is installed in the default directory
+    HOUDINI_INSTALL_DIR="/opt/hfs" # if you didn't set the Install dir variable we assume your Houdini is installed in the default directory
 fi
 
-export HFS="${HOUDINI_INSTALL_DIR}${HOU_VER}" # this auto constructs the default install path for most Houdini installs under Linux. if you moved your 
+export HFS="${HOUDINI_INSTALL_DIR}${HOU_VER}" # This auto-constructs the default install path for most Houdini installations under Linux. If you moved your install location to another folder, export the HOUDINI_INSTALL_DIR env variable and point it to the folder
 #---------- Build Script Codes ---------------
 DEBUG=0
 CLEAN_BUILD=0
 DEV=0
 JTRACE=0
-
 
 #----------------- Build Script Start Up Tests ------------------
 if [ "$1" == "Debug" ]; then
@@ -49,17 +50,17 @@ fi
 if [ "$CLEAN_BUILD" -eq 1 ]; then
   echo "Clean build is activated"
   rm -rf build
-  rm -rf Resolvers
+  # rm -rf Resolvers
   mkdir build
-  mkdir Resolvers
+  #mkdir Resolvers
 fi
 
 #----------------- cmake Commands ------------------
 set -e # Exit on error
 cmake . -B build -DDEV=$DEV -DJTRACE=$JTRACE
-if [ "$CLEAN_BUILD" -eq 1 ]; then 
+if [ "$CLEAN_BUILD" -eq 1 ]; then
   cmake --build build --clean-first
 else
   cmake --build build
 fi
-cmake --install build   
+cmake --install build

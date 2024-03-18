@@ -1,4 +1,7 @@
 #!/bin/bash
+
+cd ../
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SCRIPT_DIR=$SCRIPT_DIR/Resolvers
 

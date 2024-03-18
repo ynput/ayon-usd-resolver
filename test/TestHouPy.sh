@@ -1,4 +1,7 @@
 #!/bin/bash
+
+cd ../
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SCRIPT_DIR=$SCRIPT_DIR/Resolvers/HouLinux/LinuxPy310Houdini20
 
@@ -25,4 +28,4 @@ pushd /opt/hfs20.0.590 && source houdini_setup && popd
 
 
 # Start Houdini with Hython
-hython test/Debug.py
+hython test/HouLinuxTest.py

@@ -59,10 +59,8 @@ if(WIN32)
 else()
   set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api/ext/opensslL")
 endif()
-
-
 include_directories(${OPENSSL_ROOT_DIR}/include)
-find_package(OpenSSL REQUIRED)
+
 
 # setting default boost namespace 
 set(AR_BOOST_NAMESPACE boost)
@@ -131,7 +129,6 @@ endif()
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/defaults)
 include(setBoostNamespace)
 include_directories(${CMAKE_SOURCE_DIR}/src/utils)
-
 
 
 # Boost
