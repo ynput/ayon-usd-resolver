@@ -15,7 +15,7 @@ echo $SCRIPT_DIR
 # we do it this way to make batch building the resolver easier.
 
 if [ -z "$HOUDINI_INSTALL_DIR" ]; then
-    HOUDINI_INSTALL_DIR="/opt/hfs" #if you didn't set the Install dir variable we assume your Houdini is installed in the default directory
+    HOUDINI_INSTALL_DIR="/opt/hfs" # if you didn't set the Install dir variable we assume your Houdini is installed in the default directory
 fi
 
 export HFS="${HOUDINI_INSTALL_DIR}${HOU_VER}" # this auto constructs the default install path for most Houdini installs under Linux. if you moved your
