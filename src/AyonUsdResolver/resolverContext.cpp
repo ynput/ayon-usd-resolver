@@ -23,7 +23,7 @@
 PXR_NAMESPACE_USING_DIRECTIVE
 
 // TODO find a better way to make the cache Global, this is not optimal at all.
-std::shared_ptr<resolverContextCache> GlobaleCahce = std::make_shared<resolverContextCache>();
+std::shared_ptr<resolverContextCache> GlobalCache = std::make_shared<resolverContextCache>();
 
 bool
 getStringEndswithString(const std::string &value, const std::string &compareValue) {
@@ -48,14 +48,14 @@ getStringEndswithStrings(const std::string &value, const std::vector<std::string
 
 AyonUsdResolverContext::AyonUsdResolverContext() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
-    cache = GlobaleCahce;
+    cache = GlobalCache;
     this->Initialize();
 }
 
 AyonUsdResolverContext::AyonUsdResolverContext(const AyonUsdResolverContext &ctx) = default;
 
 AyonUsdResolverContext::~AyonUsdResolverContext() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::~ResolverContext() - Destructed Context \n");
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::~ResolverContext() - Destructed Context\n");
 }
 
 bool
@@ -79,7 +79,7 @@ hash_value(const AyonUsdResolverContext &ctx) {
 }
 void
 AyonUsdResolverContext::Initialize() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::Initialize \n");
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::Initialize\n");
 }
 
 void
@@ -91,18 +91,18 @@ AyonUsdResolverContext::ClearAndReinitialize() {
 
 void
 AyonUsdResolverContext::dropCache() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::dropCache() \n");
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::dropCache()\n");
 };
 
 void
 AyonUsdResolverContext::deleteFromCache(const std::string &key) {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::deleteFromCache(%s) \n", key.c_str());
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::deleteFromCache(%s)\n", key.c_str());
     cache->removeCachedObject(key);
 };
 
 void
 AyonUsdResolverContext::clearCache() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::clearCache \n");
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::clearCache\n");
     cache->clearCache();
 };
 

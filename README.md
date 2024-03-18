@@ -16,6 +16,7 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
 > [!NOTE]  
 > Building and testing are now done with Houdini 19.5 and Houdini 20. More packages will be available soon. To build against the "standalone" USD framework you need to either comment `include(BuildPlugins/${SelectedCompilePlugin}.cmake)` line in `CMakeLists.txt` or build you own build plugin in `BuildPlugins`.
 
+## Required:
 
 ### Requirements:
 - C++ Compiler
@@ -100,14 +101,24 @@ The Resolver needs some environment variables to work, namely:
  Inside AAYONn, you can use the Environment Field of your software version to define what resolver you want to use. Here is an example of how that might look:
  ```json
 {
-"USD_ASSET_RESOLVER":"/path/to/ayon-usd-resolver/Resolvers/{BuildPlugin path + name}",
-"TF_DEBUG":"",
-"LD_LIBRARY_PATH":"/path/to/ayon-usd-resolver/Resolvers/{BuildPlugin path + name}/ayonUsdResolver/lib:$LD_LIBRARY_PATH",
-"PXR_PLUGINPATH_NAME":"/path/to/ayon-usd-resolver/Resolvers/{BuildPlugin path + name}/ayonUsdResolver/resources:$PXR_PLUGINPATH_NAME",
-"PYTHONPATH":["{PYTHONPATH}","/path/to/ayon-usd-resolver/Resolvers/{BuildPlugin path + name}/ayonUsdResolver/lib/python"],
-"AYONLOGGERLOGLVL":"WARN",
-"AYONLOGGERFILELOGGING":"ON",
-"AYONLOGGERFILEPOS":"LoggingFiles"
+    "AYONUSDRESOLVER_ROOT": "/path/to/ayon-usd-resolver/Resolvers/{BuildPlugin path + name}",
+    "USD_ASSET_RESOLVER": "{AYONUSDRESOLVER_ROOT}",
+    "TF_DEBUG": "",
+    "LD_LIBRARY_PATH": [
+        "{AYONUSDRESOLVER_ROOT}/ayonUsdResolver/lib",
+        "{LD_LIBRARY_PATH}"
+    ],
+    "PXR_PLUGINPATH_NAME": [
+        "{AYONUSDRESOLVER_ROOT}/ayonUsdResolver/resources",
+        "{PXR_PLUGINPATH_NAME}"
+    ],
+    "PYTHONPATH": [
+        "{PYTHONPATH}",
+        "{AYONUSDRESOLVER_ROOT}/ayonUsdResolver/lib/python"
+    ],
+    "AYONLOGGERLOGLVL": "WARN",
+    "AYONLOGGERFILELOGGING": "ON",
+    "AYONLOGGERFILEPOS": "LoggingFiles"
 }
 ```
 
@@ -122,7 +133,7 @@ When a USD file is opened:
 - RResolver Context is created.
 	- very resolver context has a [shared_ptr](https://en.cppreference.com/w/cpp/memory/shared_ptr) that will point to the global `ResolverContextCache`
 
-USD [AssetIdentifier](https://openusd.org/release/glossary.html#usdglossary-assetinfo) is found.
+When a USD [AssetIdentifier](https://openusd.org/release/glossary.html#usdglossary-assetinfo) is found.
 - `_Resolve()` gets called with the data between the [@](https://openusd.org/release/glossary.html#usdglossary-asset) symbols.
 - `_Resolve()` checks if the path is an AYON URI path.
     - **Yes?** Then we get the current context (because in this resolver, the resolver context interacts with the [AyonCppApi](https://github.com/ynput/ayon-cpp-api/) and not the Resolver).  
