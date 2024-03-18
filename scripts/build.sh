@@ -18,13 +18,12 @@ if [ -z "$HOUDINI_INSTALL_DIR" ]; then
     HOUDINI_INSTALL_DIR="/opt/hfs" # if you didn't set the Install dir variable we assume your Houdini is installed in the default directory
 fi
 
-export HFS="${HOUDINI_INSTALL_DIR}${HOU_VER}" # this auto constructs the default install path for most Houdini installs under Linux. if you moved your
+export HFS="${HOUDINI_INSTALL_DIR}${HOU_VER}" # This auto-constructs the default install path for most Houdini installations under Linux. If you moved your install location to another folder, export the HOUDINI_INSTALL_DIR env variable and point it to the folder
 #---------- Build Script Codes ---------------
 DEBUG=0
 CLEAN_BUILD=0
 DEV=0
 JTRACE=0
-
 
 #----------------- Build Script Start Up Tests ------------------
 if [ "$1" == "Debug" ]; then
