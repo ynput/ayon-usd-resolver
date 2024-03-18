@@ -10,7 +10,7 @@ echo $SCRIPT_DIR
 
 #export INSTALLNAME="{CompilePlugin Name Overwrite}"
 #export COMPILEPLUGIN="{CompilePlugin Name and Path}" #e.g HouLinux/LinuxPy310Houdini20
-#HOUDINI_INSTALL_DIR="{Houdini install directory without Houdini number}" # on this variable you can set your Houdini install fouler.
+#HOUDINI_INSTALL_DIR="{Houdini install directory without Houdini number}" # on this variable you can set your Houdini install folder.
 # just remember that you want the folder without the number so that the HFS export can construct it correctly.
 # we do it this way to make batch building the resolver easier.
 
