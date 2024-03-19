@@ -16,9 +16,6 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
 > [!NOTE]  
 > Building and testing is now done with Houdini 19.5 and Houdini 20. More packages will be available soon. To build against the "standalone" USD framework you need to either comment `include(BuildPlugins/${SelectedCompilePlugin}.cmake)` line in `CMakeLists.txt` or build you own build plugin in `BuildPlugins`.
 
-
-## Required:
-
 ### Requirements:
 - C++ Compiler
 - CMake
@@ -38,11 +35,7 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
 	- Hou 20.0.630
 	- USD 24.03
  
-### Download the repo and its submodules:  
-```sh
-git clone --recurse-submodules https://github.com/ynput/ayon-usd-resolver.git
-git submodule update --init --recursive
-```
+
 
 ## Pre-build / Manual build
 In the future, we'll have pre-built versions of the resolver ready for you. But remember, these are the same ones our tests use, so they might not match the exact software or platform you need. Also, these prebuilt resolvers may not be up-to-date with the latest software releases.
@@ -52,11 +45,16 @@ TBA - Pre-builds are not available now. They will be shipped with [AYON USD Addo
   
 ### Building
 
+#### Download the repo and its submodules:  
+```sh
+git clone --recurse-submodules https://github.com/ynput/ayon-usd-resolver.git
+git submodule update --init --recursive
+```
+
 #### Core concepts 
 We currently support Houdini for building Resolvers. Support for other software and stand-alone configurations is coming soon.
 
 Building a Resolver involves using _.sh_ (Linux) and _.bat_ (Windows) shell scripts. The Linux script has more features because we mainly develop Resolvers on Linux, so `build.sh` includes additional functions. 
-
 
 #### Linux Build Steps for Houdini:
 First, set some variables in the `build.sh` script:
