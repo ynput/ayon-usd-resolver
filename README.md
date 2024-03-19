@@ -131,7 +131,8 @@ On USD Init:
 - AyonUsdResolver library will be loaded, and a `ResolverContextCache` and a globally accessible [shared_ptr](https://en.cppreference.com/w/cpp/memory/shared_ptr) will be created
 
 When a USD file is opened:
-- RResolver Context is created.
+- Resolver Context is created.
+
 	- very resolver context has a [shared_ptr](https://en.cppreference.com/w/cpp/memory/shared_ptr) that will point to the global `ResolverContextCache`
 
 When a USD [AssetIdentifier](https://openusd.org/release/glossary.html#usdglossary-assetinfo) is found.
