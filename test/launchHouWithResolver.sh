@@ -5,7 +5,7 @@ cd ../
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SCRIPT_DIR=$SCRIPT_DIR/Resolvers
 
-#---------- Set Usd/Python Varibles for Resolver Load
+#---------- Set Usd/Python Variables for Resolver Load
 export USD_ASSET_RESOLVER=$SCRIPT_DIR
 # export TF_DEBUG=AYONUSDRESOLVER_RESOLVER_CONTEXT
 export TF_DEBUG=AYONUSDRESOLVER_RESOLVER
