@@ -163,4 +163,5 @@ ll together, you will get an asset path like this. This asset path can be used i
 
 
 [^1]: In the CPP files, you might find `TF_DEBUG().Msg();` and one
-  of the two Enum Values AYONUSDRESOLVER_RESOLVER or AYONUSDRESOLVER_RESOLVER_CONTEXT these allow you to select what debug messages will be printed. If you want the resolver to be silent, then you can leave this value empty. It's best practice to keep it in your env variable setup, just in case.   
+  of the two Enum Values `AYONUSDRESOLVER_RESOLVER` or `AYONUSDRESOLVER_RESOLVER_CONTEXT` these allow you to select what debug messages will be printed. If you want the resolver to be silent, then you can leave this value empty. It's best practice to keep it in your env variable setup, just in case.   
+
