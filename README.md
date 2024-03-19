@@ -98,7 +98,8 @@ The Resolver needs some environment variables to work, namely:
 | `AYONLOGGERFILELOGGING` | This environment variable allows you to enable or disable file logging in AyonCppApi - `OFF`, `ON`
 | `AYONLOGGERFILEPOS` | This environment variable allows you to set a file path for the AyonCppApi logging - `/path/to` or `./relPath` |
  
- Inside AAYONn, you can use the Environment Field of your software version to define what resolver you want to use. Here is an example of how that might look:
+Inside AYON, you can use the Environment Field of your software version to define what resolver you want to use. Here is an example of how that might look:
+
  ```json
 {
     "AYONUSDRESOLVER_ROOT": "/path/to/ayon-usd-resolver/Resolvers/{BuildPlugin path + name}",
