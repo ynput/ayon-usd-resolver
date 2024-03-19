@@ -94,10 +94,9 @@ The Resolver needs some environment variables to work, namely:
 | `TF_DEBUG` | Defines what USD debug messages will be printed[^1]. |
 | `LD_LIBRARY_PATH` | Defines where the C++ dynamic library files can be found for the resolver. |
 | `PXR_PLUGINPATH_NAME` | Define where USD plug-ins are found - _it might look like you're supposed to place the AyonUsdResolver name in here, but you're actually putting the path to the `PluginInfo.json` folder into this variable._ |  
-
 | `PYTHONPATH` | Used to include the resolver's Python wrapper functions to Python. |
 | `AYONLOGGERLOGLVL` | Sets the logging level for the AyonCppApi - `INFO`, `ERROR`, `WARN`, `CRITICAL`, `OFF` |
-| `AYONLOGGERFILELOGGING` | Enables or disables file logging in AyonCppApi - `OFF`, `ON`
+| `AYONLOGGERFILELOGGING` | Enables or disables file logging in AyonCppApi - `OFF`, `ON` |
 | `AYONLOGGERFILEPOS` | Sets a filepath for the AyonCppApi logging - `/path/to` or `./relPath` |
 
  
