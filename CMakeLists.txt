@@ -65,12 +65,14 @@ include_directories(${OPENSSL_ROOT_DIR}/include)
 # setting default boost namespace 
 set(AR_BOOST_NAMESPACE boost)
 add_compile_definitions(BOOST_ALL_NO_LIB)
-
+# set default boost extend
+if (WIN32)
+    set(AR_BOOST_EXTEND -mt-x64)
+else()
+    set(AR_BOOST_EXTEND )
+endif()
 
 include(BuildPlugins/${SelectedCompilePlugin}.cmake)
-
-
-
 
 # check if the build plugin sets all the neded varibles 
 if(NOT DEFINED AR_PXR_INCLUDE_DIR)
@@ -99,16 +101,8 @@ if(NOT DEFINED BOOST_LIB_DIR)
 endif()
 
 
-
-
-
 # Boost
-if (WIN32)
-    set(AR_BOOST_PYTHON_LIB ${AR_BOOST_NAMESPACE}_${AR_PYTHON_LIB_NUMBER}-mt-x64)
-else()
-    set(AR_BOOST_PYTHON_LIB ${AR_BOOST_NAMESPACE}_${AR_PYTHON_LIB_NUMBER})
-endif()
-
+set(AR_BOOST_PYTHON_LIB ${AR_BOOST_NAMESPACE}_${AR_PYTHON_LIB_NUMBER}${AR_BOOST_EXTEND})
 
 if (WIN32)
     add_compile_definitions(NOMINMAX)
