@@ -93,10 +93,11 @@ The Resolver needs some environment variables to work, namely:
 | `TF_DEBUG` | This variable allows you to choose what Debug messages will be printed[^1]. |
 | `LD_LIBRARY_PATH` | Describes where the C++ dynamic library files can be found for the resolver. |
 | `PXR_PLUGINPATH_NAME` | Usd variable - it might look like you're supposed to place the AyonUsdResolver name in here, but you're actually putting the path to the `PluginInfo.json` folder into this variable. |  
-| `PYTHONPATH` | This is again a path for Usd that allows you to access the Python wrapper functions from the resolver inside Usd. |
-| `AYONLOGGERLOGLVL` | This environment variable allows you to set the log level for the CppApi - `INFO`, `ERROR`, `WARN`, `CRITICAL`, `OFF` |
-| `AYONLOGGERFILELOGGING` | This environment variable allows you to enable or disable file logging in AyonCppApi - `OFF`, `ON`
-| `AYONLOGGERFILEPOS` | This environment variable allows you to set a file path for the AyonCppApi logging - `/path/to` or `./relPath` |
+| `PYTHONPATH` | Used to include the resolver's Python wrapper functions to Python. |
+| `AYONLOGGERLOGLVL` | Sets the logging level for the AyonCppApi - `INFO`, `ERROR`, `WARN`, `CRITICAL`, `OFF` |
+| `AYONLOGGERFILELOGGING` | Enables or disables file logging in AyonCppApi - `OFF`, `ON`
+| `AYONLOGGERFILEPOS` | Sets a filepath for the AyonCppApi logging - `/path/to` or `./relPath` |
+
  
 Inside AYON, you can use the Environment Field of your software version to define what resolver you want to use. Here is an example of how that might look:
 
