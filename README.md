@@ -14,7 +14,8 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
 > The [AYON](https://ynput.io/ayon/) USD Resolver is an [AR2.0](https://openusd.org/release/wp_ar2.html) resolver and will not support packages that only support AR1.0 interface.
 
 > [!NOTE]  
-> Building and testing are now done with Houdini 19.5 and Houdini 20. More packages will be available soon. To build against the "standalone" USD framework you need to either comment `include(BuildPlugins/${SelectedCompilePlugin}.cmake)` line in `CMakeLists.txt` or build you own build plugin in `BuildPlugins`.
+> Building and testing is now done with Houdini 19.5 and Houdini 20. More packages will be available soon. To build against the "standalone" USD framework you need to either comment `include(BuildPlugins/${SelectedCompilePlugin}.cmake)` line in `CMakeLists.txt` or build you own build plugin in `BuildPlugins`.
+
 
 ## Required:
 
