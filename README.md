@@ -135,7 +135,7 @@ On USD Init:
 When a USD file is opened:
 - Resolver Context is created.
 
-	- very resolver context has a [shared_ptr](https://en.cppreference.com/w/cpp/memory/shared_ptr) that will point to the global `ResolverContextCache`
+	- every resolver context has a [shared_ptr](https://en.cppreference.com/w/cpp/memory/shared_ptr) that will point to the global `ResolverContextCache`
 
 When a USD [AssetIdentifier](https://openusd.org/release/glossary.html#usdglossary-assetinfo) is found.
 - `_Resolve()` gets called with the data between the [@](https://openusd.org/release/glossary.html#usdglossary-asset) symbols.
@@ -159,7 +159,7 @@ The AssetIdentifier or AssetPath is always used by the resolver to convert an AY
 
 4. `representation=usd`: This part of the path is very important; it sets the file "extension" that the resolver will search for. You can use everything that you can upload to the server.
 
-ll together, you will get an asset path like this. This asset path can be used inside of USD and will be resolved by the asset Resolver.
+All together, you will get an asset path like this. This asset path can be used inside of USD and will be resolved by the asset Resolver.
 
 `ayon://{ProjectName}/{path/to/ayon/folder}?product={FileName}&version=latest&representation=usd`
 
