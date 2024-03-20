@@ -1,4 +1,4 @@
-dir ../
+cd ../
 
 rmdir /s /q build
 REM rmdir /s /q Resolvers

@@ -1,14 +1,18 @@
 @echo off
 setlocal
 
-cd ../
+dir ../
 
 REM set "HOUDINI_BIN_DIR=C:\Program Files\Side Effects Software\Houdini 20.0.590\bin"
 set HOUDINI_BIN_DIR=C:/Program Files/Side Effects Software/Houdini 20.0.590/bin
-set COMPILEPLUGIN=HouWin/WindowsPy310Houdini20
+set COMPILEPLUGIN=AyonUsdWin/AyonUsd23_5_py39
 REM Get the directory of the script
+cd ../
 set "SCRIPT_DIR=%CD%"
-set "SCRIPT_DIR=%SCRIPT_DIR%\Resolvers\HouWin\WindowsPy310Houdini20"
+set "SCRIPT_DIR=%SCRIPT_DIR%\Resolvers\AyonUsdWin\AyonUsd23_5_py39"
+
+set "PYTHONPATH=C:\Users\lyonh\Desktop\ynput\ayon-usd\downloads\usd-23.05_win64_py39\lib\python;%PYTHONPATH%"
+set "PATH=C:\Users\lyonh\Desktop\ynput\ayon-usd\downloads\usd-23.05_win64_py39\bin;C:\Users\lyonh\Desktop\ynput\ayon-usd\downloads\usd-23.05_win64_py39\lib;%PATH%" 
 
 REM Set Usd/Python Variables for Resolver Load
 set "USD_ASSET_RESOLVER=%SCRIPT_DIR%"
@@ -16,6 +20,7 @@ set "TF_DEBUG=AYONUSDRESOLVER_RESOLVER_CONTEXT"
 set "LD_LIBRARY_PATH=%SCRIPT_DIR%\ayonUsdResolver\lib;%LD_LIBRARY_PATH%"
 set "PXR_PLUGINPATH_NAME=%SCRIPT_DIR%\ayonUsdResolver\resources;%PXR_PLUGINPATH_NAME%"
 set "PYTHONPATH=%SCRIPT_DIR%\ayonUsdResolver\lib\python;%PYTHONPATH%"
+set "PATH=%SCRIPT_DIR%\ayonUsdResolver\lib\python;%PATH%"
 
 
 REM use those lines to set the right env varibles if your not using ayon launcher to launch houdini
@@ -25,6 +30,8 @@ set "AYON_SERVER_URL=http://192.168.178.42:5000"
 
 
 REM Print environment variables
+echo PATH=%PATH%
+
 echo USD_ASSET_RESOLVER=%USD_ASSET_RESOLVER%
 echo TF_DEBUG=%TF_DEBUG%
 echo LD_LIBRARY_PATH=%LD_LIBRARY_PATH%
@@ -34,6 +41,6 @@ echo AYON_API_KEY=%AYON_API_KEY%
 echo AYON_SITE_ID=%AYON_SITE_ID%
 echo AYON_SERVER_URL=%AYON_SERVER_URL%
 
-"%HOUDINI_BIN_DIR%\hython.exe" test\HouWinTest.py
+"python" test/AyonUsdTest.py
 
 endlocal
