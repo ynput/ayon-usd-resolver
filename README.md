@@ -25,11 +25,13 @@ The resolver implements local caching and resolves the [AYON](https://ynput.io/a
 	- Hou 19.5.900
 	- Hou 20.0.590
 	- Hou 20.0.630
+    - AyonUsd23_5_py39 (System Python install)
 - Windows 10
 	- Hou 19.5.805
 	- Hou 19.5.900
 	- Hou 20.0.590
 	- Hou 20.0.630
+    - AyonUsd23_5_py39 (Pyenv-Win)
  
 ## Download the repo and its submodules:  
     ```

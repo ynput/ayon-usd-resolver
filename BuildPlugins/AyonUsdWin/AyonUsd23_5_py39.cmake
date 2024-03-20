@@ -24,6 +24,9 @@ set(AR_PXR_LIB_PREFIX "usd_")
 set(AR_PXR_INCLUDE_DIR ${AR_AYONUSD_ROOT}/include)
 
 # Set up Python
+
+#We are currently hard-coding the relative portion of the Python directories. In some cases, your internal folder structure might differ. Then, you have to change AR_PYTHON_LIB_DIR and AR_PYTHON_INCLUDE_DIR, respectively. 
+
 find_package(Python COMPONENTS Interpreter)
 execute_process(
     COMMAND ${Python_EXECUTABLE} -c "import sys; print(sys.version[0:3])"
