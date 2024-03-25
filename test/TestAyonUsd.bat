@@ -1,13 +1,11 @@
 @echo off
 setlocal
 
-dir ../
+REM dir ../
 
-REM set "HOUDINI_BIN_DIR=C:\Program Files\Side Effects Software\Houdini 20.0.590\bin"
 set HOUDINI_BIN_DIR=C:/Program Files/Side Effects Software/Houdini 20.0.590/bin
 set COMPILEPLUGIN=AyonUsdWin/AyonUsd23_5_py39
-REM Get the directory of the script
-cd ../
+
 set "SCRIPT_DIR=%CD%"
 set "SCRIPT_DIR=%SCRIPT_DIR%\Resolvers\AyonUsdWin\AyonUsd23_5_py39"
 
@@ -31,7 +29,6 @@ set "AYON_SERVER_URL=http://192.168.178.42:5000"
 
 REM Print environment variables
 echo PATH=%PATH%
-
 echo USD_ASSET_RESOLVER=%USD_ASSET_RESOLVER%
 echo TF_DEBUG=%TF_DEBUG%
 echo LD_LIBRARY_PATH=%LD_LIBRARY_PATH%
@@ -40,7 +37,6 @@ echo PYTHONPATH=%PYTHONPATH%
 echo AYON_API_KEY=%AYON_API_KEY%
 echo AYON_SITE_ID=%AYON_SITE_ID%
 echo AYON_SERVER_URL=%AYON_SERVER_URL%
-
+ 
 "python" test/AyonUsdTest.py
-
 endlocal

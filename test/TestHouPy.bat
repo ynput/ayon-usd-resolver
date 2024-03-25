@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-cd ../
+REM cd ../
 
 REM set "HOUDINI_BIN_DIR=C:\Program Files\Side Effects Software\Houdini 20.0.590\bin"
 set HOUDINI_BIN_DIR=C:/Program Files/Side Effects Software/Houdini 20.0.590/bin
@@ -33,6 +33,7 @@ echo PYTHONPATH=%PYTHONPATH%
 echo AYON_API_KEY=%AYON_API_KEY%
 echo AYON_SITE_ID=%AYON_SITE_ID%
 echo AYON_SERVER_URL=%AYON_SERVER_URL%
+
 
 "%HOUDINI_BIN_DIR%\hython.exe" test\HouWinTest.py
 
