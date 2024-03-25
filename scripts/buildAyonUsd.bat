@@ -1,3 +1,5 @@
+REM in case you use Pyenv // Pyenv exec works
+
 cd ../
 
 rmdir /s /q build
