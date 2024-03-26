@@ -21,7 +21,7 @@ set "PYTHONPATH=%SCRIPT_DIR%\ayonUsdResolver\lib\python;%PYTHONPATH%"
 set "PATH=%SCRIPT_DIR%\ayonUsdResolver\lib\python;%PATH%"
 
 
-REM use those lines to set the right env varibles if your not using ayon launcher to launch houdini
+REM use these lines to set the right env variable's if your not using AYON launcher to launch Houdini
 set "AYON_SITE_ID=groovy-amiable-reindeer"
 set "AYON_API_KEY=2d62dae97a8c13d73aec2ca7c513abf055a7a6a44b08066584b6c55a1f1ca97b"
 set "AYON_SERVER_URL=http://192.168.178.42:5000"

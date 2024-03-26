@@ -2,7 +2,6 @@
 if (WIN32)
     add_compile_definitions(AR_AYONUSDRESOLVER_EXPORTS)
 endif()
-
 ### Targets ###
 add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
     SHARED

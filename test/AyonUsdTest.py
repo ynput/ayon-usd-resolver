@@ -4,8 +4,6 @@ from pxr import Ar, Usd
 from usdAssetResolver import AyonUsdResolver
 import time
 
-
-
 Ar.SetPreferredResolver("AyonUsdResolver")
 resolver = Ar.GetResolver()
 context = AyonUsdResolver.ResolverContext()

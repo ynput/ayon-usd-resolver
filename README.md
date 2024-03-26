@@ -7,7 +7,7 @@ The resolver implements local caching and resolves the [AYON](https://ynput.io/a
 > This repository is a _development_ repository and uses Git Submodules. Make sure to use the correct `git clone` commands accordingly.  
 
 > [!IMPORTANT]  
-> The [AYON](https://ynput.io/ayon/) USD Resolver is a [AR2.0](https://openusd.org/release/wp_ar2.html) resolver and will not suport packages that only suport AR1.0
+> The [AYON](https://ynput.io/ayon/) USD Resolver is a [AR2.0](https://openusd.org/release/wp_ar2.html) resolver and will not support packages that only support AR1.0
 
 > [!NOTE]  
 > Building and testing are currently done against Houdini 19.5 and Houdini 20. Other packages will follow shortly.
@@ -16,7 +16,7 @@ The resolver implements local caching and resolves the [AYON](https://ynput.io/a
 ## Required:
 - C++ Compiler
 - Cmake
-- GitHub public key setup (this is because the submodules are linked via git@)
+- GitHub public key setup (this is because the sub-modules are linked via git@)
 - Houdini Install
 
 ## Tested Platforms:
@@ -40,31 +40,31 @@ The resolver implements local caching and resolves the [AYON](https://ynput.io/a
     ```
 
 # -------------------------- Prebuild / Self Compiled  --------------------------
-- We will deliver some prebuild versoins off the resolver in the future.
+- We will deliver some prebuilt versions off the resolver in the future.
 - but it's essential to know that those versions will be the prebuilt binaries that our tests created, so you might not find the software or OS version you want.  
 - It's also to be expected that resolver prebuilds are behind new software releases.  
 
 # ---------------------------------- Prebuild ----------------------------------
-- Prebuilds aren't available as of right now.
+- Prebuilts aren't available as of right now.
   
 # ------------------------------- Self Compiled -------------------------------
 
 ## Core concepts 
-1. currently, we only support Houdini for building Resolvers. (Other software Packages and stand-alone setups will follow soon)
-2. Currently, building the Resolver centres around a build script .sh(Linux) .bat(windows). The Linux build script is more elaborate than the Windows script because resolver development is currently done on Linux, so the build.sh carries extra functionality around. 
+1. currently, we only support Houdini and AyonUsd for building Revolver's. (Other software Packages and stand-alone setups will follow soon)
+2. Currently, building the Resolver centers around a build script .sh(Linux) .bat(windows). The Linux build script is more elaborate than the Windows script because resolver development is currently done on Linux, so the build.sh carries extra functionality around. 
 
 ### Linux Build Steps:
-- First, you must set a few variables in the `build.sh` script. (they are all greyed out)
+- First, you must set a few variables in the `build.sh` script. (they are all grayed out)
 #### Varlibes:
 - `HOU_VER` = Set this to the number off your Houdini version.
 - `COMPILEPLUGIN` = In the Reop-root, you find a folder called `BuildPlugins`. In this folder, there are .cmake scripts that we call BuildPlugins. You will have to set this variable to the path + name off this build plugin as a relative path
 starting from the `BuildPlugins` e.g. `HouLinux/LinuxPy310Houdini20`
-- `INSTALLNAME`{Optonal} = This is an optional variable that allows you to overwrite how the folder for the resolver will be named. 
-- `HOUDINI_INSTALL_DIR`{Optonal} = this is an overwrite for the instal directory off Houdini. If you don't set this, the script will assume that you installed Houdini in `opt/` with the base name of `hfs`
+- `INSTALLNAME`{Optional} = This is an optional variable that allows you to overwrite how the folder for the resolver will be named. 
+- `HOUDINI_INSTALL_DIR`{Optional} = this is an overwrite for the install directory off Houdini. If you don't set this, the script will assume that you installed Houdini in `opt/` with the base name of `hfs`
 
 #### Next Steps {in the Terminal}:
-- Run `build.sh Clean` / `Clean` = Will delete and recreate the build and Resolvers folder for a clean build setup. 
-- Your resolver is compiled and will be under Resolvers +BuildPluing Path. e.g. `Resolvers/HouLinux/LinuxPy310Houdini20`
+- Run `build.sh Clean` / `Clean` = Will delete and recreate the build and Revolvers folder for a clean build setup. 
+- Your resolver is compiled and will be under Revolver's + BuildPluing Path. e.g. `Resolvers/HouLinux/LinuxPy310Houdini20`
 
 
 ### Windows Build Steps:
