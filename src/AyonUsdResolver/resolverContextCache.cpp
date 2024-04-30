@@ -50,7 +50,7 @@ resolverContextCache::printCache() {
     std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(PreCachesharedMutex);
     std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(AyonCachesharedMutex);
     std::unique_lock<std::shared_mutex> CommonCachesharedMutexLock(CommonCachesharedMutex);
-    std::cout << "Printing out the Cache Entrys \n" << std::endl;
+    std::cout << "Printing out the Cache Entries \n" << std::endl;
     std::cout << "PreCache size: " << PreCache->size() << "\n";
     for (const auto &item: *PreCache) {
         std::cout << item.first.c_str() << " // " << item.second.GetPathString().c_str() << "\n";
@@ -81,7 +81,7 @@ resolverContextCache::insert(std::pair<std::string, pxr::ArResolvedPath> &&sourc
     PreCacheFreeItemSlots--;
 };
 
-// TODO implemnt vector insert
+// TODO implement vector insert
 void resolverContextCache::insert(std::vector<std::pair<std::string, pxr::ArResolvedPath>> sourceVec){};
 
 void
