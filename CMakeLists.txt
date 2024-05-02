@@ -1,7 +1,11 @@
 
 
+
 # this line gets an env variable to add to the install dir so that we can batch build against multiple software packages 
+
 set(SelectedCompilePlugin $ENV{COMPILEPLUGIN} CACHE PATH "install suffix for the resolver")
+
+
 
 if (NOT DEFINED ENV{INSTALLNAME})
 	set(InstallName ${SelectedCompilePlugin})
@@ -72,8 +76,8 @@ else()
     set(AR_BOOST_EXTEND )
 endif()
 
-include(BuildPlugins/${SelectedCompilePlugin}.cmake)
 
+include(BuildPlugins/${SelectedCompilePlugin}.cmake)
 # check if the build plugin sets all the neded varibles 
 
 
@@ -103,6 +107,58 @@ if(NOT DEFINED BOOST_LIB_DIR)
 endif()
 
 
+project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
+
+set(BUILD_SHARED_LIBS ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+
+# ----------------------- Project Commands 
+set(AR_AYONUSDRESOLVER_USD_PLUGIN_NAME ayonUsdResolver)
+set(AR_AYONUSDRESOLVER_USD_CXX_CLASS_NAME AyonUsdResolver)
+set(AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_NAME AyonUsdResolver)
+set(AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME ${AR_RESOLVER_USD_PYTHON_MODULE_NAME}.${AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_NAME})
+
+set(AR_AYONUSDRESOLVER_TARGET_LIB ayonUsdResolver)
+set(AR_AYONUSDRESOLVER_TARGET_PYTHON _${AR_AYONUSDRESOLVER_TARGET_LIB})
+set(AR_AYONUSDRESOLVER_INSTALL_PREFIX ${AR_PROJECT_NAME}/${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME})
+
+
+
+# shared libary setup commands
+if (WIN32)
+    set(AR_ARCH_LIB_SUFFIX "dll")
+    message(STATUS "AR_ARCH_LIB_SUFFIX dll")
+else()
+    set(AR_ARCH_LIB_SUFFIX "so")
+    message(STATUS "AR_ARCH_LIB_SUFFIX so")
+endif()
+
+# Ayon Cpp Api
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
+
+
+if(WIN32)
+  set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api/ext/opensslW")
+else()
+  set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api/ext/opensslL")
+endif()
+include_directories(${OPENSSL_ROOT_DIR}/include)
+
+
+# setting default boost namespace 
+set(AR_BOOST_NAMESPACE boost)
+add_compile_definitions(BOOST_ALL_NO_LIB)
+# set default boost extend
+if (WIN32)
+    set(AR_BOOST_EXTEND -mt-x64)
+else()
+    set(AR_BOOST_EXTEND )
+endif()
+
+
 # Boost
 set(AR_BOOST_PYTHON_LIB ${AR_BOOST_NAMESPACE}_${AR_PYTHON_LIB_NUMBER}${AR_BOOST_EXTEND})
 
@@ -116,7 +172,6 @@ if (WIN32)
 else()
     add_compile_options(-fPIC  -Wno-deprecated -Wno-deprecated-declarations)
 endif()
-
 
 
 # --------------------------- Includes / Linking
@@ -136,4 +191,3 @@ link_directories(${AR_PYTHON_LIB_DIR})
 
 # Resolver Code
 add_subdirectory("src/AyonUsdResolver")
-
