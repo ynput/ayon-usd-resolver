@@ -46,5 +46,5 @@ set(AR_BOOST_INCLUDE_DIR ${AR_MAYAUSDPLUGIN_DEVKIT_ROOT}/include/boost)
 set(BOOST_LIB_DIR ${AR_MAYAUSDPLUGIN_ROOT}/USD/lib)
 
 
-add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=1)
-target_compile_definitions(AyonCppApi PUBLIC _GLIBCXX_USE_CXX11_ABI=1)
+# setting Cxx11Abi to on because Hou20 needs it to function 
+set(GLIBCXX_USE_CXX11_ABI 1)

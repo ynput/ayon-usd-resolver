@@ -41,4 +41,9 @@ set(AR_BOOST_INCLUDE_DIR ${AR_UNREAL_ENGINE_ENGINE_FOULDER}/Source/ThirdParty/Bo
 set(BOOST_LIB_DIR ${AR_UNREAL_ENGINE_ENGINE_FOULDER}/Binaries/Linux)
 
 
-set(GLIBCXX_USE_CXX11_ABI 0) 
+set(GLIBCXX_USE_CXX11_ABI 1)
+
+set(CMAKE_CXX_COMPILER "${AR_UNREAL_ENGINE_ENGINE_FOULDER}/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/x86_64-unknown-linux-gnu/bin/clang++")
+set(UE_THIRD_PARTY_LOCATION ${AR_UNREAL_ENGINE_ENGINE_FOULDER}/Source/ThirdParty)
+add_compile_options( "-fPIC" "-nostdinc++" "-I${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/include/c++/v1")
+add_link_options("-stdlib=libc++" "-L${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu/" "-lc++" "-lc++abi"  "-lm" "-lc" "-lgcc_s" "-lgcc" "-lutil")
