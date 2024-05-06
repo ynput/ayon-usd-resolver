@@ -13,7 +13,7 @@
 
 # UNREALENGINEENGINEPATH /home/lyonh/Documents/UnrealEngine/Engine 
 
-set(CMAKE_CXX_COMPILER "clang++")
+# set(CMAKE_CXX_COMPILER "clang++")
 # plugin dependent settings 
 set(AR_UNREAL_ENGINE_ENGINE_FOULDER $ENV{UNREALENGINEENGINEPATH} CACHE PATH "Maya install directory")
 set(AR_UNREAL_ENGINE_USDIMPORTER_THIRDPARTY_FOULDER ${AR_UNREAL_ENGINE_ENGINE_FOULDER}/Plugins/Importers/USDImporter/Source/ThirdParty )
@@ -40,5 +40,5 @@ set(AR_BOOST_EXTEND -mt-x64)
 set(AR_BOOST_INCLUDE_DIR ${AR_UNREAL_ENGINE_ENGINE_FOULDER}/Source/ThirdParty/Boost/boost-1_80_0/include)
 set(BOOST_LIB_DIR ${AR_UNREAL_ENGINE_ENGINE_FOULDER}/Binaries/Linux)
 
-add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=1)
-target_compile_definitions(AyonCppApi PUBLIC _GLIBCXX_USE_CXX11_ABI=1)
+
+set(GLIBCXX_USE_CXX11_ABI 0) 

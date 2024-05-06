@@ -1,11 +1,15 @@
+<<<<<<< HEAD
 
 
 
 # this line gets an env variable to add to the install dir so that we can batch build against multiple software packages 
 
+=======
+cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
+
+# this line gets an env variable to add to the install dir so that we can batch build against multiple software packages 
+>>>>>>> 0248650 (wokring for unreal needs a lot off cleanup to work for the rest again)
 set(SelectedCompilePlugin $ENV{COMPILEPLUGIN} CACHE PATH "install suffix for the resolver")
-
-
 
 if (NOT DEFINED ENV{INSTALLNAME})
 	set(InstallName ${SelectedCompilePlugin})
@@ -21,6 +25,7 @@ set(AR_PROJECT_NAME UsdAssetResolver)
 set(AR_RESOLVER_USD_PYTHON_MODULE_NAME usdAssetResolver)
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/Resolvers/${InstallName}" CACHE PATH "install dir")
 
+<<<<<<< HEAD
 cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
 
@@ -32,6 +37,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ----------------------- Project Commands 
 
+=======
+>>>>>>> 0248650 (wokring for unreal needs a lot off cleanup to work for the rest again)
 set(AR_AYONUSDRESOLVER_USD_PLUGIN_NAME ayonUsdResolver)
 set(AR_AYONUSDRESOLVER_USD_CXX_CLASS_NAME AyonUsdResolver)
 set(AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_NAME AyonUsdResolver)
@@ -41,8 +48,25 @@ set(AR_AYONUSDRESOLVER_TARGET_LIB ayonUsdResolver)
 set(AR_AYONUSDRESOLVER_TARGET_PYTHON _${AR_AYONUSDRESOLVER_TARGET_LIB})
 set(AR_AYONUSDRESOLVER_INSTALL_PREFIX ${AR_PROJECT_NAME}/${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME})
 
+<<<<<<< HEAD
 
 
+=======
+set(BUILD_SHARED_LIBS ON)
+# set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+
+
+set(CMAKE_CXX_COMPILER "/home/lyonh/Documents/UnrealEngine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/x86_64-unknown-linux-gnu/bin/clang++")
+set(UE_THIRD_PARTY_LOCATION /home/lyonh/Documents/UnrealEngine/Engine/Source/ThirdParty)
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fPIC -nostdinc++ -I${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/include/c++/v1 ")
+# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -L${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu/ -lc++ -lc++abi  -lm -lc -lgcc_s -lgcc -lutil")
+add_compile_options("-std=c++17" "-fPIC" "-nostdinc++" "-I${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/include/c++/v1")
+add_link_options("-stdlib=libc++" "-L${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu/" "-lc++" "-lc++abi"  "-lm" "-lc" "-lgcc_s" "-lgcc" "-lutil")
+
+>>>>>>> 0248650 (wokring for unreal needs a lot off cleanup to work for the rest again)
 # shared library setup commands
 if (WIN32)
     set(AR_ARCH_LIB_SUFFIX "dll")
@@ -53,10 +77,16 @@ else()
 endif()
 
 # Ayon Cpp Api
+<<<<<<< HEAD
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
 
 
+=======
+
+
+project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
+>>>>>>> 0248650 (wokring for unreal needs a lot off cleanup to work for the rest again)
 
 if(WIN32)
   set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api/ext/opensslW")
@@ -65,19 +95,35 @@ else()
 endif()
 include_directories(${OPENSSL_ROOT_DIR}/include)
 
+<<<<<<< HEAD
+=======
+# include_directories(/home/lyonh/Documents/UnrealEngine/Engine/Source/ThirdParty/OpenSSL/1.1.1t/include/Unix)
+>>>>>>> 0248650 (wokring for unreal needs a lot off cleanup to work for the rest again)
 
 # setting default boost namespace 
 set(AR_BOOST_NAMESPACE boost)
 add_compile_definitions(BOOST_ALL_NO_LIB)
+<<<<<<< HEAD
+=======
+
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
+>>>>>>> 0248650 (wokring for unreal needs a lot off cleanup to work for the rest again)
 # set default boost extend
 if (WIN32)
     set(AR_BOOST_EXTEND -mt-x64)
 else()
     set(AR_BOOST_EXTEND )
 endif()
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0248650 (wokring for unreal needs a lot off cleanup to work for the rest again)
 
 include(BuildPlugins/${SelectedCompilePlugin}.cmake)
+
+add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=${GLIBCXX_USE_CXX11_ABI})
+target_compile_definitions(AyonCppApi PUBLIC _GLIBCXX_USE_CXX11_ABI=${GLIBCXX_USE_CXX11_ABI})
 # check if the build plugin sets all the neded varibles 
 
 
@@ -107,58 +153,6 @@ if(NOT DEFINED BOOST_LIB_DIR)
 endif()
 
 
-project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
-
-set(BUILD_SHARED_LIBS ON)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-
-# ----------------------- Project Commands 
-set(AR_AYONUSDRESOLVER_USD_PLUGIN_NAME ayonUsdResolver)
-set(AR_AYONUSDRESOLVER_USD_CXX_CLASS_NAME AyonUsdResolver)
-set(AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_NAME AyonUsdResolver)
-set(AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME ${AR_RESOLVER_USD_PYTHON_MODULE_NAME}.${AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_NAME})
-
-set(AR_AYONUSDRESOLVER_TARGET_LIB ayonUsdResolver)
-set(AR_AYONUSDRESOLVER_TARGET_PYTHON _${AR_AYONUSDRESOLVER_TARGET_LIB})
-set(AR_AYONUSDRESOLVER_INSTALL_PREFIX ${AR_PROJECT_NAME}/${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME})
-
-
-
-# shared libary setup commands
-if (WIN32)
-    set(AR_ARCH_LIB_SUFFIX "dll")
-    message(STATUS "AR_ARCH_LIB_SUFFIX dll")
-else()
-    set(AR_ARCH_LIB_SUFFIX "so")
-    message(STATUS "AR_ARCH_LIB_SUFFIX so")
-endif()
-
-# Ayon Cpp Api
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
-
-
-if(WIN32)
-  set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api/ext/opensslW")
-else()
-  set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api/ext/opensslL")
-endif()
-include_directories(${OPENSSL_ROOT_DIR}/include)
-
-
-# setting default boost namespace 
-set(AR_BOOST_NAMESPACE boost)
-add_compile_definitions(BOOST_ALL_NO_LIB)
-# set default boost extend
-if (WIN32)
-    set(AR_BOOST_EXTEND -mt-x64)
-else()
-    set(AR_BOOST_EXTEND )
-endif()
-
-
 # Boost
 set(AR_BOOST_PYTHON_LIB ${AR_BOOST_NAMESPACE}_${AR_PYTHON_LIB_NUMBER}${AR_BOOST_EXTEND})
 
@@ -172,6 +166,7 @@ if (WIN32)
 else()
     add_compile_options(-fPIC  -Wno-deprecated -Wno-deprecated-declarations)
 endif()
+
 
 
 # --------------------------- Includes / Linking
@@ -191,3 +186,4 @@ link_directories(${AR_PYTHON_LIB_DIR})
 
 # Resolver Code
 add_subdirectory("src/AyonUsdResolver")
+
