@@ -1,4 +1,4 @@
-
+cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
 
 # this line gets an env variable to add to the install dir so that we can batch build against multiple software packages 
@@ -20,13 +20,10 @@ set(AR_PROJECT_NAME UsdAssetResolver)
 set(AR_RESOLVER_USD_PYTHON_MODULE_NAME usdAssetResolver)
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/Resolvers/${InstallName}" CACHE PATH "install dir")
 
-cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
-project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
 
 set(BUILD_SHARED_LIBS ON)
-set(CMAKE_CXX_STANDARD 17)
+# set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 
@@ -48,10 +45,10 @@ set(AR_AYONUSDRESOLVER_INSTALL_PREFIX ${AR_PROJECT_NAME}/${AR_AYONUSDRESOLVER_US
 
 set(CMAKE_CXX_COMPILER "/home/lyonh/Documents/UnrealEngine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/x86_64-unknown-linux-gnu/bin/clang++")
 set(UE_THIRD_PARTY_LOCATION /home/lyonh/Documents/UnrealEngine/Engine/Source/ThirdParty)
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fPIC -nostdinc++ -I${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/include/c++/v1 ")
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -L${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu/ -lc++ -lc++abi  -lm -lc -lgcc_s -lgcc -lutil")
-add_compile_options("-std=c++17" "-fPIC" "-nostdinc++" "-I${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/include/c++/v1")
-add_link_options("-stdlib=libc++" "-L${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu/" "-lc++" "-lc++abi"  "-lm" "-lc" "-lgcc_s" "-lgcc" "-lutil")
+
+
+add_compile_options(-nostdinc++ -I${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/include/c++/v1)
+add_link_options(-stdlib=libc++ -L${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu/ -lc++ -lc++abi -lm -lc -lgcc_s -lgcc -lutil)
 
 
 # shared library setup commands
@@ -63,10 +60,12 @@ else()
     message(STATUS "AR_ARCH_LIB_SUFFIX so")
 endif()
 
-# Ayon Cpp Api
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
-
+if (WIN32)
+    add_compile_definitions(NOMINMAX)
+    add_compile_options(/Zc:inline- /w)
+else()
+    add_compile_options(-fPIC  -Wno-deprecated -Wno-deprecated-declarations)
+endif()  
 
 
 if(WIN32)
@@ -81,9 +80,6 @@ include_directories(${OPENSSL_ROOT_DIR}/include)
 set(AR_BOOST_NAMESPACE boost)
 add_compile_definitions(BOOST_ALL_NO_LIB)
 
-
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
 
 if (WIN32)
     set(AR_BOOST_EXTEND -mt-x64)
@@ -123,7 +119,7 @@ if(NOT DEFINED BOOST_LIB_DIR)
 endif()
 
 
-project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
+project(${AR_PROJECT_NAME} VERSION 1.0.0 )
 # Include AyonCppApi 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
@@ -138,12 +134,7 @@ endif()
 # Boost
 set(AR_BOOST_PYTHON_LIB ${AR_BOOST_NAMESPACE}_${AR_PYTHON_LIB_NUMBER}${AR_BOOST_EXTEND})
 
-if (WIN32)
-    add_compile_definitions(NOMINMAX)
-    add_compile_options(/Zc:inline- /w)
-else()
-    add_compile_options(-fPIC  -Wno-deprecated -Wno-deprecated-declarations)
-endif()  
+
 
 
 # shared library setup commands

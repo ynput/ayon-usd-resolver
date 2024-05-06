@@ -13,7 +13,7 @@
 
 # UNREALENGINEENGINEPATH /home/lyonh/Documents/UnrealEngine/Engine 
 
-# set(CMAKE_CXX_COMPILER "clang++")
+set(CMAKE_CXX_COMPILER "clang++")
 # plugin dependent settings 
 set(AR_UNREAL_ENGINE_ENGINE_FOULDER $ENV{UNREALENGINEENGINEPATH} CACHE PATH "Maya install directory")
 set(AR_UNREAL_ENGINE_USDIMPORTER_THIRDPARTY_FOULDER ${AR_UNREAL_ENGINE_ENGINE_FOULDER}/Plugins/Importers/USDImporter/Source/ThirdParty )
@@ -45,5 +45,5 @@ set(GLIBCXX_USE_CXX11_ABI 1)
 
 set(CMAKE_CXX_COMPILER "${AR_UNREAL_ENGINE_ENGINE_FOULDER}/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/x86_64-unknown-linux-gnu/bin/clang++")
 set(UE_THIRD_PARTY_LOCATION ${AR_UNREAL_ENGINE_ENGINE_FOULDER}/Source/ThirdParty)
-add_compile_options( "-fPIC" "-nostdinc++" "-I${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/include/c++/v1")
-add_link_options("-stdlib=libc++" "-L${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu/" "-lc++" "-lc++abi"  "-lm" "-lc" "-lgcc_s" "-lgcc" "-lutil")
+add_compile_options(-nostdinc++ -I${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/include/c++/v1)
+add_link_options(-stdlib=libc++ -L${UE_THIRD_PARTY_LOCATION}/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu -lc++ -lc++abi -lm -lc -lgcc_s -lgcc -lutil)
