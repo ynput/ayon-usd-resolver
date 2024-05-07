@@ -94,8 +94,8 @@ target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     ${AR_AYONUSDRESOLVER_TARGET_LIB}
     ${AR_BOOST_PYTHON_LIB}
 )
-
-# target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_PYTHON} AyonCppApi)
+#TODO posibly no need to link AyonCppApi for the Python target. needs testing
+target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_PYTHON} AyonCppApi)
 # Headers
 target_include_directories(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     PUBLIC

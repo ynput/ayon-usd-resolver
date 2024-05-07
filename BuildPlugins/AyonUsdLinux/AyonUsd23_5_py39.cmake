@@ -9,7 +9,8 @@
 # AR_PXR_LIB_PREFIX
 
 
-# plugin dependent settings 
+# in the case off AyonUsd we need to set project before finding the Python package or we end up in an variable change dead lock
+project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
 
 set(AR_AYONUSD_ROOT $ENV{AyonUsdRoot} CACHE PATH "Ayon Usd install directory")
 if (NOT DEFINED ENV{AyonUsdRoot})
@@ -35,8 +36,9 @@ if (NOT ${Python_VERSION} STREQUAL 3.9) # Check if System Installed Python versi
   message(FATAL_ERROR "Python version: ${Python_VERSION}")
 endif()
 find_package(Python COMPONENTS Development)
-set(AR_PYTHON_LIB_NUMBER python39)
 get_filename_component(Python_Base_Dir ${Python_INCLUDE_DIRS} DIRECTORY)
+#
+set(AR_PYTHON_LIB_NUMBER python39)
 set(AR_PYTHON_LIB_DIR ${Python_Base_Dir}) 
 set(AR_PYTHON_INCLUDE_DIR ${Python_Base_Dir}/python3.9)
 
@@ -48,8 +50,4 @@ set(BOOST_LIB_DIR ${AR_AYONUSD_ROOT}/lib)
 
 
 # can be enabled if the USD binary's you`r using are build without the new CXX11 ABI
-# add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
-# target_compile_definitions(AyonCppApi PUBLIC _GLIBCXX_USE_CXX11_ABI=0)
-
-
-
+# set(GLIBCXX_USE_CXX11_ABI 1)

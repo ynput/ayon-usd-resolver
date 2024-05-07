@@ -12,7 +12,7 @@
 
 
 # MAYAUSDPATH /usr/autodesk/mayausd/maya2024/0.25.0_202310160731-bbc8cc8/mayausd
-# MAYAUSDDEVKITPATH /home/lyonh/Downloads/devkit
+# MAYAUSDDEVKITPATH /path/to/devkit
 # MAYAPATH /usr/autodesk/maya2024
 
 # plugin dependent settings 
@@ -45,6 +45,4 @@ set(AR_PYTHON_INCLUDE_DIR ${AR_MAYA_ROOT}/include/Python310/Python)
 set(AR_BOOST_INCLUDE_DIR ${AR_MAYAUSDPLUGIN_DEVKIT_ROOT}/include/boost)
 set(BOOST_LIB_DIR ${AR_MAYAUSDPLUGIN_ROOT}/USD/lib)
 
-
-# setting Cxx11Abi to on because Hou20 needs it to function 
 set(GLIBCXX_USE_CXX11_ABI 1)

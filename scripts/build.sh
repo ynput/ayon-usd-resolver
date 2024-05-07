@@ -52,7 +52,6 @@ if [ "$CLEAN_BUILD" -eq 1 ]; then
   rm -rf build
   rm -rf Resolvers/${COMPILEPLUGIN}
   mkdir build
-  error
 fi
 
 #----------------- cmake Commands ------------------
