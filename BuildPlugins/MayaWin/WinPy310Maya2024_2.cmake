@@ -30,19 +30,20 @@ if (NOT DEFINED ENV{MAYAUSDDEVKITPATH})
 endif()
 
 
-set(AR_PXR_LIB_DIR ${AR_MAYAUSDPLUGIN_ROOT}/USD/lib)
+set(AR_PXR_LIB_DIR ${AR_MAYAUSDPLUGIN_DEVKIT_ROOT}/lib)
 set(AR_PXR_LIB_PREFIX "usd_") #the library prefix is divergent between Linux and win, some times software developers also rename the prefix
 set(AR_PXR_INCLUDE_DIR ${AR_MAYAUSDPLUGIN_DEVKIT_ROOT}/include)
 
 
+# 'python310.lib'
 # setting up python 
 set(AR_PYTHON_LIB_NUMBER python310)
-set(AR_PYTHON_LIB_DIR ${AR_MAYA_ROOT}/python/lib)
+set(AR_PYTHON_LIB_DIR ${AR_MAYA_ROOT}/lib)
 set(AR_PYTHON_INCLUDE_DIR ${AR_MAYA_ROOT}/include/Python310/Python)
 #set(AR_PYTHON_LIB_SITEPACKAGES ${AR_PYTHON_LIB_DIR}/${AR_PYTHON_LIB}/site-packages)
 
+set(AR_BOOST_EXTEND -vc142-mt-x64-1_76)
+set(AR_BOOST_INCLUDE_DIR ${AR_MAYAUSDPLUGIN_DEVKIT_ROOT}/include/boost-1_76)
+set(BOOST_LIB_DIR ${AR_MAYAUSDPLUGIN_ROOT}/lib)
 
-set(AR_BOOST_INCLUDE_DIR ${AR_MAYAUSDPLUGIN_DEVKIT_ROOT}/include/boost)
-set(BOOST_LIB_DIR ${AR_MAYAUSDPLUGIN_ROOT}/USD/lib)
-
-set(GLIBCXX_USE_CXX11_ABI 1)
+#set(GLIBCXX_USE_CXX11_ABI 1)
