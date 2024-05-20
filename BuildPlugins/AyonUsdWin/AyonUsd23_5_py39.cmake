@@ -10,6 +10,7 @@
 
 
 # plugin dependent settings 
+project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
 
 set(AR_AYONUSD_ROOT $ENV{AyonUsdRoot} CACHE PATH "Ayon Usd install directory")
 if (NOT DEFINED ENV{AyonUsdRoot})
