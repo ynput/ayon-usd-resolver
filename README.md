@@ -69,7 +69,8 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
 ### Linux Build Steps:
 - First, you must set a few variables in the `build.sh` script. (they are all grayed out)
 #### Varlibes:
-- `HOU_VER` = Set this to the number off your Houdini version.
+- `HOU_VER` = Set this to the number of your Houdini version.
+
 - `COMPILEPLUGIN` = In the Reop-root, you find a folder called `BuildPlugins`. In this folder, there are .cmake scripts that we call BuildPlugins. You will have to set this variable to the path + name off this build plugin as a relative path
 starting from the `BuildPlugins` e.g. `HouLinux/LinuxPy310Houdini20`
 - `INSTALLNAME`{Optional} = This is an optional variable that allows you to overwrite how the folder for the resolver will be named. 
