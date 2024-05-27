@@ -41,7 +41,8 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
  
 ## Download the repo and its submodules:  
     ```
-    git clone --recurse-submodules git@github.com:ynput/ayon-usd-resolver.git
+    git clone --recurse-submodules https://github.com/ynput/ayon-usd-resolver.git
+
     git submodule update --init --recursive
     ```
 
