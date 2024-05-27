@@ -48,7 +48,8 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
 
 ## Pre-build / Self Compiled
 
-- We will deliver some prebuilt versions off the resolver in the future.
+- AYON will provide some pre-built versions of the resolver in the future.
+
 - but it's essential to know that those versions will be the prebuilt binaries that our tests created, so you might not find the software or OS version you want.  
 - It's also to be expected that resolver prebuilds are behind new software releases.  
 
