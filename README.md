@@ -86,7 +86,8 @@ starting from the `BuildPlugins` e.g. `HouLinux/LinuxPy310Houdini20`
 
 ### Windows Build Steps:
 - First, you will have to set a few variables in the `build.bat` script.
-#### Varlibes:
+#### Variables:
+
 - `HFS` = this will be the Houdini install directory e.g `C:\Program Files\Side Effects Software\Houdini 20.0.590`
 - `COMPILEPLUGIN` = In the Reop-root, you find a folder called `BuildPlugins`. In this folder, there are .cmake scripts that we call BuildPlugins. You will have to set this variable to the path + name off this build plugin as a relative path
 starting from the `BuildPlugins`, e.g. `HouWin/WindowsPy310Houdini20`
