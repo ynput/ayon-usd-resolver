@@ -74,7 +74,8 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
 - `COMPILEPLUGIN` = In the repository root, you'll find a folder called `BuildPlugins`. In this folder, there are .cmake scripts that we call *BuildPlugins*. You will have to set this variable to the path + name of this build plugin as a relative path.
 
 starting from the `BuildPlugins` e.g. `HouLinux/LinuxPy310Houdini20`
-- `INSTALLNAME`{Optional} = This is an optional variable that allows you to overwrite how the folder for the resolver will be named. 
+- `INSTALLNAME`{Optional} = This is an optional variable that allows you to override how the folder for the resolver will be named. 
+
 - `HOUDINI_INSTALL_DIR`{Optional} = this is an overwrite for the install directory off Houdini. If you don't set this, the script will assume that you installed Houdini in `opt/` with the base name of `hfs`
 
 #### Next Steps {in the Terminal}:
