@@ -62,7 +62,8 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
 
 
 ## Core concepts 
-1. currently, we only support Houdini and AyonUsd for building Revolver's. (Other software Packages and stand-alone setups will follow soon)
+1. Currently, we only support Houdini and AyonUsd for building revolvers (other software packages and stand-alone setups will follow).
+
 2. Currently, building the Resolver centers around a build script .sh(Linux) .bat(windows). The Linux build script is more elaborate than the Windows script because resolver development is currently done on Linux, so the build.sh carries extra functionality around. 
 
 ### Linux Build Steps:
