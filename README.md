@@ -76,7 +76,8 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
 starting from the `BuildPlugins` e.g. `HouLinux/LinuxPy310Houdini20`
 - `INSTALLNAME`{Optional} = This is an optional variable that allows you to override how the folder for the resolver will be named. 
 
-- `HOUDINI_INSTALL_DIR`{Optional} = this is an overwrite for the install directory off Houdini. If you don't set this, the script will assume that you installed Houdini in `opt/` with the base name of `hfs`
+- `HOUDINI_INSTALL_DIR`{Optional} = this is an override for the install directory off Houdini. If you don't set this, the script will assume that you installed Houdini in `opt/` with the base name of `hfs`
+
 
 #### Next Steps {in the Terminal}:
 - Run `build.sh Clean` / `Clean` = Will delete and recreate the build and Revolvers folder for a clean build setup. 
