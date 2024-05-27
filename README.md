@@ -54,7 +54,8 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
 - It's also to be expected that resolver builds are behind new software releases.  
 
 
-# ---------------------------------- Prebuild ----------------------------------
+## Prebuild
+
 - Prebuilts aren't available as of right now.
   
 # ------------------------------- Self Compiled -------------------------------
