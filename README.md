@@ -58,7 +58,8 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
 
 - Prebuilts aren't available as of right now.
   
-# ------------------------------- Self Compiled -------------------------------
+## Self Compiled
+
 
 ## Core concepts 
 1. currently, we only support Houdini and AyonUsd for building Revolver's. (Other software Packages and stand-alone setups will follow soon)
