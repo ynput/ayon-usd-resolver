@@ -2,7 +2,6 @@
 if (WIN32)
     add_compile_definitions(AR_AYONUSDRESOLVER_EXPORTS)
 endif()
-
 ### Targets ###
 add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
     SHARED
@@ -96,7 +95,7 @@ target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     ${AR_BOOST_PYTHON_LIB}
 )
 
-#target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_PYTHON} AyonCppApi)
+target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_PYTHON} AyonCppApi)
 # Headers
 target_include_directories(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     PUBLIC
@@ -110,7 +109,7 @@ set_target_properties(${AR_AYONUSDRESOLVER_TARGET_PYTHON} PROPERTIES PREFIX "")
 if (WIN32)
     set_target_properties(${AR_AYONUSDRESOLVER_TARGET_PYTHON} PROPERTIES SUFFIX ".pyd")
 endif()
-# Preprocessor Defines (Same as #define)
+
 target_compile_definitions(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     PRIVATE
         # USD Plugin Internal Namings
@@ -118,8 +117,8 @@ target_compile_definitions(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
         MFB_PACKAGE_MODULE=${AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_NAME}
         AR_AYONUSDRESOLVER_USD_PLUGIN_NAME=${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}
         AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME=${AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME}
-        # AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME=${AR_AYONUSDRESOLVER_USD_PYTHON_EXPOSE_MODULE_NAME}
 )
+
 # Install
 install (
     FILES __init__.py

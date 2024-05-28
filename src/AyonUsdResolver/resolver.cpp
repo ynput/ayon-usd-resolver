@@ -39,7 +39,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 AR_DEFINE_RESOLVER(AyonUsdResolver, ArResolver);
 
-AyonUsdResolver::AyonUsdResolver(){};
+AyonUsdResolver::AyonUsdResolver() = default;
 
 AyonUsdResolver::~AyonUsdResolver() = default;
 
@@ -71,9 +71,8 @@ std::string
 AyonUsdResolver::_CreateIdentifierForNewAsset(const std::string &assetPath,
                                               const ArResolvedPath &anchorAssetPath) const {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-        .Msg(
-            "Resolver::_CreateIdentifierForNewAsset('%s', '%s')\n",
-            assetPath.c_str(), anchorAssetPath.GetPathString().c_str());
+        .Msg("Resolver::_CreateIdentifierForNewAsset('%s', '%s')\n", assetPath.c_str(),
+             anchorAssetPath.GetPathString().c_str());
     if (assetPath.empty()) {
         return assetPath;
     }
@@ -111,6 +110,8 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
                 ArResolvedPath resolvedPath(asset.resolvedAssetPath);
 
                 if (resolvedPath) {
+                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                        .Msg("Resolver::_Resolve( '%s' ) resolved \n", resolvedPath.GetPathString().c_str());
                     return resolvedPath;
                 }
                 // Only try the first valid context.
@@ -195,6 +196,7 @@ AyonUsdResolver::_OpenAssetForWrite(const ArResolvedPath &resolvedPath, WriteMod
 const AyonUsdResolverContext*
 AyonUsdResolver::_GetCurrentContextPtr() const {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_GetCurrentContextPtr \n");
+
     return _GetCurrentContextObject<AyonUsdResolverContext>();
 }
 

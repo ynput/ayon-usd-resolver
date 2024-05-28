@@ -40,10 +40,7 @@ set(BOOST_LIB_DIR ${AR_HOUDINI_INCLUDE_DIR})
 
 
 # setting Cxx11Abi to off because Hou20  py39 is usually gcc9 and so needs cxx11=0
-add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
-target_compile_definitions(AyonCppApi PUBLIC _GLIBCXX_USE_CXX11_ABI=0)
-
-
+set(GLIBCXX_USE_CXX11_ABI 0)
 
 # Houdini include dir (might shadow some other library but that's what we want)
 link_directories(${AR_HOUDINI_LIB_DIR})

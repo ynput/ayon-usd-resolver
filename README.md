@@ -11,15 +11,18 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
 > This repository is a _development_ repository and uses Git Submodules. Make sure to use the correct `git clone` commands accordingly.  
 
 > [!IMPORTANT]  
-> The [AYON](https://ynput.io/ayon/) USD Resolver is an [AR2.0](https://openusd.org/release/wp_ar2.html) resolver and will not support packages that only support AR1.0 interface.
+> The [AYON](https://ynput.io/ayon/) USD Resolver is a [AR2.0](https://openusd.org/release/wp_ar2.html) resolver and will not support packages that only support AR1.0
+
 
 > [!NOTE]  
 > Building and testing is now done with Houdini 19.5 and Houdini 20. More packages will be available soon. To build against the "standalone" USD framework you need to either comment `include(BuildPlugins/${SelectedCompilePlugin}.cmake)` line in `CMakeLists.txt` or build you own build plugin in `BuildPlugins`.
 
 ### Requirements:
 - C++ Compiler
-- CMake
-- USD Framework or package with USD headers and libraries
+- Cmake
+- GitHub public key setup (this is because the sub-modules are linked via git@)
+- Target DCC / SDK installed
+
 
 
 ### Tested Platforms:
@@ -28,74 +31,105 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
 	- Hou 19.5.900
 	- Hou 20.0.590
 	- Hou 20.0.630
+    - AyonUsd23_5_py39 (System Python install)
 - Windows 10
 	- Hou 19.5.805
 	- Hou 19.5.900
 	- Hou 20.0.590
 	- Hou 20.0.630
-	- USD 24.03
+  - AyonUsd23_5_py39 (Pyenv-Win)
  
+## Download the repo and its submodules:  
+    ```
+    git clone --recurse-submodules https://github.com/ynput/ayon-usd-resolver.git
+
+    git submodule update --init --recursive
+    ```
+
+## Pre-build / Self Compiled
+
+- AYON will provide some pre-built versions of the resolver in the future.
+
+- Those versions will be the pre-built binaries that our tests created, so you might not find your software/platform combination.  
+- It's also to be expected that resolver builds are behind new software releases.  
 
 
-## Pre-build / Manual build
-In the future, we'll have pre-built versions of the resolver ready for you. But remember, these are the same ones our tests use, so they might not match the exact software or platform you need. Also, these prebuilt resolvers may not be up-to-date with the latest software releases.
+## Prebuild
 
-### Pre-build
-TBA - Pre-builds are not available now. They will be shipped with [AYON USD Addon](https://github.com/ynput/ayon-usd)
+- Prebuilts aren't available as of right now.
   
-### Building
-
-#### Download the repo and its submodules:  
-```sh
-git clone --recurse-submodules https://github.com/ynput/ayon-usd-resolver.git
-git submodule update --init --recursive
-```
-
-#### Core concepts 
-We currently support Houdini for building Resolvers. Support for other software and stand-alone configurations is coming soon.
-
-Building a Resolver involves using _.sh_ (Linux) and _.bat_ (Windows) shell scripts. The Linux script has more features because we mainly develop Resolvers on Linux, so `build.sh` includes additional functions. 
-
-#### Linux Build Steps for Houdini:
-First, set some variables in the `build.sh` script:
-
-| Variable | Description |
-| --- | --- |
-| `HOU_VER` | This is your Houdini version. |
-| `COMPILEPLUGIN` | In the root of the repo, you can find a folder called `BuildPlugins`. In this folder, there are `.cmake` scripts that we call _BuildPlugins_. You will have to set this variable to the path + name of this build plugin as a relative path starting from the `BuildPlugins`, e.g. `HouLinux/LinuxPy310Houdini20` |
-| `INSTALLNAME` _(optional)_ | This is an optional variable that allows you to overwrite the resolver's folder name. |
-| `HOUDINI_INSTALL_DIR` _(optional)_ | This overrides the install directory for Houdini. If you don't specify this, the script will think you installed Houdini in `opt/` under the name `hfs`. |
-
-Run `build.sh Clean` / `Clean` to delete and re-create the build and Resolvers folder for a clean build.
-
-Your resolver is compiled and will be under Resolvers + BuildPlugin path, e.g. `Resolvers/HouLinux/LinuxPy310Houdini20`
+## Self Compiled
 
 
-#### Windows Build Steps for Houdini:
-Again, set few variables in the `build.bat` script:
+## Core concepts 
+1. Currently, we only support specific set of DCCs and their versions, and AyonUsd for building revolvers (other software packages and stand-alone setups will follow).
 
-| Variable | Description |
-| --- | --- |
-| `HFS` | Houdini install directory e.g `C:\Program Files\Side Effects Software\Houdini 20.0.590` |
-| `COMPILEPLUGIN` | In the root of the repo, you can find a folder called `BuildPlugins`. In this folder, there are `.cmake` scripts that we call _BuildPlugins_. You will have to set this variable to the path + name of this build plugin as a relative path starting from the `BuildPlugins`, e.g. `HouWin/WindowsPy310Houdini20` |
 
-Run `build.bat` and your resolver is compiled in `Resolvers` + BuildPluing Path. e.g. `Resolvers/HouLinux/LinuxPy310Houdini20`
+2. Currently, building the Resolver centers around a build script .sh(Linux) .bat(windows). The Linux build script is more elaborate than the Windows script because resolver development is currently done on Linux, so the build.sh carries extra functionality around. 
 
-### How to get the resolver working with Houdini and [AYON](https://ynput.io/ayon/)
+### Linux Build Steps:
+- First, you must set a few variables in the `build.sh` script. (they are all grayed out)
+#### Varlibes:
+- `HOU_VER` = Set this to the number of your Houdini version.
 
-#### General
-The Resolver needs some environment variables to work, namely: 
+- `COMPILEPLUGIN` = In the repository root, you'll find a folder called `BuildPlugins`. In this folder, there are .cmake scripts that we call *BuildPlugins*. You will have to set this variable to the path + name of this build plugin as a relative path.
 
-| Variable | Description |
-| --- | --- |
-| `USD_ASSET_RESOLVER` | Define for Usd what resolver to use and where to find it (this will not overwrite the default resolver as a fallback). |
-| `TF_DEBUG` | Defines what USD debug messages will be printed[^1]. |
-| `LD_LIBRARY_PATH` | Defines where the C++ dynamic library files can be found for the resolver. |
-| `PXR_PLUGINPATH_NAME` | Define where USD plug-ins are found - _it might look like you're supposed to place the AyonUsdResolver name in here, but you're actually putting the path to the `PluginInfo.json` folder into this variable._ |  
-| `PYTHONPATH` | Used to include the resolver's Python wrapper functions to Python. |
-| `AYONLOGGERLOGLVL` | Sets the logging level for the AyonCppApi - `INFO`, `ERROR`, `WARN`, `CRITICAL`, `OFF` |
-| `AYONLOGGERFILELOGGING` | Enables or disables file logging in AyonCppApi - `OFF`, `ON` |
-| `AYONLOGGERFILEPOS` | Sets a filepath for the AyonCppApi logging - `/path/to` or `./relPath` |
+starting from the `BuildPlugins` e.g. `HouLinux/LinuxPy310Houdini20`
+- `INSTALLNAME`{Optional} = This is an optional variable that allows you to override how the folder for the resolver will be named. 
+
+- `HOUDINI_INSTALL_DIR`{Optional} = this is an override for the install directory off Houdini. If you don't set this, the script will assume that you installed Houdini in `opt/` with the base name of `hfs`
+
+
+#### Next Steps {in the Terminal}:
+- Run `build.sh Clean` / `Clean` = Will delete and recreate the build and Revolvers folder for a clean build setup. 
+- Your resolver is compiled and will be under Revolver's + BuildPluing Path. e.g. `Resolvers/HouLinux/LinuxPy310Houdini20`
+
+
+### Windows Build Steps:
+- First, you will have to set a few variables in the `build.bat` script.
+#### Variables:
+
+- `HFS` = this will be the Houdini install directory e.g `C:\Program Files\Side Effects Software\Houdini 20.0.590`
+- `COMPILEPLUGIN` = In the Reop-root, you find a folder called `BuildPlugins`. In this folder, there are .cmake scripts that we call BuildPlugins. You will have to set this variable to the path + name off this build plugin as a relative path
+starting from the `BuildPlugins`, e.g. `HouWin/WindowsPy310Houdini20`
+
+#### Next Steps {in the Terminal}:
+- Run `build.bat`.
+- Your resolver is compiled and will be under Resolvers +BuildPluing Path. e.g. `Resolvers/HouLinux/LinuxPy310Houdini20`
+
+
+## How to get the resolver working with Houdini and [AYON](https://ynput.io/ayon/)
+### General. 
+The Resolver needs a few Env variables to work, namely:  
+
+USD_ASSET_RESOLVER:  
+- This variable tells Usd what resolver to use and where to find it (this will not overwrite the default resolver as a fallback).
+
+TF_DEBUG:  
+- This variable allows you to choose what Debug messages will be printed.  
+ 	- In the CPP files, you might find TF_DEBUG().Msg();  and one of the two Enum Values AYONUSDRESOLVER_RESOLVER or AYONUSDRESOLVER_RESOLVER_CONTEXT these allow you to select what debug messages will be printed.  
+   	- If you want the resolver to be silent, then you can leave this value empty. It's best practice to keep it in your env variable setup, just in case.   
+
+LD_LIBRARY_PATH:  
+- it describes where the C++ dynamic library files can be found for the resolver. 
+
+PXR_PLUGINPATH_NAME:  
+- This is also a variable for Usd, and it might look like you're supposed to place the AyonUsdResolver name in here, but you're actually putting the path to the PluginInfo.json folder into this variable.  
+
+PYTHONPATH:
+- This is again a path for Usd that allows you to access the Python wrapper functions from the resolver inside Usd.
+
+AYONLOGGERLOGLVL:  
+- This Environment variable allows you to set the log level for the CppApi.  
+	- INFO,ERROR,WARN,CRITICAL,OFF
+  	  
+AYONLOGGERFILELOGGING:  
+- This Environment variable allows you to enable or disable file logging in CppApi.  
+	- OFF,ON
+  	  
+AYONLOGGERFILEPOS:  
+-  This Environment variable allows you to set a file path for the CppApi logging.  
+	- /path/to or relPath  
 
  
 Inside AYON, you can use the Environment Field of your software version to define what resolver you want to use. Here is an example of how that might look:
