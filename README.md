@@ -21,7 +21,7 @@ This resolver uses local caching and connects with the AYON Server to handle AYO
 - C++ Compiler
 - Cmake
 - GitHub public key setup (this is because the sub-modules are linked via git@)
-- Houdini Install
+- Target DCC / SDK installed
 
 
 
