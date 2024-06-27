@@ -21,9 +21,7 @@ body:
   - type: textarea
     attributes:
       label: Conceptual Framework
-      description: The Conceptual Framework outlines the underlying principles, theories, and models that inform and support the proposal. It provides a structured way to understand the relationships between different concepts and how they contribute to the overall objectives.
-
-[Provide an overview of the conceptual framework, including key theories, models, or principles relevant to the proposal.] 
+      description: The Conceptual Framework outlines the underlying principles, theories, and models that inform and support the proposal. It provides a structured way to understand the relationships between different concepts and how they contribute to the overall objectives. [Provide an overview of the conceptual framework, including key theories, models, or principles relevant to the proposal.] 
 
   - type: textarea
     attributes:
