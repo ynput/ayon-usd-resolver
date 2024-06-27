@@ -15,6 +15,18 @@ body:
 
   - type: textarea
     attributes:
+      label: Glossary of Terms
+      description: This section provides definitions and explanations of key terms used throughout the proposal. It ensures that all readers have a common understanding of important concepts and terminology.
+      
+  - type: textarea
+    attributes:
+      label: Conceptual Framework
+      description: The Conceptual Framework outlines the underlying principles, theories, and models that inform and support the proposal. It provides a structured way to understand the relationships between different concepts and how they contribute to the overall objectives.
+
+[Provide an overview of the conceptual framework, including key theories, models, or principles relevant to the proposal.] 
+
+  - type: textarea
+    attributes:
       label: Description
       description: A detailed description of the project or feature. Include background information, context, and the importance of the project.
 
