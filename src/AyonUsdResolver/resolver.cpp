@@ -1,6 +1,3 @@
-#include <cstdlib>
-#include <ostream>
-#include <string_view>
 #include <utility>
 #include "debugCodes.h"
 #include "pxr/base/tf/debug.h"
@@ -15,25 +12,18 @@
 #include "config.h"
 #include "devMacros.h"
 #include "AyonCppApi.h"
+
 #include "pxr/base/arch/fileSystem.h"
-#include "pxr/base/arch/systemInfo.h"
-#include "pxr/base/tf/fileUtils.h"
 #include "pxr/base/tf/pathUtils.h"
-#include "pxr/base/tf/staticTokens.h"
-#include "pxr/base/tf/stringUtils.h"
+
 #include "pxr/usd/ar/defineResolver.h"
 #include "pxr/usd/ar/filesystemAsset.h"
 #include "pxr/usd/ar/filesystemWritableAsset.h"
 #include "pxr/usd/ar/notice.h"
+
 #include "pxr/usd/sdf/layer.h"
 
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <mutex>
-#include <regex>
 #include <string>
-#include <thread>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -105,7 +95,9 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
 
                 std::shared_ptr<resolverContextCache> resolverCache = ctx->getCachePtr();
 
-                asset = resolverCache->getAsset(assetPath, cacheName::AYONCACHE, true);
+                std::string clean_uri = RES_FUNCS_REMOVE_SDF_ARGS(assetPath);
+
+                asset = resolverCache->getAsset(clean_uri, cacheName::AYONCACHE, true);
 
                 ArResolvedPath resolvedPath(asset.resolvedAssetPath);
 
@@ -125,6 +117,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
     const AyonUsdResolverContext* pt = this->_GetCurrentContextPtr();
     if (pt) {
         ArResolvedPath path;
+
         path = pt->getCachePtr()->getAsset(assetPath, cacheName::COMMONCACHE, false).resolvedAssetPath;
         if (!path.empty()) {
             return path;

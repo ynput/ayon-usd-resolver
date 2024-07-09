@@ -1,15 +1,21 @@
 // #ifndef AR_AYONUSDRESOLVER_RESELUTIONFUNCTIONS_H
 // #define AR_AYONUSDRESOLVER_RESELUTIONFUNCTIONS_H
 
+#include "pxr/pxr.h"
 #include "pxr/usd/ar/filesystemAsset.h"
 #include "pxr/usd/ar/resolvedPath.h"
-#include <string_view>
 #include <string>
 
 #define CONVERT_STRING(string) #string
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
 
 PXR_NAMESPACE_USING_DIRECTIVE
+
+std::string RemoveSdfFormatArgs(const std::string &uri);
+
+#define RES_FUNCS_REMOVE_SDF_ARGS(x) RemoveSdfFormatArgs(x);
+// macro Overwrite
+// #define RES_FUNCS_REMOVE_SDF_ARGS(x) x;
 
 bool _IsRelativePath(const std::string &path);
 

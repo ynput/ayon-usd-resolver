@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
 # this line gets an env variable to add to the install dir so that we can batch build against multiple software packages 
 set(SelectedCompilePlugin $ENV{COMPILEPLUGIN} CACHE PATH "install suffix for the resolver")
+message(STATUS "Selected Compile Plugin ${SelectedCompilePlugin}")
+
+
 
 if (NOT DEFINED ENV{INSTALLNAME})
 	set(InstallName ${SelectedCompilePlugin})
