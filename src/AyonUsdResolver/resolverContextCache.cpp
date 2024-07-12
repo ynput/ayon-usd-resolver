@@ -82,7 +82,7 @@ resolverContextCache::insert(std::pair<std::string, pxr::ArResolvedPath> &&sourc
 };
 
 // TODO implement vector insert
-void resolverContextCache::insert(std::vector<std::pair<std::string, pxr::ArResolvedPath>> sourceVec) {};
+void resolverContextCache::insert(std::vector<std::pair<std::string, pxr::ArResolvedPath>> sourceVec){};
 
 void
 resolverContextCache::migratePreCacheIntoAyonCache() {
@@ -103,7 +103,6 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::getAsset: (%s) \n", assetIdentifier.c_str());
 
     assetIdent asset;
-
     if (assetIdentifier.empty()) {
         return asset;
     }
@@ -112,8 +111,7 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
 
     hit = PreCache->find(assetIdentifier);
     if (hit != PreCache->end()) {
-        std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(
-            PreCachesharedMutex);   // TODO i belive this mutex should be above the Precache->find call
+        std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(PreCachesharedMutex);
         asset.assetIdentifier = hit->first;
         asset.resolvedAssetPath = hit->second;
         PreCachesharedMutexLock.unlock();

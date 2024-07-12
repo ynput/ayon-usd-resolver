@@ -1,18 +1,26 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <mutex>
 #include <shared_mutex>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "pxr/usd/ar/resolvedPath.h"
 #include "AyonCppApi.h"
-#include "assetIdentDef.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
+
+struct assetIdent {
+        ArResolvedPath resolvedAssetPath;
+        std::string assetIdentifier;
+        bool empty();
+};
 
 enum cacheName { AYONCACHE, COMMONCACHE };
 

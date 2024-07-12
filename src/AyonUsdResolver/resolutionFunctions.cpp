@@ -1,7 +1,6 @@
 #include "resolutionFunctions.h"
 #include <cstdint>
 #include <iostream>
-#include <regex>
 #include <string_view>
 
 #include <string_view>
@@ -19,17 +18,6 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-std::string
-RemoveSdfFormatArgs(const std::string &uri) {
-    if (uri.empty()) {
-        return uri;
-    }
-
-    std::regex sdfArgsRegex(":SDF_FORMAT_ARGS.*");
-    std::string clean_uri = std::regex_replace(uri, sdfArgsRegex, "");
-    return clean_uri;
-}
-
 bool
 _IsRelativePath(const std::string &path) {
     return (!path.empty() && TfIsRelativePath(path));
@@ -42,9 +30,9 @@ _IsFileRelativePath(const std::string &path) {
 bool
 _IsAyonPath(const std::string &assetPath) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_IsAyonPath (%s) \n", assetPath.c_str());
-
+	
     Config::AyonUriConfigStruct config;
-    for (uint8_t i = 0; i < config.ayonUriOptions.size(); i++) {
+    for (uint8_t i=0; i < config.ayonUriOptions.size(); i++) {
         std::string_view assetPathTestPortion(assetPath.data(), config.ayonUriOptionsSize.at(i));
         if (assetPathTestPortion == config.ayonUriOptions.at(i)) {
             return true;
