@@ -31,7 +31,13 @@ AR_DEFINE_RESOLVER(AyonUsdResolver, ArResolver);
 
 AyonUsdResolver::AyonUsdResolver() = default;
 
-AyonUsdResolver::~AyonUsdResolver() = default;
+AyonUsdResolver::~AyonUsdResolver() {
+    std::ostringstream oss;
+    oss << static_cast<const void*>(this);
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+        .Msg("Resolver::~AyonUsdResolver(M_ADD: '%s', M_SIZE: '%s' bytes)\n", oss.str().c_str(),
+             std::to_string(sizeof(*this)).c_str());
+};
 
 std::string
 AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolvedPath &anchorAssetPath) const {

@@ -60,9 +60,12 @@ install(TARGETS ${AR_AYONUSDRESOLVER_TARGET_LIB} DESTINATION ${AR_AYONUSDRESOLVE
 
 add_library(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     SHARED
+        module.cpp
+        moduleDeps.cpp
         wrapResolver.cpp
         wrapResolverContext.cpp
-        wrapResolverTokens.cpp
+        wrapResolverTokens.cpp 
+        resolverTokens.cpp 
 )
 add_dependencies(${AR_AYONUSDRESOLVER_TARGET_PYTHON} ${AR_AYONUSDRESOLVER_TARGET_LIB})
 set_boost_namespace(${AR_AYONUSDRESOLVER_TARGET_PYTHON})
