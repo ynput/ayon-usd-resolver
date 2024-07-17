@@ -96,14 +96,10 @@ assetIdent::operator==(const assetIdent &other) const {
 
 assetIdent &
 assetIdent::operator=(const assetIdent &other) {
-    // Check for self-assignment
     if (this != &other) {
-        // Copy the non-const member variables
         m_resolvedAssetPath = other.m_resolvedAssetPath;
         m_assetIdentifier = other.m_assetIdentifier;
-        // Copy the non-const bool members
         m_invalidated = other.m_invalidated;
     }
-    // Return a reference to this object
     return *this;
 }
