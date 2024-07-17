@@ -4,6 +4,7 @@ endif()
 ### Targets ###
 add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
     SHARED
+        assetIdentDef.cpp
         debugCodes.cpp
         resolver.cpp
         resolverContext.cpp

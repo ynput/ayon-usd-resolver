@@ -9,9 +9,6 @@
 
 #include "resolver.h"
 #include "resolverContext.h"
-#include "config.h"
-#include "devMacros.h"
-#include "AyonCppApi.h"
 
 #include "pxr/base/arch/fileSystem.h"
 #include "pxr/base/tf/pathUtils.h"
@@ -105,7 +102,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
 
                 asset = resolverCache->getAsset(clean_uri, cacheName::AYONCACHE, true);
 
-                ArResolvedPath resolvedPath(asset.resolvedAssetPath);
+                ArResolvedPath resolvedPath(asset.getResolvedAssetPath());
 
                 if (resolvedPath) {
                     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
@@ -124,7 +121,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
     if (pt) {
         ArResolvedPath path;
 
-        path = pt->getCachePtr()->getAsset(assetPath, cacheName::COMMONCACHE, false).resolvedAssetPath;
+        path = pt->getCachePtr()->getAsset(assetPath, cacheName::COMMONCACHE, false).getResolvedAssetPath();
         if (!path.empty()) {
             return path;
         }
