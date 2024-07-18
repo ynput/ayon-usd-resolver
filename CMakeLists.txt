@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
 # this line gets an env variable to add to the install dir so that we can batch build against multiple software packages 
 set(SelectedCompilePlugin $ENV{COMPILEPLUGIN} CACHE PATH "install suffix for the resolver")
+message(STATUS "Selected Compile Plugin ${SelectedCompilePlugin}")
+
+
 
 if (NOT DEFINED ENV{INSTALLNAME})
 	set(InstallName ${SelectedCompilePlugin})
@@ -10,6 +13,7 @@ else()
 endif()
 
 add_compile_definitions(DEV=${DEV})
+add_compile_definitions(MACRO_REMOVE_SDF_FORMAT_ARGS=1)
 add_compile_definitions(CPPHTTPLIB_OPENSSL_SUPPORT) #we need to define this var here because ayon cpp api needs it to enable open sll support for https 
 
 
@@ -101,6 +105,7 @@ if(NOT DEFINED BOOST_LIB_DIR)
 endif()
 
 
+message(STATUS "Enable SDF_FORMAT_ARGS Remove Macro = ${MACRO_REMOVE_SDF_FORMAT_ARGS}")
 # Include AyonCppApi 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")

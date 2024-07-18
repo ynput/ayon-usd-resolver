@@ -1,14 +1,13 @@
-#include "resolutionFunctions.h"
 #include <cstdint>
-#include <iostream>
+#include <string_view>
 #include <string_view>
 
-#include <string_view>
+#include "resolutionFunctions.h"
 #include "debugCodes.h"
-#include "pxr/base/tf/debug.h"
-#include "pxr/usd/ar/resolvedPath.h"
 #include "config.h"
 
+#include "pxr/base/tf/debug.h"
+#include "pxr/usd/ar/resolvedPath.h"
 #include "pxr/base/tf/fileUtils.h"
 #include "pxr/base/tf/pathUtils.h"
 #include "pxr/base/tf/stringUtils.h"
@@ -17,6 +16,17 @@
 #include <string>
 
 PXR_NAMESPACE_USING_DIRECTIVE
+
+void
+RemoveSdfFormatArgs(std::string &uri) {
+    if (uri.empty()) {
+        return;
+    }
+
+    std::regex sdfArgsRegex(":SDF_FORMAT_ARGS.*");
+    std::string clean_uri = std::regex_replace(uri, sdfArgsRegex, "");
+    uri = clean_uri;
+}
 
 bool
 _IsRelativePath(const std::string &path) {
@@ -30,9 +40,9 @@ _IsFileRelativePath(const std::string &path) {
 bool
 _IsAyonPath(const std::string &assetPath) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_IsAyonPath (%s) \n", assetPath.c_str());
-	
+
     Config::AyonUriConfigStruct config;
-    for (uint8_t i=0; i < config.ayonUriOptions.size(); i++) {
+    for (uint8_t i = 0; i < config.ayonUriOptions.size(); i++) {
         std::string_view assetPathTestPortion(assetPath.data(), config.ayonUriOptionsSize.at(i));
         if (assetPathTestPortion == config.ayonUriOptions.at(i)) {
             return true;
