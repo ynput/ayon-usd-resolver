@@ -37,7 +37,7 @@ class assetIdent {
          * @brief allows setting the ResolvedAssetPath
          *
          * @param inResolvedAssetPath
-         * @return false if assetIdent cant be modified (eg. is_valid)
+         * @return false if assetIdent can't be modified (eg. is_valid)
          */
         bool setResolvedAssetPath(const ArResolvedPath &inResolvedAssetPath);
         bool setResolvedAssetPath(const std::string &inResolvedAssetPath);
@@ -56,13 +56,13 @@ class assetIdent {
         bool setAssetIdentifier(const std::string inAssetIdentifier);
 
         /**
-         * @brief can be used to know if an given assetIdent has data init
+         * @brief can be used to know if given assetIdent has data in it
          *
-         * @return bool: true if Neither m_resolvedAssetPath or m_assetIdentifier have any data in them
+         * @return bool: true if neither m_resolvedAssetPath or m_assetIdentifier have any data in them
          */
         bool is_empty() const;
         /**
-         * @brief this function allows you to know if an given assetIdent's cache is still valid. this can be use full
+         * @brief this function allows you to know if an given assetIdent's cache is still valid. This can be use full
          * for TTL or cache invalidation as we use lazy reaching for cached objects
          *
          * @return true if the current data can safely be used. false if the data is out of data or should in  be
@@ -71,13 +71,13 @@ class assetIdent {
         bool is_valid() const;
 
         /**
-         * @brief allows you to invalidate this assetIdent. it is not possible to invalidate an assetIdent that is not
+         * @brief allows you to invalidate this assetIdent. It is not possible to invalidate an assetIdent that is not
          * modifiable in this case the function will simply return
          */
         void invalidate();
 
         /**
-         * @brief allows you to validate this assetIdent. this function will return while doing nothing if is_modifiable
+         * @brief allows you to validate this assetIdent. This function will return while doing nothing if is_modifiable
          * returns false
          */
         void validate();
@@ -87,7 +87,7 @@ class assetIdent {
          * and getResolvedAssetPath to keep you from modifying data you should not touch. This will be the case if this
          * assetIdent is marked as static
          *
-         * @return ture if you are allowed to modify the assetIdent false if modification is not allowed for what ever
+         * @return true if you are allowed to modify the assetIdent, false if the modification is not allowed for what ever
          * reason
          */
         bool is_modifiable() const;
