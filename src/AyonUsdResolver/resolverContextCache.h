@@ -24,7 +24,7 @@ class resolverContextCache {
 
         /**
          * @brief move the pair into the preCache by using the move operator it will also check if there
-         * is enough space in the preCache and move the preCache if needed. this function is both locking and blocking
+         * is enough space in the preCache and move the preCache if needed. This function is both locking and blocking
          * so no access will be granted to ayonCache or preCache for the scope of this function
          *
          * @param sourcePair the data that you want to add to the cache as an std::pair
