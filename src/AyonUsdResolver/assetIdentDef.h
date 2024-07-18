@@ -37,7 +37,7 @@ class assetIdent {
          * @brief allows setting the ResolvedAssetPath
          *
          * @param inResolvedAssetPath
-         * @return false if assetIdent cant be modified (eg. is_valid)
+         * @return false if assetIdent can't be modified (eg. is_valid)
          */
         bool setResolvedAssetPath(const ArResolvedPath &inResolvedAssetPath);
         bool setResolvedAssetPath(const std::string &inResolvedAssetPath);
