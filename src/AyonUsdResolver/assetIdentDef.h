@@ -62,7 +62,7 @@ class assetIdent {
          */
         bool is_empty() const;
         /**
-         * @brief this function allows you to know if an given assetIdent's cache is still valid. this can be use full
+         * @brief this function allows you to know if an given assetIdent's cache is still valid. This can be use full
          * for TTL or cache invalidation as we use lazy reaching for cached objects
          *
          * @return true if the current data can safely be used. false if the data is out of data or should in  be
