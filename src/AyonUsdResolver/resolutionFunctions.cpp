@@ -1,15 +1,13 @@
-#include "resolutionFunctions.h"
 #include <cstdint>
-#include <iostream>
-#include <regex>
+#include <string_view>
 #include <string_view>
 
-#include <string_view>
+#include "resolutionFunctions.h"
 #include "debugCodes.h"
-#include "pxr/base/tf/debug.h"
-#include "pxr/usd/ar/resolvedPath.h"
 #include "config.h"
 
+#include "pxr/base/tf/debug.h"
+#include "pxr/usd/ar/resolvedPath.h"
 #include "pxr/base/tf/fileUtils.h"
 #include "pxr/base/tf/pathUtils.h"
 #include "pxr/base/tf/stringUtils.h"
@@ -19,15 +17,15 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-std::string
-RemoveSdfFormatArgs(const std::string &uri) {
+void
+RemoveSdfFormatArgs(std::string &uri) {
     if (uri.empty()) {
-        return uri;
+        return;
     }
 
     std::regex sdfArgsRegex(":SDF_FORMAT_ARGS.*");
     std::string clean_uri = std::regex_replace(uri, sdfArgsRegex, "");
-    return clean_uri;
+    uri = clean_uri;
 }
 
 bool

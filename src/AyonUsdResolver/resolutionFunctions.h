@@ -5,13 +5,14 @@
 #include "pxr/usd/ar/filesystemAsset.h"
 #include "pxr/usd/ar/resolvedPath.h"
 #include <string>
+#include <regex>
 
 #define CONVERT_STRING(string) #string
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-std::string RemoveSdfFormatArgs(const std::string &uri);
+void RemoveSdfFormatArgs(std::string &uri);
 
 #define RES_FUNCS_REMOVE_SDF_ARGS(x) RemoveSdfFormatArgs(x);
 // macro Overwrite

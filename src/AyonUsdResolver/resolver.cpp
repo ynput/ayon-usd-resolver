@@ -79,6 +79,8 @@ AyonUsdResolver::_CreateIdentifierForNewAsset(const std::string &assetPath,
 
 ArResolvedPath
 AyonUsdResolver::_Resolve(const std::string &assetPath) const {
+    RES_FUNCS_REMOVE_SDF_ARGS(const_cast<std::string &>(assetPath));
+
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_Resolve( '%s' ) \n", assetPath.c_str());
 
     if (assetPath.empty()) {
@@ -98,9 +100,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
 
                 std::shared_ptr<resolverContextCache> resolverCache = ctx->getCachePtr();
 
-                std::string clean_uri = RES_FUNCS_REMOVE_SDF_ARGS(assetPath);
-
-                asset = resolverCache->getAsset(clean_uri, cacheName::AYONCACHE, true);
+                asset = resolverCache->getAsset(assetPath, cacheName::AYONCACHE, true);
 
                 ArResolvedPath resolvedPath(asset.getResolvedAssetPath());
 
