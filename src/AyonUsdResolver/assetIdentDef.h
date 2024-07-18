@@ -71,7 +71,7 @@ class assetIdent {
         bool is_valid() const;
 
         /**
-         * @brief allows you to invalidate this assetIdent. it is not possible to invalidate an assetIdent that is not
+         * @brief allows you to invalidate this assetIdent. It is not possible to invalidate an assetIdent that is not
          * modifiable in this case the function will simply return
          */
         void invalidate();
