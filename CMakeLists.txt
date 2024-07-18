@@ -13,6 +13,7 @@ else()
 endif()
 
 add_compile_definitions(DEV=${DEV})
+add_compile_definitions(MACRO_REMOVE_SDF_FORMAT_ARGS=1)
 add_compile_definitions(CPPHTTPLIB_OPENSSL_SUPPORT) #we need to define this var here because ayon cpp api needs it to enable open sll support for https 
 
 

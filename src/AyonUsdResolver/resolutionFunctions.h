@@ -14,9 +14,11 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 void RemoveSdfFormatArgs(std::string &uri);
 
-#define RES_FUNCS_REMOVE_SDF_ARGS(x) RemoveSdfFormatArgs(x);
-// macro Overwrite
-// #define RES_FUNCS_REMOVE_SDF_ARGS(x) x;
+#if MACRO_REMOVE_SDF_FORMAT_ARGS == 1
+    #define RES_FUNCS_REMOVE_SDF_ARGS(x) RemoveSdfFormatArgs(x);
+#else
+    #define RES_FUNCS_REMOVE_SDF_ARGS(x) ;
+#endif
 
 bool _IsRelativePath(const std::string &path);
 
