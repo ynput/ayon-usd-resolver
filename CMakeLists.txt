@@ -105,6 +105,7 @@ if(NOT DEFINED BOOST_LIB_DIR)
 endif()
 
 
+message(STATUS "Enable SDF_FORMAT_ARGS Remove Macro = ${MACRO_REMOVE_SDF_FORMAT_ARGS}")
 # Include AyonCppApi 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
