@@ -77,7 +77,7 @@ class assetIdent {
         void invalidate();
 
         /**
-         * @brief allows you to validate this assetIdent. this function will return while doing nothing if is_modifiable
+         * @brief allows you to validate this assetIdent. This function will return while doing nothing if is_modifiable
          * returns false
          */
         void validate();
