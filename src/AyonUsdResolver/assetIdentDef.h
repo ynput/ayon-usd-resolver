@@ -56,9 +56,9 @@ class assetIdent {
         bool setAssetIdentifier(const std::string inAssetIdentifier);
 
         /**
-         * @brief can be used to know if an given assetIdent has data init
+         * @brief can be used to know if given assetIdent has data in it
          *
-         * @return bool: true if Neither m_resolvedAssetPath or m_assetIdentifier have any data in them
+         * @return bool: true if neither m_resolvedAssetPath or m_assetIdentifier have any data in them
          */
         bool is_empty() const;
         /**
