@@ -5,7 +5,11 @@
 #include <cstdint>
 #include <string_view>
 
-#define PRECACHE_SIZE 64
+#define PRECACHE_SIZE                       64
+
+#define ENABLE_STATICK_GLOBAL_CACHE_ENV_KEY "ENABLE_STATICK_GLOBAL_CACHE"
+
+#define PROJECT_ROOTS_ENV_KEY               "PROJECT_ROOTS"
 
 namespace Config {
 

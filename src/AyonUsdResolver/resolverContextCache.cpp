@@ -7,6 +7,10 @@
 #include "pxr/base/arch/systemInfo.h"
 #include "pxr/base/tf/pathUtils.h"
 
+#include <map>
+#include <ynput/core/iostd/env_var_helpers.hpp>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <mutex>
 #include <shared_mutex>
@@ -15,9 +19,27 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-resolverContextCache::resolverContextCache(): m_AyonCache(), m_CommonCache(), m_PreCache() {
+pinningFileHanlder::pinningFileHanlder(const std::string &pinningFilePath){};
+
+assetIdent
+pinningFileHanlder::getAssetData(const std::string &resolveKey) {
+    assetIdent assetEntry;
+
+    std::string rootLessPath = this->m_pinningFileData["ayon_resolver_pinning_data"][resolveKey];
+    assetEntry.setAssetIdentifier(resolveKey);
+    assetEntry.setResolvedAssetPath("sdfklsj");
+};
+
+resolverContextCache::resolverContextCache(): m_AyonCache(), m_CommonCache(), m_PreCache(), m_static_cache(true) {
     m_PreCache.reserve(PRECACHE_SIZE);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::resolverContextCache() \n");
+
+    const char* enable_static_env_var = std::getenv(ENABLE_STATICK_GLOBAL_CACHE_ENV_KEY);
+    if (enable_static_env_var == nullptr || std::strcmp(enable_static_env_var, "false") == 0) {
+        m_ayon.emplace();
+        this->m_static_cache = false;
+    }
+    std::map<std::string, std::string> rootReplaceInfo = ynput::core::iostd::getEnvMap(PROJECT_ROOTS_ENV_KEY);
 };
 
 resolverContextCache::~resolverContextCache() {
@@ -143,7 +165,7 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
 
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::getAsset: No Cache Hit \n");
     if (isAyonPath) {
-        std::pair<std::string, std::string> resolvedAsset = m_ayon.resolvePath(assetIdentifier);
+        std::pair<std::string, std::string> resolvedAsset = m_ayon->resolvePath(assetIdentifier);
         asset.setAssetIdentifier(std::move(resolvedAsset.first));
         asset.setResolvedAssetPath(std::move(resolvedAsset.second));
 

@@ -38,7 +38,6 @@ AyonUsdResolver::~AyonUsdResolver() {
 
 std::string
 AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolvedPath &anchorAssetPath) const {
-    RES_FUNCS_REMOVE_SDF_ARGS(const_cast<std::string &>(assetPath));
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
         .Msg("Resolver::_CreateIdentifier('%s', '%s')\n", assetPath.c_str(), anchorAssetPath.GetPathString().c_str());
 
@@ -58,17 +57,21 @@ AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolve
     if (_IsNotFilePath(assetPath) && Resolve(anchoredAssetPath).empty()) {
         return TfNormPath(assetPath);
     }
+
     return TfNormPath(anchoredAssetPath);
 }
 
 std::string
 AyonUsdResolver::_CreateIdentifierForNewAsset(const std::string &assetPath,
                                               const ArResolvedPath &anchorAssetPath) const {
-    RES_FUNCS_REMOVE_SDF_ARGS(const_cast<std::string &>(assetPath));
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
         .Msg("Resolver::_CreateIdentifierForNewAsset('%s', '%s')\n", assetPath.c_str(),
              anchorAssetPath.GetPathString().c_str());
     if (assetPath.empty()) {
+        return assetPath;
+    }
+
+    if (_IsAyonPath(assetPath)) {
         return assetPath;
     }
 
