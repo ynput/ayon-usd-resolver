@@ -51,6 +51,7 @@ class AyonUsdResolver final: public ArResolver {
         const AyonUsdResolverContext* _GetCurrentContextPtr() const;
         AyonUsdResolverContext _fallbackContext;
         const std::string emptyString{""};
+        bool m_staticParentCache;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

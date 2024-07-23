@@ -5,6 +5,7 @@
 #include <optional>
 #include <shared_mutex>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "AyonCppApi.h"
@@ -17,7 +18,8 @@ enum cacheName { AYONCACHE, COMMONCACHE };
 
 class pinningFileHanlder {
     public:
-        pinningFileHanlder(const std::string &pinningFilePath);
+        pinningFileHanlder(const std::string &pinningFilePath,
+                           const std::unordered_map<std::string, std::string> &rootReplaceData);
         ~pinningFileHanlder() = default;
 
         assetIdent getAssetData(const std::string &resolveKey);
@@ -25,6 +27,8 @@ class pinningFileHanlder {
     private:
         std::filesystem::path m_pinningFilePath;
         nlohmann::json m_pinningFileData;
+
+        std::unordered_map<std::string, std::string> m_rootReplaceData;
 };
 
 /**
@@ -93,6 +97,8 @@ class resolverContextCache {
          * @brief print out every object in the cache for debugging
          */
         void printCache() const;
+
+        bool isCacheStatic() const;
 
     private:
         std::unordered_set<assetIdent, assetIdentHash> m_PreCache;

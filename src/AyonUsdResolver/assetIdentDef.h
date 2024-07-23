@@ -87,8 +87,8 @@ class assetIdent {
          * and getResolvedAssetPath to keep you from modifying data you should not touch. This will be the case if this
          * assetIdent is marked as static
          *
-         * @return true if you are allowed to modify the assetIdent, false if the modification is not allowed for what ever
-         * reason
+         * @return true if you are allowed to modify the assetIdent, false if the modification is not allowed for what
+         * ever reason
          */
         bool is_modifiable() const;
 

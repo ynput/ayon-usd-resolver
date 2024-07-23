@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <utility>
 #include "debugCodes.h"
 #include "pxr/base/tf/debug.h"
@@ -96,8 +97,18 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         return ArResolvedPath(assetPath);
     }
 
+    // TODO refactor to avoid this extra loop
+    const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
+    for (const AyonUsdResolverContext* ctx: contexts) {
+        if (ctx) {
+            if (ctx->getCachePtr()->isCacheStatic()) {
+                return ctx->getCachePtr()->getAsset(assetPath, cacheName::AYONCACHE, true).getResolvedAssetPath();
+            }
+        }
+    }
+
     if (_IsAyonPath(assetPath)) {
-        const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
+        // const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
         for (const AyonUsdResolverContext* ctx: contexts) {
             if (ctx) {
                 std::pair<std::string, std::string> test;
