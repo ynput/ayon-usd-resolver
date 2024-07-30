@@ -21,18 +21,20 @@ zip_sub_path = f"{str(compile_plugin)}_{platform.system()}_{platform.machine()}"
 zip_path = os.path.join(bin_package_path, zip_sub_path)
 
 def generate_named_zip():
-    zip_destination = f"{zip_path}.zip"
+    zip_inner_foulder_name = os.path.basename(zip_path)
+    zip_inner_foulder_path = os.path.join(temp_dir_for_zip, zip_inner_foulder_name)
 
     if os.path.exists(temp_dir_for_zip):
         shutil.rmtree(temp_dir_for_zip)
+    os.makedirs(zip_inner_foulder_path)
 
-    resolver_source_path = os.path.dirname(current_resolver_dir)
-    if not os.path.exists(temp_dir_for_zip):
-        os.makedirs(temp_dir_for_zip)
+    resolver_source_path = current_resolver_dir
 
-    shutil.copytree(resolver_source_path, temp_dir_for_zip, dirs_exist_ok=True)
+    shutil.copytree(resolver_source_path, zip_inner_foulder_path, dirs_exist_ok=True)
     os.makedirs(bin_package_path, exist_ok=True)
-    shutil.make_archive(zip_destination,"zip", temp_dir_for_zip)
+    shutil.make_archive(zip_path,"zip", temp_dir_for_zip)
+
+    shutil.rmtree(temp_dir_for_zip)
   
 def cmake_get_vars():
     vars_dict = {}
@@ -100,5 +102,4 @@ if __name__ == "__main__":
     end_time = time.time()
     build_time = end_time - start_time
     print("build took", build_time, "seconds")
-    if os.path.exists(temp_dir_for_zip):
-        shutil.rmtree(temp_dir_for_zip)
+
