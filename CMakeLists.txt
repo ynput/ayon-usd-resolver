@@ -108,7 +108,7 @@ endif()
 message(STATUS "Enable SDF_FORMAT_ARGS Remove Macro = ${MACRO_REMOVE_SDF_FORMAT_ARGS}")
 
 # Include AyonDevTools
-include("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-dev-tools/CMakeInclude.txt")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-dev-tools")
 
 # Include AyonCppApi 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")

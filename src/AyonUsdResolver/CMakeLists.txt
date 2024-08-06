@@ -52,7 +52,7 @@ target_compile_definitions(${AR_AYONUSDRESOLVER_TARGET_LIB}
 )
 
 target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_LIB} AyonCppApi)
-
+target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_LIB} AyonCppDevToolsLib)
 # Install
 configure_file(plugInfo.json.in plugInfo.json)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/plugInfo.json DESTINATION ${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}/resources)
@@ -77,6 +77,7 @@ target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
 )
 
 target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_PYTHON} AyonCppApi)
+target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_PYTHON} AyonCppDevToolsLib)
 # Headers
 target_include_directories(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     PUBLIC

@@ -57,8 +57,11 @@ def main():
     cmd_args.add_argument("--DEV", help="Enable/Disable development build", type=int, default=0)
     cmd_args.add_argument("--JTRACE", help="Enable/Disable json tracing", type=int, default=0)
     cmd_args.add_argument("--Clean", action="store_true", help="delet build foulder for non cached build also adds --clean-first to cmake args")
+    cmd_args.add_argument("--CompilePlugin", type=str, default=0, help="select a compile plugin, this can be scipped if you set COMPILEPLUGIN env variable ")
     cmd_args = cmd_args.parse_args()
-
+    
+    if cmd_args.CompilePlugin:
+        os.environ["COMPILEPLUGIN"] = cmd_args.CompilePlugin
     if not compile_plugin:
         raise RuntimeError("No Compile plugin selected")
 

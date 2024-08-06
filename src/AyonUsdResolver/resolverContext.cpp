@@ -106,5 +106,5 @@ AyonUsdResolverContext::clearCache() {
 
 std::shared_ptr<resolverContextCache>
 AyonUsdResolverContext::getCachePtr() const {
-    return std::shared_ptr(this->cache);
+    return this->cache;
 };
