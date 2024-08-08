@@ -47,11 +47,12 @@ class AyonUsdResolver final: public ArResolver {
         std::shared_ptr<ArWritableAsset> _OpenAssetForWrite(const ArResolvedPath &resolvedPath,
                                                             WriteMode writeMode) const final;
 
+        AR_AYONUSDRESOLVER_API const AyonUsdResolverContext* GetConnectedContext() const;
+
     private:
         const AyonUsdResolverContext* _GetCurrentContextPtr() const;
         AyonUsdResolverContext _fallbackContext;
         const std::string emptyString{""};
-        bool m_staticParentCache;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

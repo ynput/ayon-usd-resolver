@@ -90,6 +90,7 @@ AyonUsdResolverContext::ClearAndReinitialize() {
 void
 AyonUsdResolverContext::dropCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::dropCache()\n");
+    this->cache = std::make_shared<resolverContextCache>();
 };
 
 void

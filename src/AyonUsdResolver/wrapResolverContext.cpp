@@ -30,8 +30,7 @@ void
 wrapResolverContext() {
     using This = AyonUsdResolverContext;
 
-    class_<This>("ResolverContext", no_init)
-        .def(init<>())
+    class_<This>("ResolverContext")
         .def(self == self)
         .def(self != self)
         .def("__hash__", _Hash)

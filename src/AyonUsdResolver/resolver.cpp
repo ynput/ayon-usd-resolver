@@ -216,4 +216,10 @@ AyonUsdResolver::_GetCurrentContextPtr() const {
     return _GetCurrentContextObject<AyonUsdResolverContext>();
 }
 
+const AyonUsdResolverContext*
+AyonUsdResolver::GetConnectedContext() const {
+    // TODO test if this implementation is valid as this->_GetCurrentContextPtr() causes a new context to be created.
+    return &_fallbackContext;
+};
+
 PXR_NAMESPACE_CLOSE_SCOPE

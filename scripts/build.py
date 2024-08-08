@@ -20,15 +20,13 @@ temp_dir_for_zip = os.path.join(resolvers_dir, "temp")
 zip_sub_path = f"{str(compile_plugin)}_{platform.system()}_{platform.machine()}"
 zip_path = os.path.join(bin_package_path, zip_sub_path)
 
-def generate_named_zip():
+def generate_named_zip(resolver_source_path:str):
     zip_inner_foulder_name = os.path.basename(zip_path)
     zip_inner_foulder_path = os.path.join(temp_dir_for_zip, zip_inner_foulder_name)
-
+    
     if os.path.exists(temp_dir_for_zip):
         shutil.rmtree(temp_dir_for_zip)
     os.makedirs(zip_inner_foulder_path)
-
-    resolver_source_path = current_resolver_dir
 
     shutil.copytree(resolver_source_path, zip_inner_foulder_path, dirs_exist_ok=True)
     os.makedirs(bin_package_path, exist_ok=True)
@@ -51,6 +49,13 @@ def cmake(*args):
     command.extend(*args)
     subprocess.run(command)
 
+class _StoreDictKeyPair(argparse.Action):
+     def __call__(self, parser, namespace, values, option_string=None):
+         extra_env_var_dict = {}
+         for kv in values.split(","):
+             k,v = kv.split("=")
+             extra_env_var_dict[k] = v
+         setattr(namespace, self.dest, extra_env_var_dict)
 
 def main():
     cmd_args = argparse.ArgumentParser(description="Ayon Usd Resolver main Build Script")
@@ -58,10 +63,21 @@ def main():
     cmd_args.add_argument("--JTRACE", help="Enable/Disable json tracing", type=int, default=0)
     cmd_args.add_argument("--Clean", action="store_true", help="delet build foulder for non cached build also adds --clean-first to cmake args")
     cmd_args.add_argument("--CompilePlugin", type=str, default=0, help="select a compile plugin, this can be scipped if you set COMPILEPLUGIN env variable ")
+    cmd_args.add_argument("--extra_env_vars", dest="extra_env_var_dict", action=_StoreDictKeyPair, metavar="KEY1=VAL1,KEY2=VAL2...")
     cmd_args = cmd_args.parse_args()
+    
+    if cmd_args.extra_env_var_dict:
+        for key in cmd_args.extra_env_var_dict:
+            val = cmd_args.extra_env_var_dict[key]
+            os.environ[key] = val
     
     if cmd_args.CompilePlugin:
         os.environ["COMPILEPLUGIN"] = cmd_args.CompilePlugin
+        global compile_plugin
+        global current_resolver_dir
+        compile_plugin = os.environ.get("COMPILEPLUGIN")
+        current_resolver_dir = os.path.join(resolvers_dir, compile_plugin)
+
     if not compile_plugin:
         raise RuntimeError("No Compile plugin selected")
 
@@ -101,7 +117,7 @@ if __name__ == "__main__":
     os.chdir(prj_root_dir)
     start_time = time.time()
     main()
-    generate_named_zip()
+    generate_named_zip(current_resolver_dir)
     end_time = time.time()
     build_time = end_time - start_time
     print("build took", build_time, "seconds")

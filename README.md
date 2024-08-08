@@ -2,36 +2,38 @@
 
 ## Introduction
 
-The [AYON](https://ynput.io/ayon/) USD Resolver is
-[an asset resolver plugin](https://openusd.org/release/api/ar_page_front.html#ar_uri_resolvers)
-for [Pixar's USD](https://openusd.org). It's designed to turn URIs with the
-`ayon://` or `ayon+entity://` formats into local file paths.
+The [AYON](https://ynput.io/ayon/) USD Resolver is an
+[AR2.0 AssetResolver Plugin](https://openusd.org/release/api/ar_page_front.html#ar_uri_resolvers)
+for [Open USD](https://openusd.org) it has been designed to make Cross team,
+Platfrom and software interoperability easy and accessable for all AYON users.
+it is best used with our new Contribution workflow.
 
 This resolver uses local caching and connects with the AYON Server to handle
 AYON compatible entity URIs through the
 [AyonCppApi](<(https://github.com/ynput/ayon-cpp-api/)>).
 
 > [!IMPORTANT]\
-> This repository is a _development_ repository and uses Git Submodules. Make
-> sure to use the correct `git clone` commands accordingly.
+> This repository uses Git Submodules. Make sure to use the correct `git clone`
+> commands accordingly.\
+> `git clone --recurse-submodules https://github.com/ynput/ayon-usd-resolver.git`\
+> `git submodule update --init --recursive`
 
 > [!IMPORTANT]\
-> The [AYON](https://ynput.io/ayon/) USD Resolver is a
+> The [AYON](https://ynput.io/ayon/) USD Resolver is an
 > [AR2.0](https://openusd.org/release/wp_ar2.html) resolver and will not support
-> packages that only support AR1.0
+> AR1.0 resolution. Make sure that your software package is compatible with the
+> AR2.0 standard or use the **defaults** we provide in the
+> [AYON Usd Addon](https://github.com/ynput/ayon-usd)
 
-> [!NOTE]\
-> Building and testing is now done with Houdini 19.5 and Houdini 20. More
-> packages will be available soon. To build against the "standalone" USD
-> framework you need to either comment
-> `include(BuildPlugins/${SelectedCompilePlugin}.cmake)` line in
-> `CMakeLists.txt` or build you own build plugin in `BuildPlugins`.
+> **NOTE**\
+> **Admin** and **Dev** docs can be found under `/Docs/Ayon_Docs/`
+
+# Repository Docs
 
 ### Requirements:
 
 - C++ Compiler
 - Cmake
-- GitHub public key setup (this is because the sub-modules are linked via git@)
 - Target DCC / SDK installed
 
 ### Tested Platforms:
@@ -41,256 +43,139 @@ AYON compatible entity URIs through the
   - Hou 19.5.900
   - Hou 20.0.590
   - Hou 20.0.630
+  - Maya 2024.2(UsdAddon_0.25.0)
+  - Unreal5.4
   - AyonUsd23_5_py39 (System Python install)
 - Windows 10
   - Hou 19.5.805
   - Hou 19.5.900
   - Hou 20.0.590
   - Hou 20.0.630
+  - Maya 2024.2(UsdAddon_0.25.0)
+  - Maya 2025
+  - Unreal5.4
   - AyonUsd23_5_py39 (Pyenv-Win)
-
-## Download the repo and its submodules:
-
-    ```
-    git clone --recurse-submodules https://github.com/ynput/ayon-usd-resolver.git
-
-    git submodule update --init --recursive
-    ```
 
 ## Pre-build / Self Compiled
 
-- AYON will provide some pre-built versions of the resolver in the future.
+There are multiple Options to get your hands on the AyonUsdAsset resolver.
 
-- Those versions will be the pre-built binaries that our tests created, so you
-  might not find your software/platform combination.
-- It's also to be expected that resolver builds are behind new software
-  releases.
+**[AyonUsdAddon](https://github.com/ynput/ayon-usd)**\
+the AyonUsd addon will automatically download and setup a list of compiled
+Resolvers.\
+it is generally recommended to go with the AyonUsd addon if you don't want to
+develop with the resolver as recompiling and setting up your own LakeFs setup
+can be involved.
 
-## Prebuild
-
-- Prebuilts aren't available as of right now.
+**Self Compiled**\
+if you want to compile your own resolver because you want to implement a new
+feature, fix a bug or add a new software to compile against.
 
 ## Self Compiled
 
-## Core concepts
+> **Note**\
+> Currently, we only support specific set of DCCs and their versions, and
+> AyonUsd for building revolvers (other software packages and stand-alone setups
+> will follow).
 
-1. Currently, we only support specific set of DCCs and their versions, and
-   AyonUsd for building revolvers (other software packages and stand-alone
-   setups will follow).
+> **Note**\
+> we updated the build startup script to be run via python to make cross
+> platfrom development easyer.\
+> in the future we intend to use AyonAutomator to provide build, test, developer
+> and document stages with different build options.
 
-2. Currently, building the Resolver centers around a build script .sh(Linux)
-   .bat(windows). The Linux build script is more elaborate than the Windows
-   script because resolver development is currently done on Linux, so the
-   build.sh carries extra functionality around.
+## `build.py` variables
 
-### Linux Build Steps:
+`--DEV`\
+if you set this variable to one the CMake build script will be instructed to
+compile in debug mode. It will also enable all Developer Macros.\
+it is not advised to use this for production as it will impact the performance.
 
-- First, you must set a few variables in the `build.sh` script. (they are all
-  grayed out)
+`--JTRACE`\
+the resolver project includes an option to output a tracing file.\
+this tracing file can be used with PerfettoUi in order to get detailed
+information's about what functions where called while the resolver was running.\
+this system works exclusively at runtime and will only show the functions that
+where called no static testing is done.\
+you should not use this in production as it will drastically impact the
+performance.
 
-#### Varlibes:
+`--Clean`\
+CMake uses an internal cache wile its compiling. this helps speed up the compile
+process but it can create issues if a variable changed that cmake did not
+monitor.\
+using Clean build will remove the compiled resolver files and the build
+directory and call CMake clean first. this way we can ensure that the new
+complie has a clean environment\
+we advice to run a Clean compile when you want to release a new resolver or if
+you run a CiCd process.
 
-- `HOU_VER` = Set this to the number of your Houdini version.
+`--CompilePlugin`\
+there are 2 options to select a compile plugin.
 
-- `COMPILEPLUGIN` = In the repository root, you'll find a folder called
-  `BuildPlugins`. In this folder, there are .cmake scripts that we call
-  _BuildPlugins_. You will have to set this variable to the path + name of this
-  build plugin as a relative path.
+1. use this build script option.
+2. use a Env variable.
 
-starting from the `BuildPlugins` e.g. `HouLinux/LinuxPy310Houdini20`
+In the end of the day this option will just set the Env variable for you.
 
-- `INSTALLNAME`{Optional} = This is an optional variable that allows you to
-  override how the folder for the resolver will be named.
+`--extra_env_vars`\
+this flag allows you to set key value pairs that will be setup as environment
+variables. eg if your build plugin needs some Env variables you can set this via
+this system its not mandatory tho.
 
-- `HOUDINI_INSTALL_DIR`{Optional} = this is an override for the install
-  directory off Houdini. If you don't set this, the script will assume that you
-  installed Houdini in `opt/` with the base name of `hfs`
+## Compile Plugin's
 
-#### Next Steps {in the Terminal}:
+we use compile plugins to allow compilation against different platforms and
+software packages.\
+using compile plugins allows us to have a small and efficient CMake setup while
+also allowing build setups to be simple per Package instead of one big setup.
 
-- Run `build.sh Clean` / `Clean` = Will delete and recreate the build and
-  Revolvers folder for a clean build setup.
-- Your resolver is compiled and will be under Revolver's + BuildPluing Path.
-  e.g. `Resolvers/HouLinux/LinuxPy310Houdini20`
+### How dose it work ?
 
-### Windows Build Steps:
+**Folder Layout**\
+in the root of this Reposetory you will find a folder called `BuildPlugins/`\
+in this foulder you find a few subfoulders They are named via
+`{AppName}{Platfrom_Name}`\
+all those foulders hold BuildPlugins. every build plugin is for one specific
+application varient. (if different variants of a software share the same
+resolver one BuildPlugin for all of them is enough)
 
-- First, you will have to set a few variables in the `build.bat` script.
+**What Dose a Build Plugin Doo ?**\
+Every application implemented OpenUsd in a different way.\
+Houdini for example has all the include files in one dir and all the bin files
+in a separate one. But Maya has a zip file for some of the files. so in the end
+a BuilPlugin will just need to setup a few Folder paths that we need in order to
+allow the Build Process to find the right files and library's.
 
-#### Variables:
+**How to select a build Plugin**\
+Build plugins are selected by there path starting at `BuildPlugins/`\
+so the path for `AyonUsd23_5_Py39_Linux` would be
+`AyonUsdLinux/AyonUsd23_5_Py39_Linux` you should not include the .cmake
+extension as the main CMake file will append it to the path.
 
-- `HFS` = this will be the Houdini install directory e.g
-  `C:\Program Files\Side Effects Software\Houdini 20.0.590`
-- `COMPILEPLUGIN` = In the Reop-root, you find a folder called `BuildPlugins`.
-  In this folder, there are .cmake scripts that we call BuildPlugins. You will
-  have to set this variable to the path + name off this build plugin as a
-  relative path starting from the `BuildPlugins`, e.g.
-  `HouWin/WindowsPy310Houdini20`
+**Build Plugin Requirements**\
+Every build Plugin usually has some Env variables you need to set.\
+For Houdini build Plugins you will need to set the root path to your Houdini
+install.\
+in the end of the day you will need to look into the BuildPlugin file to know
+what the needed variables are in case they are not documented in Dev_Docs.
 
-#### Next Steps {in the Terminal}:
+**The Build Command**\
+a few things about the build script first.
 
-- Run `build.bat`.
-- Your resolver is compiled and will be under Resolvers +BuildPluing Path. e.g.
-  `Resolvers/HouLinux/LinuxPy310Houdini20`
+1. you can start the build script from anny location and it will find its paths
+   relative to its own loacaton so dont move the build script.
+2. the build script compiles a single resolver, and generates a zip. you dont
+   need the zip to work with the resolver locally but the Ynput LakeFs setup
+   needs the zip to work correctly.
 
-## How to get the resolver working with Houdini and [AYON](https://ynput.io/ayon/)
-
-### General.
-
-The Resolver needs a few Env variables to work, namely:
-
-USD_ASSET_RESOLVER:
-
-- This variable tells Usd what resolver to use and where to find it (this will
-  not overwrite the default resolver as a fallback).
-
-TF_DEBUG:
-
-- This variable allows you to choose what Debug messages will be printed.
-  - In the CPP files, you might find TF_DEBUG().Msg(); and one of the two Enum
-    Values AYONUSDRESOLVER_RESOLVER or AYONUSDRESOLVER_RESOLVER_CONTEXT these
-    allow you to select what debug messages will be printed.
-  - If you want the resolver to be silent, then you can leave this value empty.
-    It's best practice to keep it in your env variable setup, just in case.
-
-LD_LIBRARY_PATH:
-
-- it describes where the C++ dynamic library files can be found for the
-  resolver.
-
-PXR_PLUGINPATH_NAME:
-
-- This is also a variable for Usd, and it might look like you're supposed to
-  place the AyonUsdResolver name in here, but you're actually putting the path
-  to the PluginInfo.json folder into this variable.
-
-PYTHONPATH:
-
-- This is again a path for Usd that allows you to access the Python wrapper
-  functions from the resolver inside Usd.
-
-AYONLOGGERLOGLVL:
-
-- This Environment variable allows you to set the log level for the CppApi.
-  - INFO,ERROR,WARN,CRITICAL,OFF
-
-AYONLOGGERFILELOGGING:
-
-- This Environment variable allows you to enable or disable file logging in
-  CppApi.
-  - OFF,ON
-
-AYONLOGGERFILEPOS:
-
-- This Environment variable allows you to set a file path for the CppApi
-  logging.
-  - /path/to or relPath
-
-Inside AYON, you can use the Environment Field of your software version to
-define what resolver you want to use. Here is an example of how that might look:
-
-```json
-{
-  "AYONUSDRESOLVER_ROOT": "/path/to/ayon-usd-resolver/Resolvers/{BuildPlugin path + name}",
-  "USD_ASSET_RESOLVER": "{AYONUSDRESOLVER_ROOT}",
-  "TF_DEBUG": "",
-  "LD_LIBRARY_PATH": [
-    "{AYONUSDRESOLVER_ROOT}/ayonUsdResolver/lib",
-    "{LD_LIBRARY_PATH}"
-  ],
-  "PXR_PLUGINPATH_NAME": [
-    "{AYONUSDRESOLVER_ROOT}/ayonUsdResolver/resources",
-    "{PXR_PLUGINPATH_NAME}"
-  ],
-  "PYTHONPATH": [
-    "{PYTHONPATH}",
-    "{AYONUSDRESOLVER_ROOT}/ayonUsdResolver/lib/python"
-  ],
-  "AYONLOGGERLOGLVL": "WARN",
-  "AYONLOGGERFILELOGGING": "ON",
-  "AYONLOGGERFILEPOS": "LoggingFiles"
-}
-```
-
-## Developer Information
-
-BuildPluingins Naming schema is as follows:
-`{AppName}{PlatfromName}/{AppName}{AppVersion}_Py{pythonVersion}_{PlatfromName}.cmake`
-PlatfromName options = {Win, Linux, Mac, specific Os Name}
-
-### Resolver Behavior:
-
-On USD Init:
-
-- AyonUsdResolver library will be loaded, and a `ResolverContextCache` and a
-  globally accessible
-  [shared_ptr](https://en.cppreference.com/w/cpp/memory/shared_ptr) will be
-  created
-
-When a USD file is opened:
-
-- Resolver Context is created.
-
-  - every resolver context has a
-    [shared_ptr](https://en.cppreference.com/w/cpp/memory/shared_ptr) that will
-    point to the global `ResolverContextCache`
-
-When a USD
-[AssetIdentifier](https://openusd.org/release/glossary.html#usdglossary-assetinfo)
-is found.
-
-- `_Resolve()` gets called with the data between the
-  [@](https://openusd.org/release/glossary.html#usdglossary-asset) symbols.
-- `_Resolve()` checks if the path is an AYON URI path.
-  - **Yes?** Then we get the current context (because in this resolver, the
-    resolver context interacts with the
-    [AyonCppApi](https://github.com/ynput/ayon-cpp-api/) and not the Resolver).
-    - We ask the ResolverContext to return the path to us, and the
-      ResolverContext calls the `getAsset()` function in the
-      `ResolverContextCache`.
-    - The `ResolverContextCache` will then first check the PreCache and then the
-      Responsible cache. If the `ResolverContextCache` finds the asset, it will
-      be returned as a struct. If the `ResolverContextCache` does not find an
-      asset, it will call the **AyonCppApi** and request the asset information
-      from the server.
-  - **No?** Then we check if the AssetIdentifier was already registered in the
-    CommonCache, and if so, we will return the cached entry. If not, we will
-    resolve the path against the operating system file system the same way that
-    USD Default Resolver does it.
-
-### Asset Identifier / Behavior:
-
-The AssetIdentifier or AssetPath is always used by the resolver to convert an
-AYON path to a path on disk. The resolver needs some information in the path to
-figure out what asset you want.
-
-1. `ayon:` is used in the `_resolve()` function to know whether your asset is an
-   AYON asset or not (done via a string view comparison).
-2. `//{ProjectName}/{path/to/ayon/folder}?product={FileName}` This is a classic
-   AYON path that defines what Ayon folder you want, e.g., sequences/sh010,
-   assets/characters/bob, etc.
-3. `version=latest` version has multiple options:
-
-   - `latest`: Will tell the resolver to use the latest version no matter what.
-   - `hero`: This will tell the resolver to find the pinned hero version (you
-     should know that you have the option to set up your AYON server without
-     hero versions; in this case, the resolver will not be able to find your
-     product version).
-   - `v001` _(or whatever you put in your template)_: Will allow you to use a
-     specific version of the product.
-
-4. `representation=usd`: This part of the path is very important; it sets the
-   file "extension" that the resolver will search for. You can use everything
-   that you can upload to the server.
-
-All together, you will get an asset path like this. This asset path can be used
-inside of USD and will be resolved by the asset Resolver.
-
-`ayon://{ProjectName}/{path/to/ayon/folder}?product={FileName}&version=latest&representation=usd`
-
-[^1]:
-    In the CPP files, you might find `TF_DEBUG().Msg();` and one of the two
-    Enum Values `AYONUSDRESOLVER_RESOLVER` or `AYONUSDRESOLVER_RESOLVER_CONTEXT`
-    these allow you to select what debug messages will be printed. If you want the
-    resolver to be silent, then you can leave this value empty. It's best practice
-    to keep it in your env variable setup, just in case.
+The command is usage as follows\
+`python scripts/build.py [Flags]`\
+most of the time you will use the `--CompilePlugin` and `--extra_env_vars` the
+first allows you to select the Build Plugin to build with and the second one can
+be useful to set the BuildPlugin related env vars\
+Excample:\
+`python scripts/build.py --CompilePlugin=AyonUsdLinux/AyonUsd23_5_Py39_Linux --extra_env_vars AyonUsdRoot={Path To UsdLib}`\
+also remember that you need to use `--Clean` when you want to do a clean
+compile. and when you change the build plugin you will need to run **Clean** so
+that CMake delets the cached data for the BudilPlugin
