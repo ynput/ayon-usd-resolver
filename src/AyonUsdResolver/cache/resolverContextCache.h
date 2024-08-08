@@ -6,10 +6,9 @@
 #include <shared_mutex>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 
 #include "AyonCppApi.h"
-#include "assetIdentDef.h"
+#include "../cache/assetIdentDef.h"
 #include <nlohmann/json.hpp>
 
 PXR_NAMESPACE_USING_DIRECTIVE

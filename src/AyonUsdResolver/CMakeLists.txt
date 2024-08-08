@@ -4,14 +4,14 @@ endif()
 ### Targets ###
 add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
     SHARED
-        assetIdentDef.cpp
-        debugCodes.cpp
+        cache/assetIdentDef.cpp
+        codes/debugCodes.cpp
         resolver.cpp
         resolverContext.cpp
-        resolverTokens.cpp 
+        Wrappers_Tokens/resolverTokens.cpp 
 		
-        resolverContextCache.cpp
-        resolutionFunctions.cpp 
+        cache/resolverContextCache.cpp
+        helpers/resolutionFunctions.cpp 
 )
 
 target_compile_definitions(${AR_AYONUSDRESOLVER_TARGET_LIB}
@@ -61,12 +61,12 @@ install(TARGETS ${AR_AYONUSDRESOLVER_TARGET_LIB} DESTINATION ${AR_AYONUSDRESOLVE
 
 add_library(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
     SHARED
-        module.cpp
-        moduleDeps.cpp
-        wrapResolver.cpp
-        wrapResolverContext.cpp
-        wrapResolverTokens.cpp 
-        resolverTokens.cpp 
+        pluginData/module.cpp
+        pluginData/moduleDeps.cpp
+        Wrappers_Tokens/wrapResolver.cpp
+        Wrappers_Tokens/wrapResolverContext.cpp
+        Wrappers_Tokens/wrapResolverTokens.cpp 
+        Wrappers_Tokens/resolverTokens.cpp 
 )
 add_dependencies(${AR_AYONUSDRESOLVER_TARGET_PYTHON} ${AR_AYONUSDRESOLVER_TARGET_LIB})
 set_boost_namespace(${AR_AYONUSDRESOLVER_TARGET_PYTHON})

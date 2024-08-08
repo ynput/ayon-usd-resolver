@@ -1,23 +1,14 @@
 #include <memory>
 #include <string>
-#include <utility>
-#include "debugCodes.h"
+
+#include "codes/debugCodes.h"
 #define CONVERT_STRING(string) #string
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
 
-#include "resolver.h"
 #include "resolverContext.h"
-#include "resolverTokens.h"
 
-#include "pxr/base/tf/getenv.h"
-#include "pxr/base/tf/pathUtils.h"
 #include "pxr/pxr.h"
-#include "pxr/usd/sdf/layer.h"
-#include "pxr/usd/usd/collectionMembershipQuery.h"
 
-#include <iostream>
-#include <mutex>
-#include <thread>
 #include <vector>
 
 PXR_NAMESPACE_USING_DIRECTIVE

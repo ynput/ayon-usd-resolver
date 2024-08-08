@@ -1,4 +1,4 @@
-#include "resolver.h"
+#include "../resolver.h"
 
 #include <pxr/pxr.h>
 #include <pxr/usd/ar/resolver.h>

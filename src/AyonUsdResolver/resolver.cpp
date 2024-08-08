@@ -1,10 +1,10 @@
-#include <stdexcept>
+#include <string>
 #include <utility>
-#include "debugCodes.h"
+#include "codes/debugCodes.h"
 #include "pxr/base/tf/debug.h"
 #include "pxr/usd/ar/resolvedPath.h"
-#include "resolverContextCache.h"
-#include "resolutionFunctions.h"
+#include "cache/resolverContextCache.h"
+#include "helpers/resolutionFunctions.h"
 #define CONVERT_STRING(string) #string
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
 
@@ -20,8 +20,6 @@
 #include "pxr/usd/ar/notice.h"
 
 #include "pxr/usd/sdf/layer.h"
-
-#include <string>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -97,36 +95,33 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         return ArResolvedPath(assetPath);
     }
 
-    // TODO refactor to avoid this extra loop
+    const AyonUsdResolverContext* activeContext = nullptr;
     const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
     for (const AyonUsdResolverContext* ctx: contexts) {
         if (ctx) {
-            if (ctx->getCachePtr()->isCacheStatic()) {
-                return ctx->getCachePtr()->getAsset(assetPath, cacheName::AYONCACHE, true).getResolvedAssetPath();
-            }
+            activeContext = ctx;
+            break;
         }
     }
 
+    if (activeContext->getCachePtr()->isCacheStatic()) {
+        return activeContext->getCachePtr()->getAsset(assetPath, cacheName::AYONCACHE, true).getResolvedAssetPath();
+    }
     if (_IsAyonPath(assetPath)) {
-        // const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
-        for (const AyonUsdResolverContext* ctx: contexts) {
-            if (ctx) {
-                std::pair<std::string, std::string> test;
-                assetIdent asset;
+        if (activeContext) {
+            std::pair<std::string, std::string> test;
+            assetIdent asset;
 
-                std::shared_ptr<resolverContextCache> resolverCache = ctx->getCachePtr();
+            std::shared_ptr<resolverContextCache> resolverCache = activeContext->getCachePtr();
 
-                asset = resolverCache->getAsset(assetPath, cacheName::AYONCACHE, true);
+            asset = resolverCache->getAsset(assetPath, cacheName::AYONCACHE, true);
 
-                ArResolvedPath resolvedPath(asset.getResolvedAssetPath());
+            ArResolvedPath resolvedPath(asset.getResolvedAssetPath());
 
-                if (resolvedPath) {
-                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                        .Msg("Resolver::_Resolve( '%s' ) resolved \n", resolvedPath.GetPathString().c_str());
-                    return resolvedPath;
-                }
-                // Only try the first valid context.
-                break;
+            if (resolvedPath) {
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                    .Msg("Resolver::_Resolve( '%s' ) resolved \n", resolvedPath.GetPathString().c_str());
+                return resolvedPath;
             }
         }
         return ArResolvedPath();

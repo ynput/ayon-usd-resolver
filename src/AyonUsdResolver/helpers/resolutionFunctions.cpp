@@ -1,10 +1,11 @@
 #include <cstdint>
+#include <regex>
 #include <string_view>
 #include <string_view>
 
 #include "resolutionFunctions.h"
-#include "debugCodes.h"
-#include "config.h"
+#include "../codes/debugCodes.h"
+#include "../config.h"
 
 #include "pxr/base/tf/debug.h"
 #include "pxr/usd/ar/resolvedPath.h"

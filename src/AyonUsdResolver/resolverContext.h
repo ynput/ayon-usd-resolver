@@ -1,14 +1,13 @@
 #ifndef AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_H
 #define AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_H
 
-#include "api.h"
+#include "pluginData/api.h"
 
 #include "pxr/pxr.h"
 #include "pxr/usd/ar/defineResolverContext.h"
 
-#include "resolverContextCache.h"
+#include "cache/resolverContextCache.h"
 
-#include <memory>
 #include <string>
 
 class AyonUsdResolverContext {

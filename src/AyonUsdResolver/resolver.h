@@ -1,13 +1,13 @@
 #ifndef AR_AYONUSDRESOLVER_RESOLVER_H
 #define AR_AYONUSDRESOLVER_RESOLVER_H
 
-#include "api.h"
+#include "pluginData/api.h"
 
 #include "pxr/pxr.h"
 #include "pxr/usd/ar/resolvedPath.h"
 #include "pxr/usd/ar/resolver.h"
 #include "resolverContext.h"
-#include "resolutionFunctions.h"
+#include "helpers/resolutionFunctions.h"
 
 #include <memory>
 #include <string>

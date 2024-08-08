@@ -1,8 +1,8 @@
 #include "resolverContextCache.h"
-#include "config.h"
-#include "debugCodes.h"
+#include "../config.h"
+#include "../codes/debugCodes.h"
 #include "nlohmann/json_fwd.hpp"
-#include "resolutionFunctions.h"
+#include "../helpers/resolutionFunctions.h"
 
 #include "pxr/usd/ar/resolvedPath.h"
 #include "pxr/base/arch/systemInfo.h"

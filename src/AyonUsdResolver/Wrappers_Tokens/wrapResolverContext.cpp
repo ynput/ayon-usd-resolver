@@ -1,4 +1,4 @@
-#include "resolverContext.h"
+#include "../resolverContext.h"
 
 #include "pxr/base/tf/pyUtils.h"
 #include "pxr/pxr.h"
