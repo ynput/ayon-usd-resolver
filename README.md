@@ -2,8 +2,6 @@
 
 ## Introduction
 
-## Docs
-
 The [AYON](https://ynput.io/ayon/) USD Resolver is
 [an asset resolver plugin](https://openusd.org/release/api/ar_page_front.html#ar_uri_resolvers)
 for [Pixar's USD](https://openusd.org). It's designed to turn URIs with the
@@ -58,6 +56,11 @@ AYON compatible entity URIs through the
 
     git submodule update --init --recursive
     ```
+
+## DoxyGen Dox
+
+Can be found on the connected GH Page
+`https://ynput.github.io/ayon-usd-resolver/`
 
 ## Pre-build / Self Compiled
 
