@@ -60,7 +60,7 @@ AYON compatible entity URIs through the
 ## DoxyGen Dox
 
 Can be found on the connected GH Page
-`https://ynput.github.io/ayon-usd-resolver/`
+[Docs GH Page](https://ynput.github.io/ayon-usd-resolver/)
 
 ## Pre-build / Self Compiled
 
