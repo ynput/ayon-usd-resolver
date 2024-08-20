@@ -11,7 +11,7 @@ A few things to begin with.
 
 ### How to setup a Resolver
 
-**The Env Varaibles**\
+**The Env Variables**\
 USD_ASSET_RESOLVER:
 
 - This variable tells Usd what resolver to use and where to find it (this will
