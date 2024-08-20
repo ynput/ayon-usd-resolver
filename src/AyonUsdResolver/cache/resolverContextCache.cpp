@@ -24,14 +24,14 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-pinningFileHanlder::pinningFileHanlder(const std::string &pinningFilePath,
+pinningFileHandler::pinningFileHandler(const std::string &pinningFilePath,
                                        const std::unordered_map<std::string, std::string> &rootReplaceData):
     m_pinningFilePath(pinningFilePath),
     m_rootReplaceData(rootReplaceData) {
     std::ifstream pinningFile(this->m_pinningFilePath);
 
     if (!pinningFile.is_open()) {
-        throw std::runtime_error("pinningFileHanlder was not able to open PinningFile: "
+        throw std::runtime_error("pinningFileHandler was not able to open PinningFile: "
                                  + this->m_pinningFilePath.string());
     }
 
@@ -52,7 +52,7 @@ pinningFileHanlder::pinningFileHanlder(const std::string &pinningFilePath,
  * @return populated assetIdent if key was found in pinning file. Empty assetIdent if key was not found
  */
 assetIdent
-pinningFileHanlder::getAssetData(const std::string &resolveKey) {
+pinningFileHandler::getAssetData(const std::string &resolveKey) {
     assetIdent assetEntry;
 
     std::string rootLessPath;
@@ -87,7 +87,7 @@ resolverContextCache::resolverContextCache(): m_AyonCache(), m_CommonCache(), m_
         std::map<std::string, std::string> projectRootsEnvMap = ynput::core::iostd::getEnvMap(PROJECT_ROOTS_ENV_KEY);
         std::unordered_map<std::string, std::string> projectRootsEnvUMap(
             std::make_move_iterator(projectRootsEnvMap.begin()), std::make_move_iterator(projectRootsEnvMap.end()));
-        this->m_pinningFileHanlder.emplace(ynput::core::iostd::getEnvKey(PINNING_FILE_PATH_ENV_KEY),
+        this->m_pinningFileHandler.emplace(ynput::core::iostd::getEnvKey(PINNING_FILE_PATH_ENV_KEY),
                                            projectRootsEnvUMap);
     }
 };
@@ -163,7 +163,7 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
         return asset;
     }
     if (this->m_static_cache) {
-        return this->m_pinningFileHanlder->getAssetData(assetIdentifier);
+        return this->m_pinningFileHandler->getAssetData(assetIdentifier);
     }
 
     std::unordered_set<assetIdent, assetIdentHash>::iterator hit;

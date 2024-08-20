@@ -15,11 +15,11 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 enum cacheName { AYONCACHE, COMMONCACHE };
 
-class pinningFileHanlder {
+class pinningFileHandler {
     public:
-        pinningFileHanlder(const std::string &pinningFilePath,
+        pinningFileHandler(const std::string &pinningFilePath,
                            const std::unordered_map<std::string, std::string> &rootReplaceData);
-        ~pinningFileHanlder() = default;
+        ~pinningFileHandler() = default;
 
         assetIdent getAssetData(const std::string &resolveKey);
 
@@ -111,7 +111,7 @@ class resolverContextCache {
         std::optional<AyonApi> m_ayon;
         bool m_static_cache;
 
-        std::optional<pinningFileHanlder> m_pinningFileHanlder;
+        std::optional<pinningFileHandler> m_pinningFileHandler;
 };
 
 #endif   // AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
