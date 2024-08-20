@@ -5,7 +5,7 @@
 A few things to begin with.
 
 1. The AyonUsd addon will setup the resolver via Ayon Server settings and in
-   most cases this will be more than enough for Studio Deployment.
+   most cases this will be enough for Studio Deployment.
 2. you can setup the resolver via Env variables like any other OpenUsd addon
    just in case you need some special Requirements.
 
