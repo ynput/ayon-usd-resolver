@@ -84,7 +84,7 @@ def main():
     prior_compile_vars = cmake_get_vars()
     last_compile_plugin = str(prior_compile_vars.get("SelectedCompilePlugin")).split("=")[-1]
     if not compile_plugin == last_compile_plugin:
-        print("Last Selected Compile plgin is not the same as the current", compile_plugin, last_compile_plugin)
+        print("Last Selected Compile plugin is not the same as the current, force clean", compile_plugin, last_compile_plugin)
         cmd_args.Clean = True
 
     if cmd_args.Clean:
