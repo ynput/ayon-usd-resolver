@@ -93,6 +93,40 @@ duplicates in the keys but the Cache stores the data as an Unordered_Map so it
 will end up deduplicating the Keys. But you can't have spaces in the list as
 they are not removed and will be interpreted as part of the Key or Value.
 
+**example**\
+setup the resolver for pinning support. we empty all the AYON c++ api keys just
+for example you can simply not set them.
+
+```bash
+export AYON_API_KEY=""
+export AYON_SITE_ID=""
+export AYON_SERVER_URL=""
+export AYON_PROJECT_NAME=""
+
+export AYONLOGGERLOGLVL=""
+export AYONLOGGERFILELOGGING=""
+export AYONLOGGERFILEPOS=""
+
+export ENABLE_STATIC_GLOBAL_CACHE="true"
+export PINNING_FILE_PATH="/path/to/pinning.json"
+export PROJECT_ROOTS="key:/val,key:/val"
+
+export TF_DEBUG=""
+```
+
+```py
+stage = Usd.Stage.Open(pinning_file_json["ayon_pinning_data_entry_sceene"])
+print(stage.ExportToString())
+```
+
+PS: its interesting to know that when you generate a pinning file via the
+AYON-USD addon the json file will have a key named
+`ayon_pinning_data_entry_sceene`.\
+This should always be the path used to open the stage Otherwise the pinning file
+might not have the correct AssetIdentifier stored.\
+aka: if this key points to a local path and you use an URI that points to the
+local path the resolver wont be able to resolve.
+
 ### Controlling the cache
 
 `context = AyonUsdResolver.ResolverContext()` there are multiple ways to control
@@ -117,6 +151,34 @@ or you want to disconnect from the Global Cache you should access the Context
 connected to this specific resolver.\
 `explicit_resolver_context = explicit_resolver.GetConnectedContext()` all the
 other functions stay the same.
+
+**Examples**
+
+Deleting cached entry's
+
+```py
+resolver = Ar.GetResolver()
+context = AyonUsdResolver.ResolverContext()
+
+# Delete From the Global Cache
+AssetIdentifier: str="ayon://{ProjectName}/{path/to/ayon/folder}?product={FileName}&version=latest&representation=usd"
+context.deleteFromCache(AssetIdentifier)
+
+# Clear the Global Cache
+context.clearCache()
+```
+
+Disconnecting from the global cache
+
+```py
+explicit_resolver = AyonUsdResolver.Resolver()
+explicit_resolver_context = explicit_resolver.GetConnectedContext()
+
+# Drooping the cache so that the resolver will generate its own dedicated cache instance
+explicit_resolver_context.dropCache()
+
+# Delete from cache and clearCache will also work with an explicit_resolver_context
+```
 
 ## Resolver Developer Docs
 
