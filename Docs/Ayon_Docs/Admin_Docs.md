@@ -28,7 +28,7 @@ TF_DEBUG:
     on performance.
 
   - If you want the resolver to be silent, then you can leave this value empty.
-  - there are more optional debug variables that exist in Usd outside of the
+  - There are more optional debug variables that exist in Usd outside of the
     AYON usd resolver. Have a look at the
     [USD Survival Guide By Luca Sheller](https://lucascheller.github.io/VFX-UsdSurvivalGuide/core/profiling/debug.html?highlight=tf%20debug#overview)
 
