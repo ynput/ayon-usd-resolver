@@ -86,7 +86,7 @@ when running the resolver against the AYON server the CppApi will query the
 `Get Project Site Roots` endpoint and get a Dict[str,str] of
 {root[RootOverwriteKey]}=Val overwrites.\
 when running with a pinning file you will need to set this Dict[str,str] as an
-ENV variable. e.g:`{Key}:{Path},{Key}:{Path}"` its not a problem to have
+ENV variable. e.g:`{Key}:{Path},{Key}:{Path}"` it's not a problem to have
 duplicates in the keys but the Cache stores the data as an Unordered_Map so it
 will end up deduplicating the Keys. But you cant have spaces in the list as they
 are not removed and will be interpreted as part of the Key or Value.
