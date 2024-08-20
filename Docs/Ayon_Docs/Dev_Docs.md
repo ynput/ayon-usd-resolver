@@ -190,7 +190,7 @@ PlatfromName options = {Win, Linux, Mac, specific Os Name}
 
 ### All About this Project
 
-**Dependencys**
+**Dependencies**
 
 - [AyonCppApi](https://github.com/ynput/ayon-usd)\
   Internal AyonCppApi. Used for communication with the server and specifically
