@@ -35,7 +35,7 @@ resolver = Ar.GetResolver()
 context = AyonUsdResolver.ResolverContext()
 ```
 
-If you want fine condole over the resolver you will be able to get the connected
+If you want fine control over the resolver you will be able to get the connected
 context via `GetConnectedContext`\
 this is also the recommended way to get access to the dropCache function for the
 resolver
