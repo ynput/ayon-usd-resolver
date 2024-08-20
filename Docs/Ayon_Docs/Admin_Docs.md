@@ -48,7 +48,7 @@ AYONLOGGERLOGLVL:
 
 AYONLOGGERFILELOGGING:
 
-- allows you to enable or disable file logging in CppApi.
+- Allows you to enable or disable file logging in CppApi.
   - OFF,ON
 
 AYONLOGGERFILEPOS:
