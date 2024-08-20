@@ -28,7 +28,7 @@ TF_DEBUG:
 
 LD_LIBRARY_PATH:
 
-- it describes where the C++ dynamic library files can be found for the
+- Describes where the C++ dynamic library files can be found for the
   resolver.
 
 PXR_PLUGINPATH_NAME:
