@@ -21,11 +21,11 @@ TF_DEBUG:
 
 - This variable allows you to choose what Debug messages will be printed.
 
-  - the standars for the AYON Usd Resolver are `AYONUSDRESOLVER_RESOLVER`
+  - The standards for the AYON Usd Resolver are `AYONUSDRESOLVER_RESOLVER`
     `AYONUSDRESOLVER_RESOLVER_CONTEXT` they can be used to get more detailed
-    info's about the resolver operations. Its not advised to keep those on
-    outside of debugging as it will slow your production and drive your artists
-    crazy.
+    information about the resolver's operations. It is not advised to have these enabled
+    outside of debugging as it will be very verbose and may have a big impact 
+    on performance.
 
   - If you want the resolver to be silent, then you can leave this value empty.
   - there are more optional debug variables that exist in Usd outside of the
