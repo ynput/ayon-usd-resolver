@@ -2,7 +2,7 @@
 
 ### Into
 
-Welcome to the Devloper Docs. this document will be split into 2 portions.
+Welcome to the Developer Docs. this document will be split into 2 portions.
 
 1: documentation for **AYON** developers that want to use the resolver but dont
 want to work on the source code. it will outile all the things the resolver
