@@ -2,21 +2,21 @@
 
 ### Into
 
-Welcome to the Developer Docs. this document will be split into 2 portions.
+Welcome to the Developer Docs. This document will be split into 2 portions.
 
-1: documentation for **AYON** developers that want to use the resolver but dont
+1: documentation for **AYON** developers that want to use the resolver but don't
 want to work on the source code. it will outline all the things the resolver
 offers and how you can control them.\
-2: the **Resolver Developer** part. this portion will talk about what we use for
-the resolver how we use it and
+2: the **Resolver Developer** part. Lets take a look at what tools and library's
+we use and how we use them.
 
 ## AyonDev Documentation
 
 ### Pythonic Usage via USD
 
 first of all. if you setup the resolver via the AyonUsd addon usd will
-automatically use it as the default resolver meaning every time you call a resolver
-AyonUsdResolver will be used.
+automatically use it as the default resolver meaning every time you call a
+resolver AyonUsdResolver will be used.
 
 but you have a bit more fine grain controle if you want to.
 
@@ -65,6 +65,8 @@ instance is useful if you want to manipulate the Global resolver cache.
 the AyonUsdResolver has a feature called Pinning Support.\
 in short pinning support allows you to load a pinning File and disconnect the
 AyonCppApi.\
+In the implementation this boils down to a static Memory cache that bypasses the
+resolver Logic.\
 why would you do that ? When running a resolver on a farm with many many
 systems(Render Nodes) you might not want them all to call the Ayon server to
 avoid impacting the server performance.
@@ -72,7 +74,7 @@ avoid impacting the server performance.
 **How to use it ?**\
 There are 3 Env variables that control the Pinning file support
 
-`ENABLE_STATICK_GLOBAL_CACHE`\
+`ENABLE_STATIC_GLOBAL_CACHE`\
 Enables or Disables static Cache creation. This effectively allows you to enable
 or disable Pinning file support.\
 as you might want to have a pinning file in your env vars but for e.g debugging
@@ -88,8 +90,8 @@ when running the resolver against the AYON server the CppApi will query the
 when running with a pinning file you will need to set this Dict[str,str] as an
 ENV variable. e.g:`{Key}:{Path},{Key}:{Path}"` it's not a problem to have
 duplicates in the keys but the Cache stores the data as an Unordered_Map so it
-will end up deduplicating the Keys. But you can't have spaces in the list as they
-are not removed and will be interpreted as part of the Key or Value.
+will end up deduplicating the Keys. But you can't have spaces in the list as
+they are not removed and will be interpreted as part of the Key or Value.
 
 ### Controlling the cache
 
@@ -179,16 +181,21 @@ is found.
 
 ### Asset Identifier / Behavior:
 
-The AssetIdentifier or AssetPath is always used by the resolver to convert an
-AYON path to a path on disk. The resolver needs some information in the path to
-figure out what asset you want.
+In usd every reference has a so Called
+[AssetIdentifier](https://openusd.org/release/glossary.html#usdglossary-assetinfo)
+we use an AYON URI as the Identifier to allow resolution via the AYON server.\
+The resolver expects a valid AYON URI, which needs to match our Standards:
 
-1. `ayon:` is used in the `_resolve()` function to know whether your asset is an
-   AYON asset or not (done via a string view comparison).
-2. `//{ProjectName}/{path/to/ayon/folder}?product={FileName}` This is a classic
-   AYON path that defines what Ayon folder you want, e.g., sequences/sh010,
+1. scheme: "ayon"\
+   used in the `_resolve()` function to know whether your asset is an AYON asset
+   or not (done via a string view comparison).
+2. path: path to the product folder\
+   `//{ProjectName}/{path/to/ayon/folder}` This is a classic AYON path that
+   defines what Ayon folder you want, e.g., sequences/sh010,
    assets/characters/bob, etc.
-3. `version=latest` version has multiple options:
+3. query: product name, version and representation.\
+   `?product={ProductName}`\
+   `version=latest` version has multiple options:
 
    - `latest`: Will tell the resolver to use the latest version no matter what.
    - `hero`: this should be avoided in most cases with usd as our internal hero
@@ -196,9 +203,11 @@ figure out what asset you want.
    - `v001` _(or whatever you put in your template)_: Will allow you to use a
      specific version of the product.
 
-4. `representation=usd`: This part of the path is very important; it sets the
-   file "extension" that the resolver will search for. You can use everything
-   that you can upload to the server.
+   `representation=usd`: a Publish in AYON can have multiple representations
+   aka: the same character might be published in Usd and Fbx so that the
+   texturing department can use the Fbx while the Lighting department uses the
+   Usd. For the resolver we need to pin this to usd as we don't support Fbx and
+   co.
 
 All together, you will get an asset path like this. This asset path can be used
 inside of USD and will be resolved by the asset Resolver.

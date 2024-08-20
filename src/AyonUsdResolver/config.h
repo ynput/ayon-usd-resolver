@@ -5,12 +5,12 @@
 #include <cstdint>
 #include <string_view>
 
-#define PRECACHE_SIZE                       64
+#define PRECACHE_SIZE                      64
 
-#define ENABLE_STATICK_GLOBAL_CACHE_ENV_KEY "ENABLE_STATICK_GLOBAL_CACHE"
+#define ENABLE_STATIC_GLOBAL_CACHE_ENV_KEY "ENABLE_STATIC_GLOBAL_CACHE"
 
-#define PROJECT_ROOTS_ENV_KEY               "PROJECT_ROOTS"
-#define PINNING_FILE_PATH_ENV_KEY           "PINNING_FILE_PATH"
+#define PROJECT_ROOTS_ENV_KEY              "PROJECT_ROOTS"
+#define PINNING_FILE_PATH_ENV_KEY          "PINNING_FILE_PATH"
 
 namespace Config {
 

@@ -78,7 +78,7 @@ resolverContextCache::resolverContextCache(): m_AyonCache(), m_CommonCache(), m_
     m_PreCache.reserve(PRECACHE_SIZE);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::resolverContextCache() \n");
 
-    const char* enable_static_env_var = std::getenv(ENABLE_STATICK_GLOBAL_CACHE_ENV_KEY);
+    const char* enable_static_env_var = std::getenv(ENABLE_STATIC_GLOBAL_CACHE_ENV_KEY);
     if (enable_static_env_var == nullptr || std::strcmp(enable_static_env_var, "false") == 0) {
         m_ayon.emplace();
         this->m_static_cache = false;
