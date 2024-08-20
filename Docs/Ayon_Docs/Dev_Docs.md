@@ -97,7 +97,7 @@ are not removed and will be interpreted as part of the Key or Value.
 the cache of a resolver. but if your resolver uses the global cache you can
 simply create a new ResolverContext and access the cache control functions to
 affect the global cache.\
-this dose not work if you disconnected the Global cache from your resolver.
+this does not work if you disconnected the Global cache from your resolver.
 
 `context.deleteFromCache(AssetIdentifier)` this would allow you to delete an
 individual cached entry.\
