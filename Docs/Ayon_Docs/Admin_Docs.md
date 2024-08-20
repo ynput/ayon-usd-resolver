@@ -1,6 +1,6 @@
 # Admin Docs
 
-### General.
+### General
 
 A few things to begin with.
 
