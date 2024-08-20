@@ -6,8 +6,8 @@ A few things to begin with.
 
 1. The AyonUsd addon will setup the resolver via Ayon Server settings and in
    most cases this will be enough for Studio Deployment.
-2. You can setup the resolver via environment variables like any other OpenUsd addon
-   just in case you need some special Requirements.
+2. You can setup the resolver via environment variables like any other OpenUsd
+   addon just in case you need some special Requirements.
 
 ### How to setup a Resolver
 
@@ -20,16 +20,21 @@ USD_ASSET_RESOLVER:
 TF_DEBUG:
 
 - This variable allows you to choose what Debug messages will be printed.
-  - In the CPP files, you find TF_DEBUG().Msg();\
-    they always have one of two Enum Values AYONUSDRESOLVER_RESOLVER or
-    AYONUSDRESOLVER_RESOLVER_CONTEXT these allow you to select what debug
-    messages will be printed.
+
+  - the standars for the AYON Usd Resolver are `AYONUSDRESOLVER_RESOLVER`
+    `AYONUSDRESOLVER_RESOLVER_CONTEXT` they can be used to get more detailed
+    info's about the resolver operations. Its not advised to keep those on
+    outside of debugging as it will slow your production and drive your artists
+    crazy.
+
   - If you want the resolver to be silent, then you can leave this value empty.
+  - there are more optional debug variables that exist in Usd outside of the
+    AYON usd resolver. Have a look at the
+    [USD Survival Guide By Luca Sheller](https://lucascheller.github.io/VFX-UsdSurvivalGuide/core/profiling/debug.html?highlight=tf%20debug#overview)
 
 LD_LIBRARY_PATH:
 
-- Describes where the C++ dynamic library files can be found for the
-  resolver.
+- Describes where the C++ dynamic library files can be found for the resolver.
 
 PXR_PLUGINPATH_NAME:
 
