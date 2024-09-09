@@ -33,7 +33,7 @@ AyonUsdResolver::~AyonUsdResolver() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
         .Msg("Resolver::~AyonUsdResolver(M_ADD: '%s', M_SIZE: '%s' bytes)\n", oss.str().c_str(),
              std::to_string(sizeof(*this)).c_str());
-};
+ };
 
 std::string
 AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolvedPath &anchorAssetPath) const {
@@ -105,7 +105,8 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
     }
 
     if (activeContext->getCachePtr()->isCacheStatic()) {
-        return activeContext->getCachePtr()->getAsset(assetPath, cacheName::AYONCACHE, true).getResolvedAssetPath();
+        ArResolvedPath cachedPath = activeContext->getCachePtr()->getAsset(assetPath, cacheName::AYONCACHE, true).getResolvedAssetPath();
+        return cachedPath;
     }
     if (_IsAyonPath(assetPath)) {
         if (activeContext) {

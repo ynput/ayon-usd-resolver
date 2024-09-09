@@ -23,7 +23,8 @@
 #include <utility>
 
 PXR_NAMESPACE_USING_DIRECTIVE
-
+// TODO pinning file hanlder should construct its cache directly at construction getAssetData should not call
+// rootReplace
 pinningFileHandler::pinningFileHandler(const std::string &pinningFilePath,
                                        const std::unordered_map<std::string, std::string> &rootReplaceData):
     m_pinningFilePath(pinningFilePath),
@@ -35,11 +36,21 @@ pinningFileHandler::pinningFileHandler(const std::string &pinningFilePath,
                                  + this->m_pinningFilePath.string());
     }
 
+    nlohmann::json raw_pinning_file;
     try {
-        this->m_pinningFileData = nlohmann::json::parse(pinningFile);
+        raw_pinning_file = nlohmann::json::parse(pinningFile);
     }
     catch (const nlohmann::json::parse_error &e) {
-        throw std::runtime_error("The pining File is not in the Correct Format: " + this->m_pinningFilePath.string());
+        throw std::runtime_error("The pining File is not in the Correct Format: ");
+    }
+
+    nlohmann::json pinningData = raw_pinning_file.at("ayon_resolver_pinning_data");
+    pinningData.erase("ayon_pinning_data_entry_scene");
+
+    for (auto &entry: pinningData.items()) {
+        std::string pathed_key = ynput::tool::ayon::rootReplace(entry.key(), this->m_rootReplaceData);
+        std::string pathed_val = ynput::tool::ayon::rootReplace(entry.value(), this->m_rootReplaceData);
+        this->m_pinningFileData[pathed_key] = pathed_val;
     }
 };
 
@@ -55,9 +66,9 @@ assetIdent
 pinningFileHandler::getAssetData(const std::string &resolveKey) {
     assetIdent assetEntry;
 
-    std::string rootLessPath;
+    std::string pinnedAssetPath;
     try {
-        rootLessPath = this->m_pinningFileData.at("ayon_resolver_pinning_data").at(resolveKey);
+        pinnedAssetPath = this->m_pinningFileData.at(resolveKey);
     }
     catch (const nlohmann::json::out_of_range &e) {
         return assetEntry;
@@ -66,9 +77,9 @@ pinningFileHandler::getAssetData(const std::string &resolveKey) {
         // key in PinningFile key: " + resolveKey);
     }
 
-    if (!rootLessPath.empty()) {
+    if (!pinnedAssetPath.empty()) {
         assetEntry.setAssetIdentifier(resolveKey);
-        assetEntry.setResolvedAssetPath(ynput::tool::ayon::rootReplace(rootLessPath, this->m_rootReplaceData));
+        assetEntry.setResolvedAssetPath(pinnedAssetPath);
     }
 
     return assetEntry;

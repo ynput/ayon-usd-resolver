@@ -32,6 +32,8 @@ execute_process(
     OUTPUT_VARIABLE Python_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+
+
 if (NOT ${Python_VERSION} STREQUAL 3.9) # Check if System Installed Python version is 3.9
   message(FATAL_ERROR "Python version: ${Python_VERSION}")
 endif()

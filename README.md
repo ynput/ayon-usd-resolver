@@ -35,6 +35,7 @@ AYON compatible entity URIs through the
 - C++ Compiler
 - Cmake
 - Target DCC / SDK installed
+- python3 development files (Optional when building Against AYON Usd)
 
 ### Tested Platforms:
 
