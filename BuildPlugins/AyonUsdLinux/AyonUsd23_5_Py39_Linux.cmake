@@ -43,7 +43,6 @@ get_filename_component(Python_Base_Dir ${Python_INCLUDE_DIRS} DIRECTORY)
 set(AR_PYTHON_LIB_NUMBER python39)
 set(AR_PYTHON_LIB_DIR ${Python_Base_Dir}) 
 set(AR_PYTHON_INCLUDE_DIR ${Python_Base_Dir}/python3.9)
-
 # setting up boost 
 add_compile_definitions(BOOST_ALL_NO_LIB)
 set(AR_BOOST_NAMESPACE boost) 

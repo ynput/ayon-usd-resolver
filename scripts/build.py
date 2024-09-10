@@ -43,7 +43,7 @@ def cmake_get_vars():
         stdout=subprocess.PIPE,
         text=True,
         universal_newlines=True,
-        check=True,
+        # check=True,
     )
     for i in process.stdout.split("//"):
         for x in i.split("\n"):
