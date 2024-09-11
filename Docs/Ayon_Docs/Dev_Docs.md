@@ -145,10 +145,13 @@ affect the global cache.\
 This does not work if you disconnected the Global cache from your resolver.
 
 `context.deleteFromCache(AssetIdentifier)` delete an individual cached entry.
-`context.clearCache()` allows you to clear the connected cache. it is important
-to understand that by default a Resolver will be connected to the global cache
-and this call will delete all entry's in the global cache not just the ones that
-where added by this resolver.\
+`context.clearCache()` clear the connected cache. 
+
+:::note
+It is important to understand that by default a Resolver will be connected to the global cache
+and this call will delete all entries in the global cache not just the ones that
+where added by this resolver.
+:::
 `context.dropCache()` allows you do disconnect from the current cache object and
 initialize a new one. This can be useful if you want to disconnect from the
 global cache and have a Resolver local cache instead.
