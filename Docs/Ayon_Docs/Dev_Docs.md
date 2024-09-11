@@ -59,7 +59,7 @@ preferred Resolver. If you use the AyonUsd addon you wont need to set this line
 as we register the resolver as the main resolver. But if you have a different
 resolver set as Main you might need to use this command.
 
-`resolver = Ar.GetResolver()` there are multiple ways to get access to an
+`resolver = Ar.GetResolver()` there are multiple ways to get access to a
 resolver instance but using the "Default" Usd option is usually the best idea as
 it will return the resolver for the current context.
 
