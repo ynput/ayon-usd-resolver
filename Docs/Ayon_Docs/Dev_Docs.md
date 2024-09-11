@@ -130,7 +130,7 @@ print(stage.ExportToString())
 
 PS: its interesting to know that when you generate a pinning file via the
 AYON-USD addon the json file will have a key named
-`ayon_pinning_data_entry_sceene`.\
+`ayon_pinning_data_entry_scene`.\
 This should always be the path used to open the stage Otherwise the pinning file
 might not have the correct AssetIdentifier stored.\
 aka: if this key points to a local path and you use an URI that points to the
