@@ -144,8 +144,7 @@ simply create a new ResolverContext and access the cache control functions to
 affect the global cache.\
 This does not work if you disconnected the Global cache from your resolver.
 
-`context.deleteFromCache(AssetIdentifier)` this would allow you to delete an
-individual cached entry.\
+`context.deleteFromCache(AssetIdentifier)` delete an individual cached entry.
 `context.clearCache()` allows you to clear the connected cache. it is important
 to understand that by default a Resolver will be connected to the global cache
 and this call will delete all entry's in the global cache not just the ones that
