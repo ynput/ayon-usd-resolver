@@ -58,7 +58,7 @@ AYONLOGGERFILELOGGING:
 
 AYONLOGGERFILEPOS:
 
-- allows you to set a file path for the CppApi logging.
+- Allows you to set a file path for the CppApi logging.
   - /path/to or relPath
 
 Here an example that would work with the Environment setup inside Ayon server.
