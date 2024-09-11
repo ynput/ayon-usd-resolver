@@ -193,7 +193,7 @@ explicit_resolver_context.dropCache()
 
 ## Resolver Developer Docs
 
-**Naming BuildPluingins**
+**Naming Build Plugins**
 
 Build Plugins Naming schema is as follows:
 `{AppName}{PlatfromName}/{AppName}{AppVersion}_Py{pythonVersion}_{PlatfromName}.cmake`
