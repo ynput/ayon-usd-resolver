@@ -49,8 +49,10 @@ explicit_resolver = AyonUsdResolver.Resolver()
 explicit_resolver_context = explicit_resolver.GetConnectedContext()
 ```
 
-`from usdAssetResolver import AyonUsdResolver`python bindings for the
-AyonUsdResolver.
+To access the Python bindings for the AyonUsdResolver:
+```py
+from usdAssetResolver import AyonUsdResolver
+```
 
 `Ar.SetPreferredResolver("AyonUsdResolver")` this command allows you to set a
 preferred Resolver. if you use the AyonUsd addon you wont need to set this line
