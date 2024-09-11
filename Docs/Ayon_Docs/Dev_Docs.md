@@ -184,7 +184,7 @@ explicit_resolver_context.dropCache()
 
 **Naming BuildPluingins**
 
-BuildPluingins Naming schema is as follows:
+Build Plugins Naming schema is as follows:
 `{AppName}{PlatfromName}/{AppName}{AppVersion}_Py{pythonVersion}_{PlatfromName}.cmake`
 PlatfromName options = {Win, Linux, Mac, specific Os Name}
 
