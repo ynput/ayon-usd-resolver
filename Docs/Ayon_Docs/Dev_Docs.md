@@ -73,9 +73,12 @@ In short _pinning support_ allows you to load a pinning file and disconnect the
 AyonCppApi.\
 In the implementation this boils down to a static Memory cache that bypasses the
 resolver Logic.\
-why would you do that ? When running a resolver on a farm with many many
-systems(Render Nodes) you might not want them all to call the Ayon server to
-avoid impacting the server performance.
+:::note Why use pinning?
+When running a resolver on a farm with many workers (render nodes) 
+you might not want them all to call the Ayon server to avoid impacting 
+the server performance. This is because USD Resolvers will resolve paths
+one by one, potentially resulting in many calls.
+:::
 
 **How to use it ?**\
 There are 3 Env variables that control the Pinning file support
