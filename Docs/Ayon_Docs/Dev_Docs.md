@@ -90,7 +90,7 @@ as you might want to have a pinning file in your env vars but for e.g debugging
 you don't want to activate the feature.
 
 `PINNING_FILE_PATH`\
-this is a path to the pinning file.
+This is a path to the pinning file.
 
 `PROJECT_ROOTS`\
 when running the resolver against the AYON server the CppApi will query the
