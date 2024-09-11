@@ -93,7 +93,7 @@ you don't want to activate the feature.
 This is a path to the pinning file.
 
 `PROJECT_ROOTS`\
-when running the resolver against the AYON server the CppApi will query the
+When running the resolver against the AYON server the CppApi will query the
 `Get Project Site Roots` endpoint and get a Dict[str,str] of
 {root[RootOverwriteKey]}=Val overwrites.\
 when running with a pinning file you will need to set this Dict[str,str] as an
