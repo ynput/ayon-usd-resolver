@@ -14,7 +14,7 @@ we use and how we use them.
 
 ### Pythonic Usage via USD
 
-first of all. if you setup the resolver via the AyonUsd addon usd will
+First of all, if you setup the resolver via the AyonUsd addon usd will
 automatically use it as the default resolver meaning every time you call a
 resolver AyonUsdResolver will be used.
 
