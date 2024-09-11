@@ -39,8 +39,10 @@ context = AyonUsdResolver.ResolverContext()
 
 If you want fine control over the resolver you will be able to get the connected
 context via `GetConnectedContext`\
-this is also the recommended way to get access to the dropCache function for the
-resolver
+:::tip Dropping cache entries
+Using the `resolver.GetConnectedContext()` is also the recommended way to access the `dropCache` function for the
+resolver.
+:::
 
 ```py
 explicit_resolver = AyonUsdResolver.Resolver()
