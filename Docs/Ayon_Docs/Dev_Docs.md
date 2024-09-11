@@ -197,7 +197,7 @@ explicit_resolver_context.dropCache()
 
 Build Plugins Naming schema is as follows:
 `{AppName}{PlatfromName}/{AppName}{AppVersion}_Py{pythonVersion}_{PlatfromName}.cmake`
-PlatfromName options = {Win, Linux, Mac, specific Os Name}
+PlatformName options = {Win, Linux, Mac, specific Os Name}
 
 ### All About this Project
 
