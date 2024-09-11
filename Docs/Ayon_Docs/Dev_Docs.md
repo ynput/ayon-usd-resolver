@@ -26,14 +26,16 @@ from usdAssetResolver import AyonUsdResolver
 Ar.SetPreferredResolver("AyonUsdResolver")
 ```
 
-Get a resolver via `Usd.Ar` api you will need to get a explicit context to edit
-the global context as Ar.GetResolver will return a higher order class and not
-AyonUsdResolver class
+:::note
+When you get a resolver via `Usd.Ar` API you will need to get an explicit context to 
+edit the global context as `Ar.GetResolver` will return a higher order class and 
+not `AyonUsdResolver` class.
 
 ```py
 resolver = Ar.GetResolver()
 context = AyonUsdResolver.ResolverContext()
 ```
+:::
 
 If you want fine control over the resolver you will be able to get the connected
 context via `GetConnectedContext`\
