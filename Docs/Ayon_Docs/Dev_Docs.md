@@ -172,8 +172,8 @@ resolver = Ar.GetResolver()
 context = AyonUsdResolver.ResolverContext()
 
 # Delete From the Global Cache
-AssetIdentifier: str="ayon://{ProjectName}/{path/to/ayon/folder}?product={FileName}&version=latest&representation=usd"
-context.deleteFromCache(AssetIdentifier)
+asset_identifier: str="ayon://{ProjectName}/{path/to/ayon/folder}?product={FileName}&version=latest&representation=usd"
+context.deleteFromCache(asset_identifier)
 
 # Clear the Global Cache
 context.clearCache()
