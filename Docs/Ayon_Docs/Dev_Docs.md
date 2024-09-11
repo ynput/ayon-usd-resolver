@@ -18,7 +18,7 @@ First of all, if you setup the resolver via the AyonUsd addon usd will
 automatically use it as the default resolver meaning every time you call a
 resolver AyonUsdResolver will be used.
 
-but you have a bit more fine grain controle if you want to.
+But you have more fine grained control if you want to:
 
 ```py
 from pxr import Ar
