@@ -142,7 +142,7 @@ local path the resolver wont be able to resolve.
 the cache of a resolver. but if your resolver uses the global cache you can
 simply create a new ResolverContext and access the cache control functions to
 affect the global cache.\
-this does not work if you disconnected the Global cache from your resolver.
+This does not work if you disconnected the Global cache from your resolver.
 
 `context.deleteFromCache(AssetIdentifier)` this would allow you to delete an
 individual cached entry.\
