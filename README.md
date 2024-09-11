@@ -77,4 +77,4 @@ Can be found on the connected GH Page
 
 ## Self Compiled
 
-- See Doxygen Docs Getting Started Page
+- See [Doxygen Docs](https://ynput.github.io/ayon-usd-resolver/md_md_Getting_Started.html) Getting Started Page
