@@ -69,7 +69,7 @@ instance is useful if you want to manipulate the Global resolver cache.
 ### Pinning
 
 the AyonUsdResolver has a feature called Pinning Support.\
-in short pinning support allows you to load a pinning File and disconnect the
+In short _pinning support_ allows you to load a pinning file and disconnect the
 AyonCppApi.\
 In the implementation this boils down to a static Memory cache that bypasses the
 resolver Logic.\
