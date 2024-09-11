@@ -55,7 +55,7 @@ from usdAssetResolver import AyonUsdResolver
 ```
 
 `Ar.SetPreferredResolver("AyonUsdResolver")` this command allows you to set a
-preferred Resolver. if you use the AyonUsd addon you wont need to set this line
+preferred Resolver. If you use the AyonUsd addon you wont need to set this line
 as we register the resolver as the main resolver. but if you have a different
 resolver set as Main you might need to use this command.
 
