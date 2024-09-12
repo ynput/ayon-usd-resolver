@@ -1,6 +1,3 @@
-#include <cstdlib>
-#include <ostream>
-#include <string_view>
 #include <utility>
 #include "debugCodes.h"
 #include "pxr/base/tf/debug.h"
@@ -12,39 +9,36 @@
 
 #include "resolver.h"
 #include "resolverContext.h"
-#include "config.h"
-#include "devMacros.h"
-#include "AyonCppApi.h"
+
 #include "pxr/base/arch/fileSystem.h"
-#include "pxr/base/arch/systemInfo.h"
-#include "pxr/base/tf/fileUtils.h"
 #include "pxr/base/tf/pathUtils.h"
-#include "pxr/base/tf/staticTokens.h"
-#include "pxr/base/tf/stringUtils.h"
+
 #include "pxr/usd/ar/defineResolver.h"
 #include "pxr/usd/ar/filesystemAsset.h"
 #include "pxr/usd/ar/filesystemWritableAsset.h"
 #include "pxr/usd/ar/notice.h"
+
 #include "pxr/usd/sdf/layer.h"
 
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <mutex>
-#include <regex>
 #include <string>
-#include <thread>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
 AR_DEFINE_RESOLVER(AyonUsdResolver, ArResolver);
 
-AyonUsdResolver::AyonUsdResolver(){};
+AyonUsdResolver::AyonUsdResolver() = default;
 
-AyonUsdResolver::~AyonUsdResolver() = default;
+AyonUsdResolver::~AyonUsdResolver() {
+    std::ostringstream oss;
+    oss << static_cast<const void*>(this);
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+        .Msg("Resolver::~AyonUsdResolver(M_ADD: '%s', M_SIZE: '%s' bytes)\n", oss.str().c_str(),
+             std::to_string(sizeof(*this)).c_str());
+};
 
 std::string
 AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolvedPath &anchorAssetPath) const {
+    RES_FUNCS_REMOVE_SDF_ARGS(const_cast<std::string &>(assetPath));
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
         .Msg("Resolver::_CreateIdentifier('%s', '%s')\n", assetPath.c_str(), anchorAssetPath.GetPathString().c_str());
 
@@ -70,10 +64,10 @@ AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolve
 std::string
 AyonUsdResolver::_CreateIdentifierForNewAsset(const std::string &assetPath,
                                               const ArResolvedPath &anchorAssetPath) const {
+    RES_FUNCS_REMOVE_SDF_ARGS(const_cast<std::string &>(assetPath));
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-        .Msg(
-            "Resolver::_CreateIdentifierForNewAsset('%s', '%s')\n",
-            assetPath.c_str(), anchorAssetPath.GetPathString().c_str());
+        .Msg("Resolver::_CreateIdentifierForNewAsset('%s', '%s')\n", assetPath.c_str(),
+             anchorAssetPath.GetPathString().c_str());
     if (assetPath.empty()) {
         return assetPath;
     }
@@ -87,6 +81,8 @@ AyonUsdResolver::_CreateIdentifierForNewAsset(const std::string &assetPath,
 
 ArResolvedPath
 AyonUsdResolver::_Resolve(const std::string &assetPath) const {
+    RES_FUNCS_REMOVE_SDF_ARGS(const_cast<std::string &>(assetPath));
+
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_Resolve( '%s' ) \n", assetPath.c_str());
 
     if (assetPath.empty()) {
@@ -108,9 +104,11 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
 
                 asset = resolverCache->getAsset(assetPath, cacheName::AYONCACHE, true);
 
-                ArResolvedPath resolvedPath(asset.resolvedAssetPath);
+                ArResolvedPath resolvedPath(asset.getResolvedAssetPath());
 
                 if (resolvedPath) {
+                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                        .Msg("Resolver::_Resolve( '%s' ) resolved \n", resolvedPath.GetPathString().c_str());
                     return resolvedPath;
                 }
                 // Only try the first valid context.
@@ -124,7 +122,8 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
     const AyonUsdResolverContext* pt = this->_GetCurrentContextPtr();
     if (pt) {
         ArResolvedPath path;
-        path = pt->getCachePtr()->getAsset(assetPath, cacheName::COMMONCACHE, false).resolvedAssetPath;
+
+        path = pt->getCachePtr()->getAsset(assetPath, cacheName::COMMONCACHE, false).getResolvedAssetPath();
         if (!path.empty()) {
             return path;
         }
@@ -135,6 +134,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
 
 ArResolvedPath
 AyonUsdResolver::_ResolveForNewAsset(const std::string &assetPath) const {
+    RES_FUNCS_REMOVE_SDF_ARGS(const_cast<std::string &>(assetPath));
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_ResolveForNewAsset('%s')\n", assetPath.c_str());
     return ArResolvedPath(assetPath.empty() ? assetPath : TfAbsPath(assetPath));
 }
@@ -147,6 +147,7 @@ AyonUsdResolver::_CreateDefaultContext() const {
 
 ArResolverContext
 AyonUsdResolver::_CreateDefaultContextForAsset(const std::string &assetPath) const {
+    RES_FUNCS_REMOVE_SDF_ARGS(const_cast<std::string &>(assetPath));
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_CreateDefaultContextForAsset\n");
 
     return ArResolverContext(AyonUsdResolverContext());
@@ -154,6 +155,7 @@ AyonUsdResolver::_CreateDefaultContextForAsset(const std::string &assetPath) con
 
 bool
 AyonUsdResolver::_IsContextDependentPath(const std::string &assetPath) const {
+    RES_FUNCS_REMOVE_SDF_ARGS(const_cast<std::string &>(assetPath));
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_IsContextDependentPath()\n");
     return _IsNotFilePath(assetPath);
 }
@@ -172,6 +174,7 @@ AyonUsdResolver::_RefreshContext(const ArResolverContext &context) {
 
 ArTimestamp
 AyonUsdResolver::_GetModificationTimestamp(const std::string &assetPath, const ArResolvedPath &resolvedPath) const {
+    RES_FUNCS_REMOVE_SDF_ARGS(const_cast<std::string &>(assetPath));
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
         .Msg("Resolver::GetModificationTimestamp('%s', '%s')\n", assetPath.c_str(),
              resolvedPath.GetPathString().c_str());
@@ -195,6 +198,7 @@ AyonUsdResolver::_OpenAssetForWrite(const ArResolvedPath &resolvedPath, WriteMod
 const AyonUsdResolverContext*
 AyonUsdResolver::_GetCurrentContextPtr() const {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_GetCurrentContextPtr \n");
+
     return _GetCurrentContextObject<AyonUsdResolverContext>();
 }
 

@@ -48,11 +48,10 @@ if [ "$DEBUG" -eq 1 ]; then
 fi
 
 if [ "$CLEAN_BUILD" -eq 1 ]; then
-  echo "Clean build is activated"
+  echo "Clean build is activated "
   rm -rf build
-  # rm -rf Resolvers
+  rm -rf Resolvers/${COMPILEPLUGIN}
   mkdir build
-  #mkdir Resolvers
 fi
 
 #----------------- cmake Commands ------------------

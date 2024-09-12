@@ -1,0 +1,52 @@
+name: Deploy Docs content to Pages
+
+on:
+  push:
+    branches: ["main"]
+
+  workflow_dispatch:
+
+env:
+  VERSION: 0.1.0 
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Python script
+        run: |
+          python Docs/src/generate.py --Version=$VERSION --DontBuild=True   
+
+      - name: BuildDocs 
+        uses: mattnotmitt/doxygen-action@v1.9.5
+        with:
+            working-directory: 'Docs/src/'
+            doxyfile-path: 'Doxyfile'
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'Docs/docs/${{ env.VERSION }}/html'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

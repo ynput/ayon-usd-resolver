@@ -1,6 +1,6 @@
 # LinuxPy310Houdini20
 
-#Variables that need to be set by the plugin ( the env variables will be checked by the main cmakeLists script and an error will accrue if one or more are missing )
+# Variables that need to be set by the plugin ( the env variables will be checked by the main cmakeLists script and an error will accrue if one or more are missing )
 # AR_PXR_INCLUDE_DIR
 # AR_PXR_LIB_DIR
 # AR_PYTHON_LIB_NUMBER
@@ -40,10 +40,7 @@ set(BOOST_LIB_DIR ${AR_HOUDINI_INCLUDE_DIR})
 
 
 # setting Cxx11Abi to off because Hou20  py39 is usually gcc9 and so needs cxx11=0
-add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
-target_compile_definitions(AyonCppApi PUBLIC _GLIBCXX_USE_CXX11_ABI=0)
-
-
+set(GLIBCXX_USE_CXX11_ABI 0)
 
 # Houdini include dir (might shadow some other library but that's what we want)
 link_directories(${AR_HOUDINI_LIB_DIR})

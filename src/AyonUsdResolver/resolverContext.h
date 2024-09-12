@@ -2,17 +2,13 @@
 #define AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_H
 
 #include "api.h"
-#include "debugCodes.h"
 
 #include "pxr/pxr.h"
 #include "pxr/usd/ar/defineResolverContext.h"
-#include "pxr/usd/ar/resolverContext.h"
 
 #include "resolverContextCache.h"
 
-#include <map>
 #include <memory>
-#include <regex>
 #include <string>
 
 class AyonUsdResolverContext {

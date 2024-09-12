@@ -1,10 +1,12 @@
+REM in case you use Pyenv // Pyenv exec works
+
 cd ../
 
 rmdir /s /q build
+rmdir /s /q Resolvers/AyonUsdWin/AyonUsd23_5_py39
 
-
-::set HFS=C:/Program Files/Side Effects Software/Houdini 20.0.590
-::set COMPILEPLUGIN=HouWin/WindowsPy310Houdini20
+set AyonUsdRoot=
+set COMPILEPLUGIN=
 
 cmake -S . -B build -DDEV=0 -DJTRACE=0 -DCMAKE_BUILD_TYPE=Release
 cmake --build build --clean-first --config Release
