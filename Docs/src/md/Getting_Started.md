@@ -142,6 +142,7 @@ from usdAssetResolver import AyonUsdResolver
 Ar.SetPreferredResolver("AyonUsdResolver")
 ```
 
+
 > **note**
 > When you get a resolver via `Usd.Ar` API you will need to get an explicit context to 
 > edit the global context as `Ar.GetResolver` will return a higher order class and 
@@ -219,6 +220,7 @@ duplicates in the keys but the Cache stores the data as an Unordered_Map so it
 will end up deduplicating the Keys. But you can't have spaces in the list as
 they are not removed and will be interpreted as part of the Key or Value.
 
+
 **example**\n
 setup the resolver for pinning support. we empty all the AYON c++ api keys just
 for example you can simply not set them.
@@ -247,6 +249,7 @@ print(stage.ExportToString())
 
 PS: its interesting to know that when you generate a pinning file via the
 AYON-USD addon the json file will have a key named
+
 `ayon_pinning_data_entry_scene`.\n
 This should always be the path used to open the stage Otherwise the pinning file
 might not have the correct AssetIdentifier stored.\n
@@ -258,11 +261,13 @@ local path the resolver wont be able to resolve.
 `context = AyonUsdResolver.ResolverContext()` there are multiple ways to control
 the cache of a resolver. but if your resolver uses the global cache you can
 simply create a new ResolverContext and access the cache control functions to
+
 affect the global cache.\n
 This does not work if you disconnected the Global cache from your resolver.
 
 `context.deleteFromCache(AssetIdentifier)` delete an individual cached entry.
 `context.clearCache()` clear the connected cache. 
+
 
 > **note**
 > It is important to understand that by default a Resolver will be connected to the global cache
@@ -276,6 +281,7 @@ global cache and have a Resolver local cache instead.
 `explicit_resolver = AyonUsdResolver.Resolver()` if you need to create an
 explicit resolver because you want to e.g pass a specific instance into a stage
 or you want to disconnect from the Global Cache you should access the Context
+
 connected to this specific resolver.\n
 `explicit_resolver_context = explicit_resolver.GetConnectedContext()` all the
 other functions stay the same.
@@ -307,5 +313,3 @@ explicit_resolver_context.dropCache()
 
 # Delete from cache and clearCache will also work with an explicit_resolver_context
 ```
-
-

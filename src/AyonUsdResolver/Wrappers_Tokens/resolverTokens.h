@@ -1,7 +1,7 @@
 #ifndef AR_AYONUSDRESOLVER_TOKENS_H
 #define AR_AYONUSDRESOLVER_TOKENS_H
 
-#include "api.h"
+#include "../pluginData/api.h"
 
 #include <pxr/pxr.h>
 #include <pxr/base/tf/staticTokens.h>

@@ -1,9 +1,10 @@
+#include <string>
 #include <utility>
-#include "debugCodes.h"
+#include "codes/debugCodes.h"
 #include "pxr/base/tf/debug.h"
 #include "pxr/usd/ar/resolvedPath.h"
-#include "resolverContextCache.h"
-#include "resolutionFunctions.h"
+#include "cache/resolverContextCache.h"
+#include "helpers/resolutionFunctions.h"
 #define CONVERT_STRING(string) #string
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
 
@@ -19,8 +20,6 @@
 #include "pxr/usd/ar/notice.h"
 
 #include "pxr/usd/sdf/layer.h"
-
-#include <string>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -58,6 +57,7 @@ AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolve
     if (_IsNotFilePath(assetPath) && Resolve(anchoredAssetPath).empty()) {
         return TfNormPath(assetPath);
     }
+
     return TfNormPath(anchoredAssetPath);
 }
 
@@ -69,6 +69,10 @@ AyonUsdResolver::_CreateIdentifierForNewAsset(const std::string &assetPath,
         .Msg("Resolver::_CreateIdentifierForNewAsset('%s', '%s')\n", assetPath.c_str(),
              anchorAssetPath.GetPathString().c_str());
     if (assetPath.empty()) {
+        return assetPath;
+    }
+
+    if (_IsAyonPath(assetPath)) {
         return assetPath;
     }
 
@@ -93,26 +97,35 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         return ArResolvedPath(assetPath);
     }
 
+    const AyonUsdResolverContext* activeContext = nullptr;
+    const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
+    for (const AyonUsdResolverContext* ctx: contexts) {
+        if (ctx) {
+            activeContext = ctx;
+            break;
+        }
+    }
+
+    if (activeContext->getCachePtr()->isCacheStatic()) {
+        ArResolvedPath cachedPath
+            = activeContext->getCachePtr()->getAsset(assetPath, cacheName::AYONCACHE, true).getResolvedAssetPath();
+        return cachedPath;
+    }
     if (_IsAyonPath(assetPath)) {
-        const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
-        for (const AyonUsdResolverContext* ctx: contexts) {
-            if (ctx) {
-                std::pair<std::string, std::string> test;
-                assetIdent asset;
+        if (activeContext) {
+            std::pair<std::string, std::string> test;
+            assetIdent asset;
 
-                std::shared_ptr<resolverContextCache> resolverCache = ctx->getCachePtr();
+            std::shared_ptr<resolverContextCache> resolverCache = activeContext->getCachePtr();
 
-                asset = resolverCache->getAsset(assetPath, cacheName::AYONCACHE, true);
+            asset = resolverCache->getAsset(assetPath, cacheName::AYONCACHE, true);
 
-                ArResolvedPath resolvedPath(asset.getResolvedAssetPath());
+            ArResolvedPath resolvedPath(asset.getResolvedAssetPath());
 
-                if (resolvedPath) {
-                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                        .Msg("Resolver::_Resolve( '%s' ) resolved \n", resolvedPath.GetPathString().c_str());
-                    return resolvedPath;
-                }
-                // Only try the first valid context.
-                break;
+            if (resolvedPath) {
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                    .Msg("Resolver::_Resolve( '%s' ) resolved \n", resolvedPath.GetPathString().c_str());
+                return resolvedPath;
             }
         }
         return ArResolvedPath();
@@ -201,5 +214,11 @@ AyonUsdResolver::_GetCurrentContextPtr() const {
 
     return _GetCurrentContextObject<AyonUsdResolverContext>();
 }
+
+const AyonUsdResolverContext*
+AyonUsdResolver::GetConnectedContext() const {
+    // TODO test if this implementation is valid as this->_GetCurrentContextPtr() causes a new context to be created.
+    return &_fallbackContext;
+};
 
 PXR_NAMESPACE_CLOSE_SCOPE
