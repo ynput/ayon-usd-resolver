@@ -1,28 +1,18 @@
 #include <memory>
 #include <string>
-#include <utility>
-#include "debugCodes.h"
+
+#include "codes/debugCodes.h"
 #define CONVERT_STRING(string) #string
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
 
-#include "resolver.h"
 #include "resolverContext.h"
-#include "resolverTokens.h"
 
-#include "pxr/base/tf/getenv.h"
-#include "pxr/base/tf/pathUtils.h"
 #include "pxr/pxr.h"
-#include "pxr/usd/sdf/layer.h"
-#include "pxr/usd/usd/collectionMembershipQuery.h"
 
-#include <iostream>
-#include <mutex>
-#include <thread>
 #include <vector>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-// TODO find a better way to make the cache Global, this is not optimal at all.
 std::shared_ptr<resolverContextCache> GlobalCache = std::make_shared<resolverContextCache>();
 
 bool
@@ -46,9 +36,8 @@ getStringEndswithStrings(const std::string &value, const std::vector<std::string
     return false;
 }
 
-AyonUsdResolverContext::AyonUsdResolverContext() {
+AyonUsdResolverContext::AyonUsdResolverContext(): cache(std::shared_ptr(GlobalCache)) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
-    cache = GlobalCache;
     this->Initialize();
 }
 
@@ -92,6 +81,7 @@ AyonUsdResolverContext::ClearAndReinitialize() {
 void
 AyonUsdResolverContext::dropCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::dropCache()\n");
+    this->cache = std::make_shared<resolverContextCache>();
 };
 
 void
@@ -108,5 +98,5 @@ AyonUsdResolverContext::clearCache() {
 
 std::shared_ptr<resolverContextCache>
 AyonUsdResolverContext::getCachePtr() const {
-    return cache;
+    return this->cache;
 };

@@ -1,12 +1,21 @@
 #include "resolverContextCache.h"
-#include "config.h"
-#include "debugCodes.h"
-#include "resolutionFunctions.h"
+#include "../config.h"
+#include "../codes/debugCodes.h"
+#include "nlohmann/json_fwd.hpp"
+#include "../helpers/resolutionFunctions.h"
 
 #include "pxr/usd/ar/resolvedPath.h"
 #include "pxr/base/arch/systemInfo.h"
 #include "pxr/base/tf/pathUtils.h"
 
+#include <map>
+#include <ynput/core/iostd/envVarHelpers.hpp>
+#include <ynput/tool/ayon/rootHelpers.hpp>
+
+#include <stdexcept>
+#include <unordered_map>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <mutex>
 #include <shared_mutex>
@@ -14,10 +23,84 @@
 #include <utility>
 
 PXR_NAMESPACE_USING_DIRECTIVE
+// TODO pinning file hanlder should construct its cache directly at construction getAssetData should not call
+// rootReplace
+pinningFileHandler::pinningFileHandler(const std::string &pinningFilePath,
+                                       const std::unordered_map<std::string, std::string> &rootReplaceData):
+    m_pinningFilePath(pinningFilePath),
+    m_rootReplaceData(rootReplaceData) {
+    std::ifstream pinningFile(this->m_pinningFilePath);
 
-resolverContextCache::resolverContextCache(): m_AyonCache(), m_CommonCache(), m_PreCache() {
+    if (!pinningFile.is_open()) {
+        throw std::runtime_error("pinningFileHandler was not able to open PinningFile: "
+                                 + this->m_pinningFilePath.string());
+    }
+
+    nlohmann::json raw_pinning_file;
+    try {
+        raw_pinning_file = nlohmann::json::parse(pinningFile);
+    }
+    catch (const nlohmann::json::parse_error &e) {
+        throw std::runtime_error("The pining File is not in the Correct Format: ");
+    }
+
+    nlohmann::json pinningData = raw_pinning_file.at("ayon_resolver_pinning_data");
+    pinningData.erase("ayon_pinning_data_entry_scene");
+
+    for (auto &entry: pinningData.items()) {
+        std::string pathed_key = ynput::tool::ayon::rootReplace(entry.key(), this->m_rootReplaceData);
+        std::string pathed_val = ynput::tool::ayon::rootReplace(entry.value(), this->m_rootReplaceData);
+        this->m_pinningFileData[pathed_key] = pathed_val;
+    }
+};
+
+/**
+ * @brief return assetIdent populated with root rootReplaceData from the pinning file using the pinning file data loaded
+ * at construction and the PROJECT_ROOTS env variable.
+ * this is not a cached function it will reconstruct the assetIdent. it will not reload the file or the env var however.
+ *
+ * @param resolveKey UsdAssetIdent
+ * @return populated assetIdent if key was found in pinning file. Empty assetIdent if key was not found
+ */
+assetIdent
+pinningFileHandler::getAssetData(const std::string &resolveKey) {
+    assetIdent assetEntry;
+
+    std::string pinnedAssetPath;
+    try {
+        pinnedAssetPath = this->m_pinningFileData.at(resolveKey);
+    }
+    catch (const nlohmann::json::out_of_range &e) {
+        return assetEntry;
+        // TODO decide if we should crash the resolver incase the UsdAssetIdent cant be found in the pinning file. Usd
+        // default is return empty path if you cant resolve it throw std::runtime_error("resolver was not able to find
+        // key in PinningFile key: " + resolveKey);
+    }
+
+    if (!pinnedAssetPath.empty()) {
+        assetEntry.setAssetIdentifier(resolveKey);
+        assetEntry.setResolvedAssetPath(pinnedAssetPath);
+    }
+
+    return assetEntry;
+};
+
+resolverContextCache::resolverContextCache(): m_AyonCache(), m_CommonCache(), m_PreCache(), m_static_cache(true) {
     m_PreCache.reserve(PRECACHE_SIZE);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::resolverContextCache() \n");
+
+    const char* enable_static_env_var = std::getenv(ENABLE_STATIC_GLOBAL_CACHE_ENV_KEY);
+    if (enable_static_env_var == nullptr || std::strcmp(enable_static_env_var, "false") == 0) {
+        m_ayon.emplace();
+        this->m_static_cache = false;
+    }
+    else {
+        std::map<std::string, std::string> projectRootsEnvMap = ynput::core::iostd::getEnvMap(PROJECT_ROOTS_ENV_KEY);
+        std::unordered_map<std::string, std::string> projectRootsEnvUMap(
+            std::make_move_iterator(projectRootsEnvMap.begin()), std::make_move_iterator(projectRootsEnvMap.end()));
+        this->m_pinningFileHandler.emplace(ynput::core::iostd::getEnvKey(PINNING_FILE_PATH_ENV_KEY),
+                                           projectRootsEnvUMap);
+    }
 };
 
 resolverContextCache::~resolverContextCache() {
@@ -90,6 +173,9 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
     if (assetIdentifier.empty()) {
         return asset;
     }
+    if (this->m_static_cache) {
+        return this->m_pinningFileHandler->getAssetData(assetIdentifier);
+    }
 
     std::unordered_set<assetIdent, assetIdentHash>::iterator hit;
 
@@ -143,7 +229,7 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
 
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::getAsset: No Cache Hit \n");
     if (isAyonPath) {
-        std::pair<std::string, std::string> resolvedAsset = m_ayon.resolvePath(assetIdentifier);
+        std::pair<std::string, std::string> resolvedAsset = m_ayon->resolvePath(assetIdentifier);
         asset.setAssetIdentifier(std::move(resolvedAsset.first));
         asset.setResolvedAssetPath(std::move(resolvedAsset.second));
 
@@ -275,4 +361,9 @@ resolverContextCache::clearCache() {
     m_CommonCache.clear();
     m_AyonCache.clear();
     m_PreCache.clear();
+};
+
+bool
+resolverContextCache::isCacheStatic() const {
+    return this->m_static_cache;
 };

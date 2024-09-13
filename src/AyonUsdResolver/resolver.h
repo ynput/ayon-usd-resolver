@@ -1,13 +1,13 @@
 #ifndef AR_AYONUSDRESOLVER_RESOLVER_H
 #define AR_AYONUSDRESOLVER_RESOLVER_H
 
-#include "api.h"
+#include "pluginData/api.h"
 
 #include "pxr/pxr.h"
 #include "pxr/usd/ar/resolvedPath.h"
 #include "pxr/usd/ar/resolver.h"
 #include "resolverContext.h"
-#include "resolutionFunctions.h"
+#include "helpers/resolutionFunctions.h"
 
 #include <memory>
 #include <string>
@@ -46,6 +46,8 @@ class AyonUsdResolver final: public ArResolver {
         AR_AYONUSDRESOLVER_API
         std::shared_ptr<ArWritableAsset> _OpenAssetForWrite(const ArResolvedPath &resolvedPath,
                                                             WriteMode writeMode) const final;
+
+        AR_AYONUSDRESOLVER_API const AyonUsdResolverContext* GetConnectedContext() const;
 
     private:
         const AyonUsdResolverContext* _GetCurrentContextPtr() const;

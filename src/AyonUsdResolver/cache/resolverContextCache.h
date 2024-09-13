@@ -1,16 +1,34 @@
 #ifndef AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
 #define AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
 
+#include <filesystem>
+#include <optional>
 #include <shared_mutex>
 #include <string>
-#include <unordered_set>
+#include <unordered_map>
 
 #include "AyonCppApi.h"
-#include "assetIdentDef.h"
+#include "../cache/assetIdentDef.h"
+#include <nlohmann/json.hpp>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
 enum cacheName { AYONCACHE, COMMONCACHE };
+
+class pinningFileHandler {
+    public:
+        pinningFileHandler(const std::string &pinningFilePath,
+                           const std::unordered_map<std::string, std::string> &rootReplaceData);
+        ~pinningFileHandler() = default;
+
+        assetIdent getAssetData(const std::string &resolveKey);
+
+    private:
+        std::filesystem::path m_pinningFilePath;
+        nlohmann::json m_pinningFileData;
+
+        std::unordered_map<std::string, std::string> m_rootReplaceData;
+};
 
 /**
  * @class resolverContextCache
@@ -79,19 +97,21 @@ class resolverContextCache {
          */
         void printCache() const;
 
+        bool isCacheStatic() const;
+
     private:
         std::unordered_set<assetIdent, assetIdentHash> m_PreCache;
         std::unordered_set<assetIdent, assetIdentHash> m_AyonCache;
         std::unordered_set<assetIdent, assetIdentHash> m_CommonCache;
-        // std::vector<assetIdent> m_AyonCache;
-        // std::vector<assetIdent> m_CommonCache;
-        // std::array<assetIdent, PRECACHE_SIZE> m_PreCache;
 
         mutable std::shared_mutex m_PreCachesharedMutex;
         mutable std::shared_mutex m_AyonCachesharedMutex;
         mutable std::shared_mutex m_CommonCachesharedMutex;
 
-        AyonApi m_ayon;
+        std::optional<AyonApi> m_ayon;
+        bool m_static_cache;
+
+        std::optional<pinningFileHandler> m_pinningFileHandler;
 };
 
 #endif   // AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
