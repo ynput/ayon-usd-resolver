@@ -33,10 +33,11 @@ AyonUsdResolver::~AyonUsdResolver() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
         .Msg("Resolver::~AyonUsdResolver(M_ADD: '%s', M_SIZE: '%s' bytes)\n", oss.str().c_str(),
              std::to_string(sizeof(*this)).c_str());
- };
+};
 
 std::string
 AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolvedPath &anchorAssetPath) const {
+    RES_FUNCS_REMOVE_SDF_ARGS(const_cast<std::string &>(assetPath));
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
         .Msg("Resolver::_CreateIdentifier('%s', '%s')\n", assetPath.c_str(), anchorAssetPath.GetPathString().c_str());
 
@@ -63,6 +64,7 @@ AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolve
 std::string
 AyonUsdResolver::_CreateIdentifierForNewAsset(const std::string &assetPath,
                                               const ArResolvedPath &anchorAssetPath) const {
+    RES_FUNCS_REMOVE_SDF_ARGS(const_cast<std::string &>(assetPath));
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
         .Msg("Resolver::_CreateIdentifierForNewAsset('%s', '%s')\n", assetPath.c_str(),
              anchorAssetPath.GetPathString().c_str());
@@ -105,7 +107,8 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
     }
 
     if (activeContext->getCachePtr()->isCacheStatic()) {
-        ArResolvedPath cachedPath = activeContext->getCachePtr()->getAsset(assetPath, cacheName::AYONCACHE, true).getResolvedAssetPath();
+        ArResolvedPath cachedPath
+            = activeContext->getCachePtr()->getAsset(assetPath, cacheName::AYONCACHE, true).getResolvedAssetPath();
         return cachedPath;
     }
     if (_IsAyonPath(assetPath)) {

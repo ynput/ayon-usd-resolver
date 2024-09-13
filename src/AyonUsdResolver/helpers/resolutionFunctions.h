@@ -5,6 +5,7 @@
 #include "pxr/usd/ar/filesystemAsset.h"
 #include "pxr/usd/ar/resolvedPath.h"
 #include <string>
+#include <regex>
 
 #define CONVERT_STRING(string) #string
 #define DEFINE_STRING(string)  CONVERT_STRING(string)

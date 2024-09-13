@@ -33,7 +33,6 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-
 if (NOT ${Python_VERSION} STREQUAL 3.9) # Check if System Installed Python version is 3.9
   message(FATAL_ERROR "Python version: ${Python_VERSION}")
 endif()
@@ -43,6 +42,8 @@ get_filename_component(Python_Base_Dir ${Python_INCLUDE_DIRS} DIRECTORY)
 set(AR_PYTHON_LIB_NUMBER python39)
 set(AR_PYTHON_LIB_DIR ${Python_Base_Dir}) 
 set(AR_PYTHON_INCLUDE_DIR ${Python_Base_Dir}/python3.9)
+
+
 # setting up boost 
 add_compile_definitions(BOOST_ALL_NO_LIB)
 set(AR_BOOST_NAMESPACE boost) 

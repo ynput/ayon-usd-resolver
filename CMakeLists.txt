@@ -13,6 +13,7 @@ else()
 endif()
 
 add_compile_definitions(DEV=${DEV})
+add_compile_definitions(MACRO_REMOVE_SDF_FORMAT_ARGS=1)
 add_compile_definitions(CPPHTTPLIB_OPENSSL_SUPPORT) #we need to define this var here because ayon cpp api needs it to enable open sll support for https 
 
 
@@ -38,6 +39,7 @@ set(AR_AYONUSDRESOLVER_TARGET_PYTHON _${AR_AYONUSDRESOLVER_TARGET_LIB})
 set(AR_AYONUSDRESOLVER_INSTALL_PREFIX ${AR_PROJECT_NAME}/${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME})
 
 set(MACRO_REMOVE_SDF_FORMAT_ARGS 1)
+
 
 # shared library setup commands
 if (WIN32)
@@ -122,6 +124,7 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-dev-tools")
 # Include AyonCppApi 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
+
 
 # setting CXX11ABI infos
 if(DEFINED GLIBCXX_USE_CXX11_ABI)
