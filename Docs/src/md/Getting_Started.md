@@ -142,23 +142,24 @@ from usdAssetResolver import AyonUsdResolver
 Ar.SetPreferredResolver("AyonUsdResolver")
 ```
 
-:::note
-When you get a resolver via `Usd.Ar` API you will need to get an explicit context to 
-edit the global context as `Ar.GetResolver` will return a higher order class and 
-not `AyonUsdResolver` class.
+> **note**
+> When you get a resolver via `Usd.Ar` API you will need to get an explicit context to 
+> edit the global context as `Ar.GetResolver` will return a higher order class and 
+> not `AyonUsdResolver` class.
 
 ```py
 resolver = Ar.GetResolver()
 context = AyonUsdResolver.ResolverContext()
 ```
-:::
+
 
 If you want fine control over the resolver you will be able to get the connected
-context via `GetConnectedContext`\
-:::tip Dropping cache entries
+context via `GetConnectedContext`\n
+
+tip Dropping cache entries
 Using the `resolver.GetConnectedContext()` is also the recommended way to access the `dropCache` function for the
 resolver.
-:::
+
 
 ```py
 explicit_resolver = AyonUsdResolver.Resolver()
@@ -184,41 +185,41 @@ instance is useful if you want to manipulate the Global resolver cache.
 
 ## Pinning
 
-the AyonUsdResolver has a feature called Pinning Support.\
+the AyonUsdResolver has a feature called Pinning Support.\n
 In short _pinning support_ allows you to load a pinning file and disconnect the
-AyonCppApi.\
+AyonCppApi.\n
 In the implementation this boils down to a static Memory cache that bypasses the
-resolver Logic.\
-:::note Why use pinning?
-When running a resolver on a farm with many workers (render nodes) 
-you might not want them all to call the Ayon server to avoid impacting 
-the server performance. This is because USD Resolvers will resolve paths
-one by one, potentially resulting in many calls.
-:::
+resolver Logic.\n
 
-**How to use it ?**\
+> **note** Why use pinning?
+> When running a resolver on a farm with many workers (render nodes) 
+> you might not want them all to call the Ayon server to avoid impacting 
+> the server performance. This is because USD Resolvers will resolve paths
+> one by one, potentially resulting in many calls.
+
+**How to use it ?**\n
 There are 3 Env variables that control the Pinning file support
 
-`ENABLE_STATIC_GLOBAL_CACHE`\
+`ENABLE_STATIC_GLOBAL_CACHE`\n
 Enables or Disables static Cache creation. This effectively allows you to enable
-or disable Pinning file support.\
+or disable Pinning file support.\n
 as you might want to have a pinning file in your env vars but for e.g debugging
 you don't want to activate the feature.
 
-`PINNING_FILE_PATH`\
+`PINNING_FILE_PATH`\n
 This is a path to the pinning file.
 
-`PROJECT_ROOTS`\
+`PROJECT_ROOTS`\n
 When running the resolver against the AYON server the CppApi will query the
 `Get Project Site Roots` endpoint and get a `Dict[str,str]` of
-{root[RootOverwriteKey]}=Val overwrites.\
+{root[RootOverwriteKey]}=Val overwrites.\n
 when running with a pinning file you will need to set this Dict[str,str] as an
-ENV variable. e.g:`{Key}:{Path},{Key}:{Path}"` it's not a problem to have
+ENV variable. e.g:`{Key}:{Path},{Key}:{Path}` it's not a problem to have
 duplicates in the keys but the Cache stores the data as an Unordered_Map so it
 will end up deduplicating the Keys. But you can't have spaces in the list as
 they are not removed and will be interpreted as part of the Key or Value.
 
-**example**\
+**example**\n
 setup the resolver for pinning support. we empty all the AYON c++ api keys just
 for example you can simply not set them.
 
@@ -246,9 +247,9 @@ print(stage.ExportToString())
 
 PS: its interesting to know that when you generate a pinning file via the
 AYON-USD addon the json file will have a key named
-`ayon_pinning_data_entry_scene`.\
+`ayon_pinning_data_entry_scene`.\n
 This should always be the path used to open the stage Otherwise the pinning file
-might not have the correct AssetIdentifier stored.\
+might not have the correct AssetIdentifier stored.\n
 aka: if this key points to a local path and you use an URI that points to the
 local path the resolver wont be able to resolve.
 
@@ -257,17 +258,17 @@ local path the resolver wont be able to resolve.
 `context = AyonUsdResolver.ResolverContext()` there are multiple ways to control
 the cache of a resolver. but if your resolver uses the global cache you can
 simply create a new ResolverContext and access the cache control functions to
-affect the global cache.\
+affect the global cache.\n
 This does not work if you disconnected the Global cache from your resolver.
 
 `context.deleteFromCache(AssetIdentifier)` delete an individual cached entry.
 `context.clearCache()` clear the connected cache. 
 
-:::note
-It is important to understand that by default a Resolver will be connected to the global cache
-and this call will delete all entries in the global cache not just the ones that
-where added by this resolver.
-:::
+> **note**
+> It is important to understand that by default a Resolver will be connected to the global cache
+> and this call will delete all entries in the global cache not just the ones that
+> where added by this resolver.
+
 `context.dropCache()` allows you do disconnect from the current cache object and
 initialize a new one. This can be useful if you want to disconnect from the
 global cache and have a Resolver local cache instead.
@@ -275,7 +276,7 @@ global cache and have a Resolver local cache instead.
 `explicit_resolver = AyonUsdResolver.Resolver()` if you need to create an
 explicit resolver because you want to e.g pass a specific instance into a stage
 or you want to disconnect from the Global Cache you should access the Context
-connected to this specific resolver.\
+connected to this specific resolver.\n
 `explicit_resolver_context = explicit_resolver.GetConnectedContext()` all the
 other functions stay the same.
 
