@@ -12,10 +12,8 @@ else()
 	set(InstallName $ENV{INSTALLNAME} CACHE PATH "install suffix for the resolver")
 endif()
 
-add_compile_definitions(DEV=${DEV})
-add_compile_definitions(MACRO_REMOVE_SDF_FORMAT_ARGS=1)
-add_compile_definitions(CPPHTTPLIB_OPENSSL_SUPPORT) #we need to define this var here because ayon cpp api needs it to enable open sll support for https 
 
+add_compile_definitions(MACRO_REMOVE_SDF_FORMAT_ARGS=1)
 
 set(AR_PROJECT_NAME UsdAssetResolver)
 set(AR_RESOLVER_USD_PYTHON_MODULE_NAME usdAssetResolver)
@@ -40,7 +38,6 @@ set(AR_AYONUSDRESOLVER_INSTALL_PREFIX ${AR_PROJECT_NAME}/${AR_AYONUSDRESOLVER_US
 
 set(MACRO_REMOVE_SDF_FORMAT_ARGS 1)
 
-
 # shared library setup commands
 if (WIN32)
     set(AR_ARCH_LIB_SUFFIX "dll")
@@ -58,14 +55,6 @@ else()
 endif()  
 
 
-if(WIN32)
-  set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api/ext/opensslW")
-else()
-  set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api/ext/opensslL")
-endif()
-include_directories(${OPENSSL_ROOT_DIR}/include)
-
-
 # setting default boost namespace 
 set(AR_BOOST_NAMESPACE boost)
 add_compile_definitions(BOOST_ALL_NO_LIB)
@@ -80,46 +69,17 @@ endif()
 
 #-------------- Compile Plugin loading
 include(BuildPlugins/${SelectedCompilePlugin}.cmake)
-
-if(NOT DEFINED AR_PXR_INCLUDE_DIR)
-    message(FATAL_ERROR "AR_PXR_INCLUDE_DIR is not defined. Please set it before continuing.")
-endif()
-if(NOT DEFINED AR_PXR_LIB_DIR)
-    message(FATAL_ERROR "AR_PXR_LIB_DIR is not defined. Please set it before continuing.")
-endif()
-if(NOT DEFINED AR_PXR_LIB_PREFIX)
-    message(FATAL_ERROR "AR_PXR_LIB_PREFIX is not defined. Please set it before continuing.")
-endif()
-if(NOT DEFINED AR_PYTHON_LIB_NUMBER)
-    message(FATAL_ERROR "AR_PYTHON_LIB_NUMBER is not defined. Please set it before continuing.")
-endif()
-if(NOT DEFINED AR_PYTHON_LIB_DIR)
-    message(FATAL_ERROR "AR_PYTHON_LIB_DIR is not defined. Please set it before continuing.")
-endif()
-if(NOT DEFINED AR_PYTHON_INCLUDE_DIR)
-    message(FATAL_ERROR "AR_PYTHON_INCLUDE_DIR is not defined. Please set it before continuing.")
-endif()
-if(NOT DEFINED AR_BOOST_INCLUDE_DIR)
-    message(FATAL_ERROR "AR_BOOST_INCLUDE_DIR is not defined. Please set it before continuing.")
-endif()
-if(NOT DEFINED BOOST_LIB_DIR)
-    message(FATAL_ERROR "BOOST_LIB_DIR is not defined. Please set it before continuing.")
-endif()
-
-message(STATUS "AR_PXR_INCLUDE_DIR path: ${AR_PXR_INCLUDE_DIR}")
-message(STATUS "AR_PXR_LIB_DIR path: ${AR_PXR_LIB_DIR}")
-message(STATUS "AR_PXR_LIB_PREFIX path: ${AR_PXR_LIB_PREFIX}")
-message(STATUS "AR_PYTHON_LIB_NUMBER path: ${AR_PYTHON_LIB_NUMBER}")
-message(STATUS "AR_PYTHON_LIB_DIR path: ${AR_PYTHON_LIB_DIR}")
-message(STATUS "AR_PYTHON_INCLUDE_DIR path: ${AR_PYTHON_INCLUDE_DIR}")
-message(STATUS "AR_BOOST_INCLUDE_DIR path: ${AR_BOOST_INCLUDE_DIR}")
-message(STATUS "BOOST_LIB_DIR path: ${BOOST_LIB_DIR}")
+include(cmake/EnsureBuildPluginSafe.cmake)
 
 message(STATUS "SDF_FORMAT_ARGS = ${MACRO_REMOVE_SDF_FORMAT_ARGS}")
 add_compile_definitions(MACRO_REMOVE_SDF_FORMAT_ARGS=${MACRO_REMOVE_SDF_FORMAT_ARGS})
 
+set(AYON_CPPTOOLS_GTEST)
+
 # Include AyonDevTools
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-dev-tools")
+
+
 
 # Include AyonCppApi 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")
@@ -137,7 +97,6 @@ endif()
 
 # Boost
 set(AR_BOOST_PYTHON_LIB ${AR_BOOST_NAMESPACE}_${AR_PYTHON_LIB_NUMBER}${AR_BOOST_EXTEND})
-
 
 
 project(${AR_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)

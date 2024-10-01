@@ -1,6 +1,7 @@
 #ifndef AR_AYONUSDRESOLVER_RESOLVER_H
 #define AR_AYONUSDRESOLVER_RESOLVER_H
 
+#include <gtest/gtest_prod.h>
 #include "pluginData/api.h"
 
 #include "pxr/pxr.h"
@@ -8,6 +9,8 @@
 #include "pxr/usd/ar/resolver.h"
 #include "resolverContext.h"
 #include "helpers/resolutionFunctions.h"
+
+#include "gtest/gtest.h"
 
 #include <memory>
 #include <string>
@@ -53,6 +56,8 @@ class AyonUsdResolver final: public ArResolver {
         const AyonUsdResolverContext* _GetCurrentContextPtr() const;
         AyonUsdResolverContext _fallbackContext;
         const std::string emptyString{""};
+
+        FRIEND_TEST(ResolverTest, TestA);
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE
