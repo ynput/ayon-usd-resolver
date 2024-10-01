@@ -126,14 +126,19 @@ def generate_named_zip(resolver_source_path: str, compile_plugin):
     shutil.rmtree(temp_dir_for_zip)
 
 
+def _get_os_path(src_path: str) -> str:
+    if platform.system() == "Windows":
+        path = os.path.abspath(src_path)
+    else:
+        path = os.path.expanduser(os.path.expandvars(src_path))
+    return path
+
+
 def _generate_env(change_keys: dict) -> os._Environ:
     test_env = os.environ.copy()
 
     for key, val in change_keys.items():
-        if platform.system() == "Windows":
-            path = os.path.abspath(val)
-        else:
-            path = os.path.expanduser(os.path.expandvars(val))
+        path = _get_os_path(val)
         if os.path.exists(path):
             val = path
         test_env[key] = val
@@ -181,7 +186,7 @@ def validate_build_conf(build_targets: Union[str, dict]):
     build_config = build_targets
 
     if isinstance(build_targets, str):
-        conf_path = os.path.abspath(build_targets)
+        conf_path = _get_os_path(build_targets)
         if build_targets.endswith("yaml") and os.path.isfile(conf_path):
             with open(conf_path, "r") as file:
                 build_config = yaml.safe_load(file)
