@@ -303,7 +303,7 @@ def _zip_bin_package():
 
 zip_package_stage = Stage("Zip_Bin_Package")
 zip_package_stage.add_funcs(Func("zip", _zip_bin_package))
-zip_package_stage.addArtefactFoulder(
+zip_package_stage.addArtefactFolder(
     os.path.join(os.getcwd(), "Resolvers", "AyonUsdResolverBin.zip")
 )
 AyonUsdResolverPRJ.add_stage(zip_package_stage)
