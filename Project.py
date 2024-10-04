@@ -68,7 +68,7 @@ import yaml
 import jsonschema
 from jsonschema import validate
 
-parrallel_limit = threading.Semaphore(cmd_args.Parallel)
+parallel_limit = threading.Semaphore(cmd_args.Parallel)
 MEMORY_THRESHOLD = cmd_args.MinMem
 build_dir = os.path.join(os.getcwd(), "build")
 resolvers_dir = os.path.join(os.getcwd(), "Resolvers")
