@@ -12,6 +12,15 @@ from typing import Union
 
 
 class BuildTypes(Enum):
+    """Enum for Cmake Build types that the build Setup of this Project Supports
+
+    Attributes:
+        Release: For standard Release Types
+        Debug: Debug Builds (Will be slower and output extra Data)
+        RelWithDebInfo: Release with Debug info for stack debugging
+        MinSizeRel: Release with reduced size for Space Efficiency (only use this if needed)
+    """
+
     Release = "Release"
     Debug = "Debug"
     RelWithDebInfo = "RelWithDebInfo"
@@ -24,10 +33,12 @@ class BuildTypes(Enum):
 from automator.AyonCiCd.Project import Project, Func, Stage, Cmd_StoreDictKeyPair
 from automator.AyonCiCd import Cmake
 
+# Setting Up the Project
 AyonUsdResolverPRJ = Project("Ayon_Usd_Resolver")
 AyonUsdResolverPRJ.add_pip_package("PyYAML")
 AyonUsdResolverPRJ.add_pip_package("jsonschema")
 
+# Adding CMD args to the Project
 AyonUsdResolverPRJ.add_cmd_arg("--GenerateArgs", action=Cmd_StoreDictKeyPair)
 AyonUsdResolverPRJ.add_cmd_arg(
     "--Clean",
@@ -63,6 +74,7 @@ AyonUsdResolverPRJ.add_cmd_arg(
     help="Set the minimum available memory required to initiate a task.",
 )
 
+# Project Setup (Variable, PipPackage and base CMD init)
 cmd_args = AyonUsdResolverPRJ.setup_prj()
 import yaml
 import jsonschema
@@ -73,6 +85,7 @@ MEMORY_THRESHOLD = cmd_args.MinMem
 build_dir = os.path.join(os.getcwd(), "build")
 resolvers_dir = os.path.join(os.getcwd(), "Resolvers")
 
+# the json read build config needs to adhere to the following standard
 build_config_schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
@@ -90,6 +103,7 @@ build_config_schema = {
 
 
 def remove_all_build_folders():
+    """Deletes all build and artifact folders for the AyonUsdResolverPRJ"""
     if os.path.exists(AyonUsdResolverPRJ._build_artefacts_out_path):
         shutil.rmtree(AyonUsdResolverPRJ._build_artefacts_out_path)
         os.makedirs(AyonUsdResolverPRJ._build_artefacts_out_path, exist_ok=True)
@@ -102,6 +116,12 @@ def remove_all_build_folders():
 
 
 def generate_named_zip(resolver_source_path: str, compile_plugin):
+    """generate the output zip for a given resolver compile output
+
+    Args:
+        compile_plugin (): the compile plugin selected for the build
+        resolver_source_path: path where the resovler was build to.
+    """
     bin_package_path = os.path.join(resolvers_dir, "AyonUsdResolverBin")
     zip_path = os.path.join(
         os.getcwd(),
@@ -127,6 +147,14 @@ def generate_named_zip(resolver_source_path: str, compile_plugin):
 
 
 def _get_os_path(src_path: str) -> str:
+    """fully expands a path for windows and Linux
+
+    Args:
+        src_path: input path
+
+    Returns: an expanded path
+
+    """
     if platform.system() == "Windows":
         path = os.path.abspath(src_path)
     else:
@@ -135,6 +163,14 @@ def _get_os_path(src_path: str) -> str:
 
 
 def _generate_env(change_keys: dict) -> os._Environ:
+    """generate an os.env for a given key set
+
+    Args:
+        change_keys: keys to be changed or added in the environment
+
+    Returns: a copy of the current environment with the keys changed
+
+    """
     test_env = os.environ.copy()
 
     for key, val in change_keys.items():
@@ -146,6 +182,15 @@ def _generate_env(change_keys: dict) -> os._Environ:
 
 
 def cmake_compile(name, cmake_args, env_data, clean_build: bool, build_type):
+    """runs the cmake compile commands for this project
+
+    Args:
+        name (): compile run name (needed for parallel compiling)
+        cmake_args (): extra cmake arguments
+        env_data (): os.environ to be used in the build
+        build_type (): Cmake build type selector
+        clean_build: should the build use the CMake cache or not
+    """
     try:
         parallel_limit.acquire()
         abs_build_path = os.path.abspath(f"build/{name}")
@@ -183,6 +228,18 @@ def cmake_compile(name, cmake_args, env_data, clean_build: bool, build_type):
 
 
 def validate_build_conf(build_targets: Union[str, dict]):
+    """validated the build config against the definition
+    also expands a config yaml file to a config
+
+    Args:
+        build_targets: can be an path to a config yaml or a full json config
+
+    Raises:
+        ValueError: raises error if the config is not valid
+
+    Returns: returns the full build config if valid
+
+    """
     build_config = build_targets
 
     if isinstance(build_targets, str):
@@ -199,13 +256,23 @@ def validate_build_conf(build_targets: Union[str, dict]):
     return build_config
 
 
-def _cmake_multi_build(
+def _cma_multi_build(
     build_targets: Union[str, dict],
     cmake_conf: dict,
     clean_build: bool = False,
     clean_all: bool = False,
     build_type=BuildTypes.Release,
 ):
+    """distributes cmake builds against multiple threads and subprocesses
+    the called cmake_compile function uses a Semaphore to limit the amount of concurrently running CMake commands to ensure enough memory is available.
+
+    Args:
+        build_type (): select a CMake build type (all builds will be run with the same build type)
+        build_targets: a build target config (dose not need to be validated or expanded if its a path to a yaml)
+        cmake_conf: cmake config overwrite
+        clean_build: should all builds run clean or use CMake cache
+        clean_all: clean the full build environment and not just the individual build folders
+    """
     remove_all_build_folders()
     build_config = validate_build_conf(build_targets)
 
@@ -229,6 +296,13 @@ def _cmake_multi_build(
 def _zip_resolvers(
     build_targets: Union[str, dict], cmake_conf: dict, clean_build: bool = False
 ):
+    """zip the resolvers for the build targets
+
+    Args:
+        build_targets: input build config expands paths and validates
+        cmake_conf: cmake conf overwrites
+        clean_build: should the build be clean or use CMake cache
+    """
     build_config = validate_build_conf(build_targets)
 
     for name, conf in build_config.items():
