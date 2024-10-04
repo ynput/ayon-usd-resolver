@@ -194,7 +194,7 @@ def validate_build_conf(build_targets: Union[str, dict]):
 
         validate(instance=build_config, schema=build_config_schema)
     except jsonschema.exceptions.ValidationError as e:
-        raise ValueError(f"Config not Valid {e}, data:{build_config}")
+        raise ValueError(f"Config not Valid {e}, data:{build_config}") from e
 
     return build_config
 
