@@ -256,7 +256,7 @@ def validate_build_conf(build_targets: Union[str, dict]):
     return build_config
 
 
-def _cma_multi_build(
+def _cmake_multi_build(
     build_targets: Union[str, dict],
     cmake_conf: dict,
     clean_build: bool = False,
@@ -354,7 +354,7 @@ zip_stage.add_funcs(
 AyonUsdResolverPRJ.add_stage(zip_stage)
 
 clean_stage = Stage("Clean")
-clean_stage.add_funcs(Func("Clean", remove_all_build_foulders))
+clean_stage.add_funcs(Func("Clean", remove_all_build_folders))
 AyonUsdResolverPRJ.add_stage(clean_stage)
 
 
