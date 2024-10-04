@@ -4,7 +4,8 @@ import platform
 import threading
 import sys
 import shutil
-import psutil
+
+# import psutil
 import time
 from enum import Enum
 from pprint import pprint
@@ -104,10 +105,6 @@ build_config_schema = {
 
 def remove_all_build_folders():
     """Deletes all build and artifact folders for the AyonUsdResolverPRJ"""
-    if os.path.exists(AyonUsdResolverPRJ._build_artefacts_out_path):
-        shutil.rmtree(AyonUsdResolverPRJ._build_artefacts_out_path)
-        os.makedirs(AyonUsdResolverPRJ._build_artefacts_out_path, exist_ok=True)
-
     if os.path.exists(build_dir):
         shutil.rmtree(build_dir)
 
