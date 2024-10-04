@@ -147,7 +147,7 @@ def _generate_env(change_keys: dict) -> os._Environ:
 
 def cmake_compile(name, cmake_args, env_data, clean_build: bool, build_type):
     try:
-        parrallel_limit.acquire()
+        parallel_limit.acquire()
         abs_build_path = os.path.abspath(f"build/{name}")
         if clean_build and os.path.exists(abs_build_path):
             shutil.rmtree(abs_build_path)
