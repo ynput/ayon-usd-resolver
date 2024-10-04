@@ -74,8 +74,6 @@ include(cmake/EnsureBuildPluginSafe.cmake)
 message(STATUS "SDF_FORMAT_ARGS = ${MACRO_REMOVE_SDF_FORMAT_ARGS}")
 add_compile_definitions(MACRO_REMOVE_SDF_FORMAT_ARGS=${MACRO_REMOVE_SDF_FORMAT_ARGS})
 
-set(AYON_CPPTOOLS_GTEST)
-
 # Include AyonDevTools
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-dev-tools")
 
