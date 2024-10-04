@@ -179,7 +179,7 @@ def cmake_compile(name, cmake_args, env_data, clean_build: bool, build_type):
             f"build/{name}",
         )
     finally:
-        parrallel_limit.release()
+        parallel_limit.release()
 
 
 def validate_build_conf(build_targets: Union[str, dict]):
