@@ -206,7 +206,7 @@ def _cmake_multi_build(
     clean_all: bool = False,
     build_type=BuildTypes.Release,
 ):
-    remove_all_build_foulders()
+    remove_all_build_folders()
     build_config = validate_build_conf(build_targets)
 
     threads = []
