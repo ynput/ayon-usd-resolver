@@ -117,7 +117,7 @@ def generate_named_zip(resolver_source_path: str, compile_plugin):
 
     if os.path.exists(temp_dir_for_zip):
         shutil.rmtree(temp_dir_for_zip)
-    os.makedirs(zip_inner_foulder_path)
+    os.makedirs(zip_inner_folder_path)
 
     shutil.copytree(resolver_source_path, zip_inner_foulder_path, dirs_exist_ok=True)
     os.makedirs(bin_package_path, exist_ok=True)
