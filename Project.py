@@ -4,8 +4,7 @@ import platform
 import threading
 import sys
 import shutil
-
-# import psutil
+import re
 import time
 from enum import Enum
 from pprint import pprint
@@ -275,7 +274,8 @@ def _cmake_multi_build(
 
     threads = []
     for name, conf in build_config.items():
-        if not cmd_args.Target == name and not cmd_args.Target == "all":
+
+        if not re.match(cmd_args.Target, name) and not cmd_args.Target == "all":
             continue
         if not platform.system() in name:
             continue
