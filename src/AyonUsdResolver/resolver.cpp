@@ -128,7 +128,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
 
         return ArResolvedPath();
     }
-
+    //TODO make this more efficeient we dont need 2 vars
     if (_IsAyonPath(assetPath)) {
         const AyonUsdResolverContext* activeContext = nullptr;
         const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
