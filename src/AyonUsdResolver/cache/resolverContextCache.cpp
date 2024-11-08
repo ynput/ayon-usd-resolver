@@ -72,9 +72,6 @@ pinningFileHandler::getAssetData(const std::string &resolveKey) {
     }
     catch (const nlohmann::json::out_of_range &e) {
         return assetEntry;
-        // TODO decide if we should crash the resolver incase the UsdAssetIdent cant be found in the pinning file. Usd
-        // default is return empty path if you cant resolve it throw std::runtime_error("resolver was not able to find
-        // key in PinningFile key: " + resolveKey);
     }
 
     if (!pinnedAssetPath.empty()) {
