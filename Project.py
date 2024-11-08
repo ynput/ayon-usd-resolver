@@ -280,15 +280,14 @@ def _cmake_multi_build(
         if not platform.system() in name:
             continue
 
-        # thread = threading.Thread(
-        #     target=cmake_compile, args=(name, cmake_conf, conf, clean_build, build_type)
-        # )
-        # threads.append(thread)
-        # thread.start()
-        cmake_compile(name, cmake_conf, conf, clean_build, build_type)
+        thread = threading.Thread(
+            target=cmake_compile, args=(name, cmake_conf, conf, clean_build, build_type)
+        )
+        threads.append(thread)
+        thread.start()
 
-    # for thread in threads:
-    #     thread.join()
+    for thread in threads:
+        thread.join()
 
 
 def _zip_resolvers(

@@ -37,6 +37,8 @@ set(AR_AYONUSDRESOLVER_TARGET_PYTHON _${AR_AYONUSDRESOLVER_TARGET_LIB})
 set(AR_AYONUSDRESOLVER_INSTALL_PREFIX ${AR_PROJECT_NAME}/${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME})
 
 set(MACRO_REMOVE_SDF_FORMAT_ARGS 1)
+#TODO this should not be needed but when we remove it we get segfaults lets find out why
+add_compile_definitions(CPPHTTPLIB_OPENSSL_SUPPORT) #we need to define this var here because ayon cpp api needs it to enable open sll support for https 
 
 # shared library setup commands
 if (WIN32)

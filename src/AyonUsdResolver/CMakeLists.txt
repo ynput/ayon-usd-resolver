@@ -40,6 +40,12 @@ target_include_directories(${AR_AYONUSDRESOLVER_TARGET_LIB}
 )
 set_target_properties(${AR_AYONUSDRESOLVER_TARGET_LIB} PROPERTIES PREFIX "")
 
+target_compile_definitions(${AR_AYONUSDRESOLVER_TARGET_LIB}
+    PRIVATE
+        # USD Plugin Internal Namings
+        MFB_PACKAGE_NAME=${AR_AYONUSDRESOLVER_USD_PLUGIN_NAME}
+)
+
 target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_LIB} AyonCppApi)
 target_link_libraries(${AR_AYONUSDRESOLVER_TARGET_LIB} AyonCppDevToolsLib)
 
