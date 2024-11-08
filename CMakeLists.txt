@@ -40,6 +40,13 @@ set(MACRO_REMOVE_SDF_FORMAT_ARGS 1)
 #TODO this should not be needed but when we remove it we get segfaults lets find out why
 add_compile_definitions(CPPHTTPLIB_OPENSSL_SUPPORT) #we need to define this var here because ayon cpp api needs it to enable open sll support for https 
 
+if(WIN32)
+  set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api/ext/opensslW")
+else()
+  set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api/ext/opensslL")
+endif()
+include_directories(${OPENSSL_ROOT_DIR}/include)
+
 # shared library setup commands
 if (WIN32)
     set(AR_ARCH_LIB_SUFFIX "dll")
