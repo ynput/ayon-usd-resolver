@@ -1,4 +1,6 @@
 #include <cstdint>
+#include <iostream>
+#include <ostream>
 #include <regex>
 
 #include <string_view>
@@ -42,10 +44,11 @@ _IsFileRelativePath(const std::string &path) {
 bool
 _IsAyonPath(const std::string &assetPath) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_IsAyonPath (%s) \n", assetPath.c_str());
-    //TODO this constrcution should not be needed
+    // TODO this constrcution should not be needed
     Config::AyonUriConfigStruct config;
     for (uint8_t i = 0; i < config.ayonUriOptions.size(); i++) {
         std::string_view assetPathTestPortion(assetPath.data(), config.ayonUriOptionsSize.at(i));
+
         if (assetPathTestPortion == config.ayonUriOptions.at(i)) {
             return true;
         }

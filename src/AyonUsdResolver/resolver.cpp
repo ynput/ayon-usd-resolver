@@ -1,3 +1,5 @@
+#include <iostream>
+#include <ostream>
 #include <string>
 #include <utility>
 
@@ -41,7 +43,6 @@ AyonUsdResolver::~AyonUsdResolver() {
 
 std::string
 AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolvedPath &anchorAssetPath) const {
-    RES_FUNCS_REMOVE_SDF_ARGS(const_cast<std::string &>(assetPath));
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
         .Msg("Resolver::_CreateIdentifier('%s', '%s')\n", assetPath.c_str(), anchorAssetPath.GetPathString().c_str());
 

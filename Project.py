@@ -46,6 +46,12 @@ AyonUsdResolverPRJ.add_cmd_arg(
     help="Deletes the specified Build Folder for the targeted item during compilation to ensure the element builds from a clean state.",
 )
 AyonUsdResolverPRJ.add_cmd_arg(
+    "--InstallTarget",
+    type=str,
+    default="Resolvers/",
+    help="Define the install Destination. (default /Resolvers/BuildName)",
+)
+AyonUsdResolverPRJ.add_cmd_arg(
     "--CleanAll",
     action="store_true",
     help="Clears all build and install directories and files prior to building to guarantee a pristine build.",
@@ -193,6 +199,11 @@ def cmake_compile(name, cmake_args, env_data, clean_build: bool, build_type):
         if clean_build and os.path.exists(abs_build_path):
             shutil.rmtree(abs_build_path)
 
+        if cmd_args.InstallTarget == "Resolvers/":
+            install_target = f"Resolvers/{name}"
+        else:
+            install_target = cmd_args.InstallTarget
+
         build_env = _generate_env(env_data)
         Cmake.cmake_command(
             AyonUsdResolverPRJ,
@@ -202,7 +213,7 @@ def cmake_compile(name, cmake_args, env_data, clean_build: bool, build_type):
             f"build/{name}",
             "-DJTRACE=0",
             f"-DCMAKE_BUILD_TYPE={str(build_type)}",
-            f"-DCMAKE_INSTALL_PREFIX=Resolvers/{name}",
+            f"-DCMAKE_INSTALL_PREFIX={install_target}",
         )
         Cmake.cmake_command(
             AyonUsdResolverPRJ,
