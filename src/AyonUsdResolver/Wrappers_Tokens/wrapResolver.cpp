@@ -18,6 +18,6 @@ void
 wrapResolver() {
     using This = AyonUsdResolver;
 
-    class_<This, bases<ArResolver>, AR_BOOST_NAMESPACE::noncopyable>("Resolver")
+    class_<This, bases<ArResolver>, AR_BOOST_NAMESPACE::noncopyable>("Resolver", no_init)
         .def("GetConnectedContext", &This::GetConnectedContext, return_value_policy<reference_existing_object>(), "");
 }

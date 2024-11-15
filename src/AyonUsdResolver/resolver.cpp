@@ -152,7 +152,7 @@ AyonUsdResolver::_CreateDefaultContext() const {
 ArResolverContext
 AyonUsdResolver::_CreateDefaultContextForAsset(const std::string &assetPath) const {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_CreateDefaultContextForAsset\n");
-
+    std::cout << "_CreateDefaultContextForAsset" << assetPath << std::endl;
     return ArResolverContext(AyonUsdResolverContext());
 }
 

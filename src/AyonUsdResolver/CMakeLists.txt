@@ -12,6 +12,7 @@ add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
         Wrappers_Tokens/resolverTokens.cpp 
 		
         cache/resolverContextCache.cpp
+        ayonFileHandler/ayonFileHandler.cpp
         helpers/resolutionFunctions.cpp 
 
 )

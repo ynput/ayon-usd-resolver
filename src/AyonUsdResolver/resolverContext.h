@@ -17,6 +17,7 @@ class AyonUsdResolverContext {
         AyonUsdResolverContext();
         AR_AYONUSDRESOLVER_API
         AyonUsdResolverContext(const AyonUsdResolverContext &ctx);
+
         AR_AYONUSDRESOLVER_API
         ~AyonUsdResolverContext();
 

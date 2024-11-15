@@ -30,7 +30,8 @@ void
 wrapResolverContext() {
     using This = AyonUsdResolverContext;
 
-    class_<This>("ResolverContext")
+    class_<This>("ResolverContext", no_init)
+        .def(init<>())
         .def(self == self)
         .def(self != self)
         .def("__hash__", _Hash)
@@ -42,7 +43,7 @@ wrapResolverContext() {
              "instance")
         .def("deleteFromCache", &This::deleteFromCache,
              "Deletes cached entity from the Connected Cache Class instance.")
-        .def("clearCache", &This::clearCache, "Deletes all cached entities from the Connected Cache Class instance.");
+        .def("clearCache", &This::clearCache, "Deletes all cached entities from the Connected Cache Class instance.")
 
-    ArWrapResolverContextForPython<This>();
+            ArWrapResolverContextForPython<This>();
 }

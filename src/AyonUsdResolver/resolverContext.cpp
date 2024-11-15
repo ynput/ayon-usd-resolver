@@ -96,6 +96,7 @@ AyonUsdResolverContext::clearCache() {
     cache->clearCache();
 };
 
+// TODO might be better to be a Weak pointer
 std::shared_ptr<resolverContextCache>
 AyonUsdResolverContext::getCachePtr() const {
     return this->cache;
