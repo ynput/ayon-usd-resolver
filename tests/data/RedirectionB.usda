@@ -1,0 +1,12 @@
+#usda 1.0
+(
+    customLayerData = {
+        dictionary AyonUsdResolverRedirectionData = {
+            token "fileA.usda" = "/home/ynput/Documents/GitHub/Lyonh/AyonDev/repos/ayon-usd-resolver/tests/data/sphere.usda"
+        }
+    }
+    subLayers = [
+        @RedirectionA.usda@
+    ]
+)
+

@@ -8,6 +8,7 @@
 #include "pxr/base/tf/pathUtils.h"
 
 #include <map>
+#include <vector>
 #include <ynput/core/iostd/envVarHelpers.hpp>
 
 #include <unordered_map>
@@ -44,8 +45,34 @@ resolverContextCache::resolverContextCache(): m_AyonCache(), m_CommonCache(), m_
     }
 };
 
+resolverContextCache::resolverContextCache(std::vector<std::string> &assetIdentInit):
+    m_AyonCache(),
+    m_CommonCache(),
+    m_PreCache(),
+    m_static_cache(true) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::resolverContextCache(VecInit) \n");
+
+    m_PreCache.reserve(PRECACHE_SIZE);
+
+    m_ayon.emplace();
+    m_static_cache = false;
+
+    std::unordered_map<std::string, std::string> assetIentsRaw = m_ayon->batchResolvePath(assetIdentInit);
+    // TODO this could be done using move and direct access to the vector that might be faster
+    for (const std::pair<std::string, std::string> &assetIdentRaw: assetIentsRaw) {
+        assetIdent asset;
+        asset.setResolvedAssetPath(assetIdentRaw.second);
+        asset.setAssetIdentifier(assetIdentRaw.first);
+        insert(asset);
+    }
+};
+
 resolverContextCache::~resolverContextCache() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::~resolverContextCache() \n");
+    std::ostringstream oss;
+    oss << static_cast<const void*>(this);
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("esolverContextCache::~resolverContextCache(M_ADD: '%s', M_SIZE: '%s' bytes)\n", oss.str().c_str(),
+             std::to_string(sizeof(*this)).c_str());
 };
 
 // TODO when ayonLogger.h has the header guards then we can import it and use logging from there
@@ -115,6 +142,7 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
         return asset;
     }
     if (this->m_static_cache) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::getAsset: Statick Cache \n");
         return this->m_pinningFileHandler->getAssetData(assetIdentifier);
     }
 
@@ -292,7 +320,7 @@ resolverContextCache::removeCachedObject(const std::string &key, const cacheName
         .Msg("resolverContextCache::removeCachedObject the object could not be found");
 };
 
-void
+bool
 resolverContextCache::clearCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::clearCache \n");
 
@@ -302,9 +330,29 @@ resolverContextCache::clearCache() {
     m_CommonCache.clear();
     m_AyonCache.clear();
     m_PreCache.clear();
+    if (!m_CommonCache.empty() || !m_AyonCache.empty() || !m_PreCache.empty()) {
+        return false;
+    }
+
+    return true;
 };
 
 bool
 resolverContextCache::isCacheStatic() const {
     return this->m_static_cache;
+};
+
+std::vector<std::string>
+resolverContextCache::getLCache() {
+    std::vector<std::string> lCache;
+    for (const auto &item: this->m_PreCache) {
+        lCache.push_back(item.getAssetIdentifier());
+    }
+    for (const auto &item: this->m_AyonCache) {
+        lCache.push_back(item.getAssetIdentifier());
+    }
+    for (const auto &item: this->m_CommonCache) {
+        lCache.push_back(item.getAssetIdentifier());
+    }
+    return lCache;
 };

@@ -3,10 +3,13 @@
 
 #include "pluginData/api.h"
 
+#include "pxr/base/vt/value.h"
 #include "pxr/pxr.h"
 #include "pxr/usd/ar/defineResolverContext.h"
+#include "pxr/base/vt/dictionary.h"
 
 #include "cache/resolverContextCache.h"
+#include "redirectionFileHanlder/redirectionHanlder.h"
 
 #include <string>
 
@@ -17,6 +20,8 @@ class AyonUsdResolverContext {
         AyonUsdResolverContext();
         AR_AYONUSDRESOLVER_API
         AyonUsdResolverContext(const AyonUsdResolverContext &ctx);
+        AR_AYONUSDRESOLVER_API
+        AyonUsdResolverContext(const std::string &configPath);
 
         AR_AYONUSDRESOLVER_API
         ~AyonUsdResolverContext();
@@ -35,7 +40,7 @@ class AyonUsdResolverContext {
         AR_AYONUSDRESOLVER_API
         void Initialize();
         AR_AYONUSDRESOLVER_API
-        void ClearAndReinitialize();
+        void ClearAndReinitialize() const;
 
         AR_AYONUSDRESOLVER_API
         void dropCache();
@@ -48,9 +53,13 @@ class AyonUsdResolverContext {
 
         std::shared_ptr<resolverContextCache> getCachePtr() const;
 
+        const redirectionFile* getRedirectionFile() const;
+        void setRedirectionFile(const std::string &rdfPath) const;
+
     private:
-        std::shared_ptr<resolverContextCache> cache;
+        mutable std::shared_ptr<resolverContextCache> cache;
         ArResolvedPath rootPath;
+        mutable std::optional<redirectionFile*> m_redirectionFile;
 };
 
 PXR_NAMESPACE_OPEN_SCOPE

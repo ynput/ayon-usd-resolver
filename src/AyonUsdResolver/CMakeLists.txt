@@ -12,7 +12,9 @@ add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
         Wrappers_Tokens/resolverTokens.cpp 
 		
         cache/resolverContextCache.cpp
+        redirectionFileHanlder/redirectionHanlder.cpp
         ayonFileHandler/ayonFileHandler.cpp
+
         helpers/resolutionFunctions.cpp 
 
 )
@@ -64,6 +66,9 @@ add_library(${AR_AYONUSDRESOLVER_TARGET_PYTHON}
         Wrappers_Tokens/wrapResolverContext.cpp
         Wrappers_Tokens/wrapResolverTokens.cpp 
         Wrappers_Tokens/resolverTokens.cpp 
+
+        Wrappers_Tokens/wrapAyonFileHanlder.cpp
+        Wrappers_Tokens/wrapRedirectionFile.cpp 
 
 )
 add_dependencies(${AR_AYONUSDRESOLVER_TARGET_PYTHON} ${AR_AYONUSDRESOLVER_TARGET_LIB})

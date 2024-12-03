@@ -11,6 +11,7 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
+// TODO rename back to pinning file handler
 class ayonDataFileHandler {
     public:
         ayonDataFileHandler(const std::string &pinningFilePath,

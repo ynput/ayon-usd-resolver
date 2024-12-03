@@ -9,6 +9,7 @@
 #include "../cache/assetIdentDef.h"
 #include "../ayonFileHandler/ayonFileHandler.h"
 #include <nlohmann/json.hpp>
+#include <vector>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -22,6 +23,8 @@ enum cacheName { AYONCACHE, COMMONCACHE };
 class resolverContextCache {
     public:
         resolverContextCache();
+
+        resolverContextCache(std::vector<std::string> &assetIdentInit);
         ~resolverContextCache();
 
         /**
@@ -74,7 +77,7 @@ class resolverContextCache {
         /**
          * @brief clear the complete cache
          */
-        void clearCache();
+        bool clearCache();
 
         /**
          * @brief print out every object in the cache for debugging
@@ -82,6 +85,11 @@ class resolverContextCache {
         void printCache() const;
 
         bool isCacheStatic() const;
+
+        /**
+         * @brief returns a vector of the left side from all caches.
+         */
+        std::vector<std::string> getLCache();
 
     private:
         std::unordered_set<assetIdent, assetIdentHash> m_PreCache;
