@@ -1,8 +1,8 @@
 # Getting Started
 
 > **INFO** Currently, we only support specific set of DCCs and their versions, and
->   AyonUsd for building revolvers (other software packages and stand-alone
->   setups will follow).
+> AyonUsd for building revolvers (other software packages and stand-alone
+> setups will follow).
 
 Welcome to the Developer Docs. This document will be split into 2 portions.
 
@@ -13,7 +13,7 @@ we use and how we use them.
 want to work on the source code. it will outline all the things the resolver
 offers and how you can control them.
 
-# Resolver Developers 
+# Resolver Developers
 
 ### Dependencies
 
@@ -26,20 +26,60 @@ offers and how you can control them.
 - [USD](https://github.com/PixarAnimationStudios/OpenUSD)\n
   OpenUsd library from Pixar
 
-
-
 ### compilation
 
-The `build.py` script located in the `scripts` folder serves as our primary build script, superseding the previous `.sh` and `.bat` files. We plan to replace this with 'Build Stage' using Ayon Automator in the future.
+We utilize the ayon automator to initiate our underlying CMake setup. Although you can manually set environment variables and trigger CMake, using the automator streamlines this process and enhances compatibility with CI/CD pipelines.
 
-Target tools for compilation are organized into separate `BuildPlugins`. To compile for a specific tool, select the corresponding `BuildPlugin` and provide the required environment variables for that tool. Subsequently, execute `build.py`, ensuring you specify the chosen `BuildPlugin` as an environment variable.
+**Getting Started**
+Before commencing with the automator, ensure that its virtual environment (venv) and output folder are set up. Use the `--setup` flag in the CLI along with `python Project.py`:
+
+```
+python Project.py --setup
+```
+
+You can run `Project.py` directly using Python or use the `--help` flag to access detailed information about the script, including available stages.
+
+**Available Stages**
+Here are some key stages you can employ via the `--runStageGRP` flag:
+
+- **Build and Zip**, **Generate Release**: These serve as "Clean" stages intended for final builds.
+- **Build Resolvers** (with `--execSingleStage`): This function enables building a range or selected resolver during development. To select a resolver, use the `--Target` flag alongside the target name from your `config.yaml` file.
+
+**Setting Build Configuration**
+You can set build configuration via CLI arguments as JSON or using a build config file. To specify the build config file, employ this function:
+
+```bash
+--setVars '{"BuildConf":"$HOME/Documents/build_conf.yaml"}'
+```
+
+Though not mandatory to set these variables in each run, they will be stored persistently unless you rerun the `--setup` command.
+
+**Example: Running Generate Release**
+Here's an example of how to execute the `Generate Release` stage:
+
+```bash
+python Project.py --runStageGRP "Generate Release" --setVars '{"BuildConf":"$HOME/Documents/build_conf.yaml"}'
+```
+
+**config.yaml Format**
+The `build_conf.yaml` file defines build targets on your machine and specifies necessary paths. The internal configuration will be read and validated to ensure compliance with standards:
+
+```yaml
+RUN_NAME:
+  COMPILEPLUGIN: "<Build Plugin Name>"
+  // List of Env Variables for the Build Plugin
+  <Key>: "<Val>"
+```
+
+The `--Target` flag triggers on `RUN_NAME`, converting variables beneath it into environment variables within subprocesses to avoid modifying your environment directly.
 
 #### Varlibes:
+
 `COMPILEPLUGIN` = Set this variable to the relative path of the desired build plugin, found within the `BuildPlugins` folder in the repository root. For example, if using `HouLinux/LinuxPy310Houdini20`.
 
-## Developer Guidelines 
+## Developer Guidelines
 
-### Testing 
+### Testing
 
 The USD Resolver currently does not employ Red-Green development. However, post-alpha release, we plan to integrate Ayon Automator.
 
@@ -53,7 +93,6 @@ We maintain all our work in GitHub (GH) issues and create branches from these is
 **Choose your Issue Type**
 Depending on the scale of work, you can pick the issue type that best fits. However, for substantial features with high complexity, it's crucial to create a Proposal. This ensures thoughtful debate around technical implementation and allows us to revisit older proposals for context.
 
-
 ## Working with Build Plugins
 
 ### Naming Build Plugins
@@ -62,11 +101,7 @@ Build Plugins Naming schema is as follows:
 `{AppName}{PlatfromName}/{AppName}{AppVersion}_Py{pythonVersion}_{PlatfromName}.cmake`
 PlatformName options = {Win, Linux, Mac, specific Os Name}
 
-
-
-
 ## Resolver Internals
-
 
 ### Resolver Behavior:
 
@@ -106,8 +141,6 @@ is found.
     resolve the path against the operating file system the same way that USD
     Default Resolver does it.
 
-
-
 ### Asset Identifier Behavior:
 
 The AssetIdentifier or AssetPath converts an AYON path to a disk path for the resolver:
@@ -122,9 +155,6 @@ The AssetIdentifier or AssetPath converts an AYON path to a disk path for the re
 The complete asset path format is: `ayon://{ProjectName}/{path/to/ayon/folder}?product={FileName}&version=latest&representation=usd`
 
 > CPP files may contain `TF_DEBUG().Msg();` and one of the enum values (`AYONUSDRESOLVER_RESOLVER`, `AYONUSDRESOLVER_RESOLVER_CONTEXT`). These control debug message output. Keep these in your environment variables for flexibility.
-
-
-
 
 # Ayon Developers
 
@@ -142,17 +172,15 @@ from usdAssetResolver import AyonUsdResolver
 Ar.SetPreferredResolver("AyonUsdResolver")
 ```
 
-
 > **note**
-> When you get a resolver via `Usd.Ar` API you will need to get an explicit context to 
-> edit the global context as `Ar.GetResolver` will return a higher order class and 
+> When you get a resolver via `Usd.Ar` API you will need to get an explicit context to
+> edit the global context as `Ar.GetResolver` will return a higher order class and
 > not `AyonUsdResolver` class.
 
 ```py
 resolver = Ar.GetResolver()
 context = AyonUsdResolver.ResolverContext()
 ```
-
 
 If you want fine control over the resolver you will be able to get the connected
 context via `GetConnectedContext`\n
@@ -161,13 +189,13 @@ tip Dropping cache entries
 Using the `resolver.GetConnectedContext()` is also the recommended way to access the `dropCache` function for the
 resolver.
 
-
 ```py
 explicit_resolver = AyonUsdResolver.Resolver()
 explicit_resolver_context = explicit_resolver.GetConnectedContext()
 ```
 
 To access the Python bindings for the AyonUsdResolver:
+
 ```py
 from usdAssetResolver import AyonUsdResolver
 ```
@@ -193,8 +221,8 @@ In the implementation this boils down to a static Memory cache that bypasses the
 resolver Logic.\n
 
 > **note** Why use pinning?
-> When running a resolver on a farm with many workers (render nodes) 
-> you might not want them all to call the Ayon server to avoid impacting 
+> When running a resolver on a farm with many workers (render nodes)
+> you might not want them all to call the Ayon server to avoid impacting
 > the server performance. This is because USD Resolvers will resolve paths
 > one by one, potentially resulting in many calls.
 
@@ -219,7 +247,6 @@ ENV variable. e.g:`{Key}:{Path},{Key}:{Path}` it's not a problem to have
 duplicates in the keys but the Cache stores the data as an Unordered_Map so it
 will end up deduplicating the Keys. But you can't have spaces in the list as
 they are not removed and will be interpreted as part of the Key or Value.
-
 
 **example**\n
 setup the resolver for pinning support. we empty all the AYON c++ api keys just
@@ -266,8 +293,7 @@ affect the global cache.\n
 This does not work if you disconnected the Global cache from your resolver.
 
 `context.deleteFromCache(AssetIdentifier)` delete an individual cached entry.
-`context.clearCache()` clear the connected cache. 
-
+`context.clearCache()` clear the connected cache.
 
 > **note**
 > It is important to understand that by default a Resolver will be connected to the global cache

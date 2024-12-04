@@ -13,6 +13,7 @@ build/
 dist/
 Docs/docs/
 Resolvers/
+Ayon_Usd_Resolver_cicd/
 *pluginInfo.json
 .cache
 logFile*
