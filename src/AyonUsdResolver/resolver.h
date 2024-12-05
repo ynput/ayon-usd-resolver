@@ -6,6 +6,7 @@
 #include "pxr/pxr.h"
 #include "pxr/usd/ar/resolvedPath.h"
 #include "pxr/usd/ar/resolver.h"
+#include "redirectionFileHanlder/redirectionHanlder.h"
 #include "resolverContext.h"
 #include "helpers/resolutionFunctions.h"
 
@@ -46,13 +47,19 @@ class AyonUsdResolver final: public ArResolver {
         AR_AYONUSDRESOLVER_API
         std::shared_ptr<ArWritableAsset> _OpenAssetForWrite(const ArResolvedPath &resolvedPath,
                                                             WriteMode writeMode) const final;
+        AR_AYONUSDRESOLVER_API
+        const AyonUsdResolverContext* GetConnectedContext() const;
 
-        AR_AYONUSDRESOLVER_API const AyonUsdResolverContext* GetConnectedContext() const;
+        AR_AYONUSDRESOLVER_API
+        const redirectionFile* getRedirectionFile() const;
+
+        AR_AYONUSDRESOLVER_API
+        void setRedirectionFileForCtx(const std::string &rdfFilePath);
 
     private:
         const AyonUsdResolverContext* _GetCurrentContextPtr() const;
         AyonUsdResolverContext _fallbackContext;
-        const std::string emptyString{""};
+        // const std::string emptyString{""};
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

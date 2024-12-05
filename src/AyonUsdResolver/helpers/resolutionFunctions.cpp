@@ -50,10 +50,12 @@ _IsAyonPath(const std::string &assetPath) {
         std::string_view assetPathTestPortion(assetPath.data(), config.ayonUriOptionsSize.at(i));
 
         if (assetPathTestPortion == config.ayonUriOptions.at(i)) {
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_IsAyonPath (true) \n");
             return true;
         }
     }
 
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_IsAyonPath (false) \n");
     return false;
 }
 
