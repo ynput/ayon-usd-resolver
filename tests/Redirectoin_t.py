@@ -164,23 +164,24 @@ def test_create_usd_and_add_rdf_later(tmp_path):
     rdf_path = tmp_path / rdf_name
     wrtie_empty_rdf(rdf_path)
     sphere_usd = create_sphere_usd(tmp_path)
-
     stage = Usd.Stage.CreateNew(str(usd_path))
 
     res = Ar.GetResolver()
-    ctx = res.GetCurrentContext()
 
-    raise RuntimeError(ctx.IsEmpty())
+    ctx = stage.GetPathResolverContext().Get()[0]
 
-    rdf = AyonUsdResolver.getRdFile(str(rdf_path))
-    rdf.addRedirection("missingRef.usda", "./sphere.usda")
+    rdf = ctx.getRedirectionFile()
 
-    print("\n" * 10, "set rdf")
-    res.setRedirectionFileForCtx(str(rdf_path))
-    rdfB = res.GetRedirectionFile()
+    rdf.addRedirection("missingRef.usda", sphere_usd)
 
-    print("\n" * 10, "adding")
+    print("\n" * 10, "set rdf", rdf.getLayers()[0])
+
     prim = stage.DefinePrim("/test", "Xform")
     prim.GetReferences().AddReference("missingRef.usda")
 
-    assert False, stage.ExportToString()
+    m0 = stage.GetPrimAtPath("/test/mesh_0")
+    assert m0, "Cant find /test/mesh_0 in stage"
+
+    rdf_path_name = "test_create_usd_and_add_rdf_later_rdf_file.json"
+    rdf.saveToFile(str(tmp_path / rdf_path_name))
+    assert os.path.exists(tmp_path / rdf_path_name)

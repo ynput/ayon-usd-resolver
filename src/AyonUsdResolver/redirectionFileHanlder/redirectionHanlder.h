@@ -20,6 +20,7 @@
 
 class redirectionFile {
     public:
+        redirectionFile();
         redirectionFile(const std::string &entryFile);
         redirectionFile(const std::filesystem::path &entryFile);
         ~redirectionFile();
@@ -77,6 +78,15 @@ class redirectionFile {
          * @return
          */
         bool save();
+
+        /**
+         * @brief saves the rdf to a given file and sets the m_loadedLayers[0] aka the root layer to the end path
+         *
+         * @param savePath
+         * @return
+         */
+
+        bool saveToFile(const std::string &savePath);
         /**
          * @brief adds a redirection entry to the current root layer
          *
@@ -126,6 +136,7 @@ class redirectionFile {
         std::unordered_map<std::string, std::string> m_internalData;
 };
 
+std::pair<redirectionFile*, std::string> getRdFile();
 redirectionFile* getRdFile(const std::filesystem::path &entryFile);
 
 #endif

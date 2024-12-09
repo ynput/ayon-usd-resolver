@@ -23,3 +23,8 @@ logFile*
 .venv/
 .python-version
 tests/testVenv/
+
+# ignored by lakectl local
+v1/*
+!v1/.lakefs_ref.yaml
+# End ignored by lakectl local

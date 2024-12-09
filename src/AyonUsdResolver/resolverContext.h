@@ -37,8 +37,8 @@ class AyonUsdResolverContext {
         friend size_t hash_value(const AyonUsdResolverContext &ctx);
 
         // Methods
-        AR_AYONUSDRESOLVER_API
-        void Initialize();
+        // AR_AYONUSDRESOLVER_API
+        // void Initialize();
         AR_AYONUSDRESOLVER_API
         void ClearAndReinitialize() const;
 

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -25,6 +26,42 @@
 std::shared_mutex _redirectionFileSingeltonMutex;
 std::unordered_map<std::filesystem::path, std::unique_ptr<redirectionFile>> _redirectionFileSingelton;
 
+std::filesystem::path
+getTmpFilePath(const std::string &filePath) {
+    return std::filesystem::temp_directory_path() / std::filesystem::path(filePath);
+};
+
+std::string
+generateRandomID(size_t length) {
+    const std::string characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(0, characters.size() - 1);
+
+    std::string randomID;
+    std::generate_n(std::back_inserter(randomID), length, [&]() { return characters[dist(gen)]; });
+
+    return randomID;
+}
+
+std::pair<redirectionFile*, std::string>
+getRdFile() {
+    std::filesystem::path randId(generateRandomID(64));
+
+    std::shared_lock<std::shared_mutex> RLock(_redirectionFileSingeltonMutex);
+    std::unordered_map<std::filesystem::path, std::unique_ptr<redirectionFile>>::iterator it
+        = _redirectionFileSingelton.find(randId);
+    if (it != _redirectionFileSingelton.end()) {
+        return {it->second.get(), randId.string()};
+    }
+    RLock.unlock();
+
+    std::unique_lock<std::shared_mutex> WLock(_redirectionFileSingeltonMutex);
+    const auto [emplacedIt, success] = _redirectionFileSingelton.emplace(randId, std::make_unique<redirectionFile>());
+
+    return {emplacedIt->second.get(), randId.string()};
+};
+
 // TODO error when loading an empty file because of parsing error
 redirectionFile*
 getRdFile(const std::filesystem::path &entryFile) {
@@ -41,6 +78,13 @@ getRdFile(const std::filesystem::path &entryFile) {
         = _redirectionFileSingelton.emplace(entryFile, std::make_unique<redirectionFile>(entryFile));
     return emplacedIt->second.get();
 }
+
+redirectionFile::redirectionFile() {
+    std::string rand(generateRandomID(64));
+    std::cout << "randId rdf" << rand << "\n";
+    m_loadedLayers.push_back(getTmpFilePath(rand + ".json"));
+    this->init(m_loadedLayers.at(0));
+};
 
 redirectionFile::redirectionFile(const std::filesystem::path &entryFile) {
     this->init(entryFile);
@@ -75,7 +119,7 @@ redirectionFile::init(const std::filesystem::path &entryFile) {
     if (!this->readLayerStackData()) {
         std::cout << "Cant Read data from LayerStack" << std::endl;
     }
-    // TODO this vaialates the DRY principle and also causes 1 more read
+    // TODO this violates the DRY principle and also causes 1 more read
     std::ifstream ifs(entryFile);
     nlohmann::json entryJson = nlohmann::json::parse(ifs);
 
@@ -218,6 +262,11 @@ redirectionFile::save() {
     std::shared_lock<std::shared_mutex> RLock(m_subLayersMutex);
     std::shared_lock<std::shared_mutex> RLockB(m_internalDataMutex);
 
+    std::shared_lock<std::shared_mutex> RLockLoadedLayers(m_loadedLayersMutex);
+    if (!m_loadedLayers.at(0).is_absolute()) {
+        throw std::runtime_error("Cant save to a file to" + m_loadedLayers.at(0).string());
+    }
+
     entryJson["subLayers"] = this->m_subLayers;
     entryJson["data"] = this->m_internalData;
 
@@ -234,8 +283,21 @@ redirectionFile::save() {
 }
 
 bool
+redirectionFile::saveToFile(const std::string &savePath) {
+    m_loadedLayers.at(0) = savePath;
+    this->save();
+    return true;
+};
+
+bool
 redirectionFile::reload() {
     std::cout << "redirectionFile::reload" << std::endl;
+
+    std::shared_lock<std::shared_mutex> RLockLoadedLayers(m_loadedLayersMutex);
+    if (!m_loadedLayers.at(0).is_absolute()) {
+        throw std::runtime_error("Cant save to a file to" + m_loadedLayers.at(0).string());
+    }
+
     this->init(this->m_loadedLayers.at(0));
     return true;
 };

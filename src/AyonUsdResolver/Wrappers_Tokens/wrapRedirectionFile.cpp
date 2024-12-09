@@ -52,7 +52,8 @@ wrapredirectionFile() {
         .def("addLayer", &This::addLayerStr)
         .def("reload", &This::reload, "reloads the Redirection Stack from disk without saving the current state")
         .def("save", &This::save)
-        .def("addRedirection", &This::addRedirection);
+        .def("addRedirection", &This::addRedirection)
+        .def("saveToFile", &This::saveToFile);
 }
 
 redirectionFile*

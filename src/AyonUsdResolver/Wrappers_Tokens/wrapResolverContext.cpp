@@ -52,7 +52,8 @@ wrapResolverContext() {
         .def("deleteFromCache", &This::deleteFromCache,
              "Deletes cached entity from the Connected Cache Class instance.")
         .def("clearCache", &This::clearCache, "Deletes all cached entities from the Connected Cache Class instance.")
-        .def("getRedirectionFile", &This::getRedirectionFile, return_value_policy<reference_existing_object>(), "");
+        .def("getRedirectionFile", &This::getRedirectionFile, return_value_policy<reference_existing_object>(), "")
+        .def("setRedirectionFile", &This::setRedirectionFile);
 
     ArWrapResolverContextForPython<This>();
 }

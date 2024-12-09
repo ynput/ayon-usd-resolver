@@ -43,6 +43,16 @@ getStringEndswithStrings(const std::string &value, const std::vector<std::string
 AyonUsdResolverContext::AyonUsdResolverContext(): cache(std::shared_ptr(GlobalCache)) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
     // this->Initialize();
+    auto [rdf, id] = getRdFile();
+    this->m_redirectionFile.emplace(rdf);
+}
+
+AyonUsdResolverContext::AyonUsdResolverContext(const std::string &configPath): cache(std::shared_ptr(GlobalCache)) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("ResolverContext::ResolverContext(const std::string &configPath) \n");
+
+    redirectionFile* rdf = getRdFile(std::filesystem::path(configPath));
+    this->m_redirectionFile.emplace(rdf);
 }
 
 AyonUsdResolverContext::AyonUsdResolverContext(const AyonUsdResolverContext &ctx) = default;
@@ -56,14 +66,6 @@ AyonUsdResolverContext::~AyonUsdResolverContext() {
              this->getCachePtr()->isCacheStatic() ? "True" : "False",
              this->getRedirectionFile() != nullptr ? "True" : "False");
 }
-
-AyonUsdResolverContext::AyonUsdResolverContext(const std::string &configPath): cache(std::shared_ptr(GlobalCache)) {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
-        .Msg("ResolverContext::ResolverContext(const std::string &configPath) \n");
-
-    redirectionFile* rdf = getRdFile(std::filesystem::path(configPath));
-    this->m_redirectionFile.emplace(rdf);
-};
 
 const redirectionFile*
 AyonUsdResolverContext::getRedirectionFile() const {

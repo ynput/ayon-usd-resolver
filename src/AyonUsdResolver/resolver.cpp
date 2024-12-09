@@ -115,7 +115,8 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         std::optional<std::pair<std::string, std::string>> rdfAsset = rdf->getRedirectionForKey(assetPath);
         if (rdfAsset.has_value()) {
             TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                .Msg("Resolver::_Resolve redirectoin found found for %s\n", assetPath.c_str());
+                .Msg("Resolver::_Resolve redirectoin found found for %s :: %s\n", assetPath.c_str(),
+                     rdfAsset->second.c_str());
             return ArResolvedPath(rdfAsset->second);
         }
     }
