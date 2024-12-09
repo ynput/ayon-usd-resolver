@@ -280,7 +280,8 @@ def _cmake_multi_build(
         clean_build: should all builds run clean or use CMake cache
         clean_all: clean the full build environment and not just the individual build folders
     """
-    remove_all_build_folders()
+    if cmd_args.Clean or cmd_args.CleanAll:
+        remove_all_build_folders()
     build_config = validate_build_conf(build_targets)
 
     threads = []
