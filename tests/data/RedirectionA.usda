@@ -1,0 +1,9 @@
+#usda 1.0
+(
+    customLayerData = {
+        dictionary AyonUsdResolverRedirectionData = {
+            token "fileA.usda" = "redirectionDataA.usda"
+        }
+    }
+)
+

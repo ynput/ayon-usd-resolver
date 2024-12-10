@@ -47,6 +47,8 @@ else()
 endif()
 include_directories(${OPENSSL_ROOT_DIR}/include)
 
+
+
 # shared library setup commands
 if (WIN32)
     set(AR_ARCH_LIB_SUFFIX "dll")
@@ -84,9 +86,8 @@ message(STATUS "SDF_FORMAT_ARGS = ${MACRO_REMOVE_SDF_FORMAT_ARGS}")
 add_compile_definitions(MACRO_REMOVE_SDF_FORMAT_ARGS=${MACRO_REMOVE_SDF_FORMAT_ARGS})
 
 # Include AyonDevTools
+
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-dev-tools")
-
-
 
 # Include AyonCppApi 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")

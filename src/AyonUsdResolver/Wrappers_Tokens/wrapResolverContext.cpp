@@ -16,6 +16,12 @@ using namespace AR_BOOST_NAMESPACE::python;
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
+static ArResolverContext*
+_Create(const AR_BOOST_NAMESPACE::python::object &obj) {
+    extract<ArResolverContext> convertToContext(obj);
+    return new ArResolverContext(convertToContext());
+}
+
 static size_t
 _Hash(const AyonUsdResolverContext &ctx) {
     return hash_value(ctx);
@@ -30,9 +36,12 @@ void
 wrapResolverContext() {
     using This = AyonUsdResolverContext;
 
-    class_<This>("ResolverContext")
+    class_<This>("ResolverContext", no_init)
+        .def(init<>())
+        .def(init<const std::string &>(args("configFile")))
         .def(self == self)
         .def(self != self)
+        .def(self < self)
         .def("__hash__", _Hash)
         .def("__repr__", _Repr)
         .def("ClearAndReinitialize", &This::ClearAndReinitialize, "Currently a no op")
@@ -42,7 +51,9 @@ wrapResolverContext() {
              "instance")
         .def("deleteFromCache", &This::deleteFromCache,
              "Deletes cached entity from the Connected Cache Class instance.")
-        .def("clearCache", &This::clearCache, "Deletes all cached entities from the Connected Cache Class instance.");
+        .def("clearCache", &This::clearCache, "Deletes all cached entities from the Connected Cache Class instance.")
+        .def("getRedirectionFile", &This::getRedirectionFile, return_value_policy<reference_existing_object>(), "")
+        .def("setRedirectionFile", &This::setRedirectionFile);
 
     ArWrapResolverContextForPython<This>();
 }
