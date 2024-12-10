@@ -1,6 +1,9 @@
 #ifndef AR_AYON_REDIRECTION_HANDLER_H
 #define AR_AYON_REDIRECTION_HANDLER_H
 
+// TODO the redirectionFile class was implemented with the idea that we will allways load data from a file when a class
+// is created. now where this is not the case we need to refactor it to allow for better perfromance because right now
+// every resolver context has a redirection file attached and therbey the if nullptr check is not usefull.
 #include <filesystem>
 
 #include <optional>
