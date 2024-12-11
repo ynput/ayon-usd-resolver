@@ -21,3 +21,4 @@ logFile*
 .poetry/
 .venv/
 .python-version
+tests/testVenv/

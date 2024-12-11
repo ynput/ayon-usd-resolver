@@ -1,5 +1,6 @@
 #include "resolverContextCache.h"
 #include "../config.h"
+#include "../helpers/ayonApiGet.h"
 #include "../codes/debugCodes.h"
 #include "nlohmann/json_fwd.hpp"
 #include "../helpers/resolutionFunctions.h"
@@ -9,6 +10,7 @@
 #include "pxr/base/tf/pathUtils.h"
 
 #include <map>
+#include <memory>
 #include <ynput/core/iostd/envVarHelpers.hpp>
 #include <ynput/tool/ayon/rootHelpers.hpp>
 
@@ -88,7 +90,9 @@ resolverContextCache::resolverContextCache(): m_AyonCache(), m_CommonCache(), m_
 
     const char* enable_static_env_var = std::getenv(ENABLE_STATIC_GLOBAL_CACHE_ENV_KEY);
     if (enable_static_env_var == nullptr || std::strcmp(enable_static_env_var, "false") == 0) {
-        m_ayon.emplace();
+        std::unique_ptr<AyonApi> api = getAyonApiFromEnv();
+        m_ayon.emplace(std::move(api));
+
         this->m_static_cache = false;
     }
     else {
@@ -226,7 +230,8 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
 
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::getAsset: No Cache Hit \n");
     if (isAyonPath) {
-        std::pair<std::string, std::string> resolvedAsset = m_ayon->resolvePath(assetIdentifier);
+        std::pair<std::string, std::string> resolvedAsset = m_ayon->get()->resolvePath(assetIdentifier);
+
         asset.setAssetIdentifier(std::move(resolvedAsset.first));
         asset.setResolvedAssetPath(std::move(resolvedAsset.second));
 

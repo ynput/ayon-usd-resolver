@@ -84,9 +84,10 @@ message(STATUS "SDF_FORMAT_ARGS = ${MACRO_REMOVE_SDF_FORMAT_ARGS}")
 add_compile_definitions(MACRO_REMOVE_SDF_FORMAT_ARGS=${MACRO_REMOVE_SDF_FORMAT_ARGS})
 
 # Include AyonDevTools
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-dev-tools")
 
-
+set(AYON_CPPTOOLS_BUILD_LOGGER 1)
+# add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api/ext/ayon-cpp-dev-tools")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api/ext/ayon-cpp-dev-tools/src/")
 
 # Include AyonCppApi 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")

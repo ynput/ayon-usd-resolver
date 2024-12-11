@@ -2,6 +2,7 @@
 #define AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
 
 #include <filesystem>
+#include <memory>
 #include <optional>
 #include <shared_mutex>
 #include <string>
@@ -108,7 +109,7 @@ class resolverContextCache {
         mutable std::shared_mutex m_AyonCachesharedMutex;
         mutable std::shared_mutex m_CommonCachesharedMutex;
 
-        std::optional<AyonApi> m_ayon;
+        std::optional<std::unique_ptr<AyonApi>> m_ayon;
         bool m_static_cache;
 
         std::optional<pinningFileHandler> m_pinningFileHandler;
