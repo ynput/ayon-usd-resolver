@@ -167,7 +167,7 @@ redirectionFile::readLayerStackData() {
             }
             this->m_redirectionData[entry.key()] = std::filesystem::weakly_canonical(
                 std::filesystem::absolute(std::filesystem::path(it->string()).parent_path()
-                                          / std::filesystem::path(entry.value().get<std::string>())));
+                                          / std::filesystem::path(entry.value().get<std::string>()))).string();
         }
     }
 
@@ -189,7 +189,7 @@ redirectionFile::getLayerStack(const std::filesystem::path &entryFile) {
     nlohmann::json entryJson = nlohmann::json::parse(ifs);
     WLock.unlock();
 
-    for (const auto &layerIdent: entryJson.at("subLayers")) {
+    for (const std::string  &layerIdent: entryJson.at("subLayers")) {
         std::filesystem::path layerFile(layerIdent);
         if (!layerFile.is_absolute()) {
             layerFile = std::filesystem::absolute(entryFile.parent_path() / layerFile);

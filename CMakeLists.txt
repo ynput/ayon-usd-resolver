@@ -12,7 +12,6 @@ else()
 	set(InstallName $ENV{INSTALLNAME} CACHE PATH "install suffix for the resolver")
 endif()
 
-
 add_compile_definitions(MACRO_REMOVE_SDF_FORMAT_ARGS=1)
 
 set(AR_PROJECT_NAME UsdAssetResolver)
@@ -51,6 +50,7 @@ include_directories(${OPENSSL_ROOT_DIR}/include)
 
 # shared library setup commands
 if (WIN32)
+    add_link_options("/NODEFAULTLIB:LIBCMTD")
     set(AR_ARCH_LIB_SUFFIX "dll")
     message(STATUS "AR_ARCH_LIB_SUFFIX dll")
 else()

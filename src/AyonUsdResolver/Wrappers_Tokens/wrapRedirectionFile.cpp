@@ -21,7 +21,7 @@ using namespace AR_BOOST_NAMESPACE::python;
 
 static size_t
 _Hash(const redirectionFile &rfl) {
-    return std::hash<std::string>{}(rfl.getLayers().at(0));
+    return std::hash<std::string>{}(rfl.getLayers().at(0).string());
 }
 
 static std::string
@@ -32,7 +32,7 @@ _Repr(const redirectionFile &rfl) {
 AR_BOOST_NAMESPACE::python::list
 _getLayers(const redirectionFile &rfl) {
     AR_BOOST_NAMESPACE::python::list pyList;
-    for (const auto &p: rfl.getLayers()) {
+    for (const std::filesystem::path &p: rfl.getLayers()) {
         pyList.append(p.string());
     }
     return pyList;
@@ -42,7 +42,6 @@ void
 wrapredirectionFile() {
     using This = redirectionFile;
     class_<This, AR_BOOST_NAMESPACE::noncopyable>("RedirectionFile", no_init)
-        .def(init<const std::filesystem::path &>(args("entryFile")))
         .def(init<const std::string &>(args("entryFile")))
         .def(self == self)
         .def(self != self)
@@ -58,7 +57,7 @@ wrapredirectionFile() {
 
 redirectionFile*
 _GetRdFilePy(const std::string &entryFile) {
-    return getRdFile(std::filesystem::path(entryFile));
+    return getRdFile(std::filesystem::path(entryFile).string());
 }
 
 void
