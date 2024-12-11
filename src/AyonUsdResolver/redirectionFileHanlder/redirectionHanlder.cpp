@@ -124,7 +124,7 @@ redirectionFile::init(const std::filesystem::path &entryFile) {
     nlohmann::json entryJson = nlohmann::json::parse(ifs);
 
     std::unique_lock<std::shared_mutex> WLock(m_subLayersMutex);
-    for (const auto &layerIdent: entryJson.at("subLayers")) {
+    for (const std::string &layerIdent: entryJson.at("subLayers")) {
         std::filesystem::path layerFile(layerIdent);
         if (!layerFile.is_absolute()) {
             layerFile = std::filesystem::absolute(entryFile.parent_path() / layerFile);
