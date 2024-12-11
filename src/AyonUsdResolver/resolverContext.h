@@ -50,10 +50,14 @@ class AyonUsdResolverContext {
 
         AR_AYONUSDRESOLVER_API
         void clearCache();
-
+        
+        AR_AYONUSDRESOLVER_API
         std::shared_ptr<resolverContextCache> getCachePtr() const;
-
+        
+        AR_AYONUSDRESOLVER_API
         const redirectionFile* getRedirectionFile() const;
+        
+        AR_AYONUSDRESOLVER_API
         void setRedirectionFile(const std::string &rdfPath) const;
 
     private:

@@ -60,7 +60,7 @@ endif()
 
 if (WIN32)
     add_compile_definitions(NOMINMAX)
-    add_compile_options(/Zc:inline- /w)
+    add_compile_options(/Zc:inline- )
 else()
     add_compile_options(-fPIC  -Wno-deprecated -Wno-deprecated-declarations)
 endif()  

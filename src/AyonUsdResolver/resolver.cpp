@@ -8,8 +8,6 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include "pxr/base/tf/token.h"
-#include "redirectionFileHanlder/redirectionHanlder.h"
 
 #define CONVERT_STRING(string) #string
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
@@ -19,6 +17,7 @@
 #include "codes/debugCodes.h"
 #include "cache/resolverContextCache.h"
 #include "helpers/resolutionFunctions.h"
+#include "redirectionFileHanlder/redirectionHanlder.h"
 
 #include "pxr/pxr.h"
 
@@ -26,8 +25,10 @@
 
 #include "pxr/base/tf/pathUtils.h"
 #include "pxr/base/tf/debug.h"
+#include "pxr/base/tf/token.h"
 
 #include "pxr/usd/sdf/layer.h"
+
 #include "pxr/usd/ar/resolverContext.h"
 #include "pxr/usd/ar/writableAsset.h"
 #include "pxr/usd/ar/resolvedPath.h"

@@ -15,13 +15,22 @@
 #include <utility>
 #include <vector>
 
+#ifdef _WIN32
+    // For Windows (DLL export)
+    #define EXPORT_API __declspec(dllexport)
+#else
+    // For Linux (Shared library export)
+    #define EXPORT_API __attribute__((visibility("default")))
+#endif
+
+
 /**
  * @brief allows the loading of Redirection Files and acces to the composed Redirection Data
  *
  * @return
  */
 
-class redirectionFile {
+class EXPORT_API redirectionFile {
     public:
         redirectionFile();
         redirectionFile(const std::string &entryFile);
@@ -139,7 +148,7 @@ class redirectionFile {
         std::unordered_map<std::string, std::string> m_internalData;
 };
 
-std::pair<redirectionFile*, std::string> getRdFile();
-redirectionFile* getRdFile(const std::filesystem::path &entryFile);
+EXPORT_API std::pair<redirectionFile*, std::string> getRdFile();
+EXPORT_API redirectionFile*  getRdFile(const std::filesystem::path &entryFile);
 
 #endif
