@@ -165,8 +165,9 @@ redirectionFile::readLayerStackData() {
                 this->m_redirectionData[entry.key()] = entry.value();
                 continue;
             }
-            this->m_redirectionData[entry.key()] = std::filesystem::weakly_canonical(std::filesystem::absolute(
-                std::filesystem::path(it->string()).parent_path() / std::filesystem::path(entry.value())));
+            this->m_redirectionData[entry.key()] = std::filesystem::weakly_canonical(
+                std::filesystem::absolute(std::filesystem::path(it->string()).parent_path()
+                                          / std::filesystem::path(entry.value().get<std::string>())));
         }
     }
 
