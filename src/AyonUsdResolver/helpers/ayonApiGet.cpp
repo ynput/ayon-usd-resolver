@@ -22,7 +22,7 @@ getAyonApiFromEnv() {
     const char* envVarFileLoggingPath = std::getenv("AYONLOGGERFILEPOS");
     const char* envVarFileLogging = std::getenv("AYONLOGGERFILELOGGING");
 
-    if (AYON_API_KEY == nullptr || AYON_SERVER_URL == nullptr || AYON_PROJECT_NAME) {
+    if (AYON_API_KEY == nullptr || AYON_SERVER_URL == nullptr || AYON_PROJECT_NAME == nullptr) {
         throw std::runtime_error(
             "Cant find 1 or more env variavbles needed to start the AyonCppApi check if the environment is correct");
     }
