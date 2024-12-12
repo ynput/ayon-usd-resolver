@@ -13,6 +13,7 @@ add_library(${AR_AYONUSDRESOLVER_TARGET_LIB}
 		
         cache/resolverContextCache.cpp
         helpers/resolutionFunctions.cpp 
+        helpers/ayonApiGet.cpp 
 
 )
 

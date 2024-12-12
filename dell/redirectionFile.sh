@@ -1,14 +1,14 @@
 #!/bin/bash
 
-cd ../
+python Project.py --execSingleStage "Build Resolvers" --Target AyonUsd
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SCRIPT_DIR=$SCRIPT_DIR/Resolvers
 
-#---------- Set Usd/Python Variables for Resolver Load
+
+SCRIPT_DIR=$(pwd)/Resolvers/AyonUs_Linux
+
+
 export USD_ASSET_RESOLVER=$SCRIPT_DIR
-# export TF_DEBUG=AYONUSDRESOLVER_RESOLVER_CONTEXT
-export TF_DEBUG=AYONUSDRESOLVER_RESOLVER
+export TF_DEBUG=AYONUSDRESOLVER_RESOLVER_CONTEXT 
 export LD_LIBRARY_PATH=$SCRIPT_DIR/ayonUsdResolver/lib:$LD_LIBRARY_PATH
 export PXR_PLUGINPATH_NAME=$SCRIPT_DIR/ayonUsdResolver/resources:$PXR_PLUGINPATH_NAME
 export PYTHONPATH=$SCRIPT_DIR/ayonUsdResolver/lib/python:
@@ -18,11 +18,14 @@ export PYTHONPATH=$SCRIPT_DIR/ayonUsdResolver/lib/python:
 #export AYON_SERVER_URL=""
 #export AYON_SERVER_URL=""
 
+
 export AYONLOGGERLOGLVL="INFO"
-export AYONLOGGERFILELOGGING="ON"
+export AYONLOGGERFILELOGGING="OFF"
 export AYONLOGGERFILEPOS="LoggingFiles"
 
+# Source Houdini setup script
+pushd /opt/hfs20.0.590 && source houdini_setup && popd
 
-pushd /opt/hfs20.0 && source houdini_setup && popd
 
-houdini -foreground
+# Start Houdini with Hython
+hython test/HouLinuxTest.py

@@ -1,7 +1,6 @@
 #include <iostream>
 #include <ostream>
 #include <string>
-#include <utility>
 
 #define CONVERT_STRING(string) #string
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
