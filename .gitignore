@@ -21,5 +21,6 @@ logFile*
 
 .poetry/
 .venv/
+__pycache__/
 .python-version
 tests/testVenv/
