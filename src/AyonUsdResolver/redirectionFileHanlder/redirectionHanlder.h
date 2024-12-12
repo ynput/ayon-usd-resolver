@@ -23,26 +23,18 @@
  * @return
  */
 
-class redirectionFile {
+class AR_AYONUSDRESOLVER_API redirectionFile {
     public:
-        AR_AYONUSDRESOLVER_API
+        
         redirectionFile();
-        AR_AYONUSDRESOLVER_API
         redirectionFile(const std::string &entryFile);
-        AR_AYONUSDRESOLVER_API
         redirectionFile(const std::filesystem::path &entryFile);
-        AR_AYONUSDRESOLVER_API
         ~redirectionFile();
 
-        AR_AYONUSDRESOLVER_API
         redirectionFile(const redirectionFile &) = delete;
-        AR_AYONUSDRESOLVER_API
         redirectionFile &operator=(const redirectionFile &) = delete;
-        AR_AYONUSDRESOLVER_API
         redirectionFile(redirectionFile &&) = delete;
-        AR_AYONUSDRESOLVER_API
         redirectionFile &operator=(redirectionFile &&) = delete;
-        AR_AYONUSDRESOLVER_API
         void init(const std::filesystem::path &entryFile);
 
         /**
@@ -51,15 +43,12 @@ class redirectionFile {
          * @param key
          * @return
          */
-        AR_AYONUSDRESOLVER_API
         std::optional<std::pair<std::string, std::string>> getRedirectionForKey(const std::string &key) const;
         /**
          * @brief returns a refernece to the internal layers.
          */
-        AR_AYONUSDRESOLVER_API
         const std::vector<std::filesystem::path> &getLayers() const;
 
-        AR_AYONUSDRESOLVER_API
         std::vector<std::string> getLayersStr() const;
         /**
          * @brief adds a layer to the root layer
@@ -68,7 +57,6 @@ class redirectionFile {
          * @param strongOrder decide if the layer is added as the strongest sublayer or the weakest
          * @return
          */
-        AR_AYONUSDRESOLVER_API
         bool addLayer(const std::filesystem::path &layerPath, bool strongOrder);
 
         /**
@@ -78,26 +66,22 @@ class redirectionFile {
          * @param strongOrder decide if this layer is the strongest or weakest layer in the sublayers
          * @return true if all operatoins where sucsessfull
          */
-        AR_AYONUSDRESOLVER_API
         bool addLayerStr(const std::string &layerPath, bool strongOrder);
         /**
          * @brief reloads the RDF_File, this causes recursive read on the disk and a full recreation off all data point
          *
          * @return
          */
-        AR_AYONUSDRESOLVER_API
         bool reload();
         /**
          * @brief helper funciton that prints all the data to std out
          */
-        AR_AYONUSDRESOLVER_API
         void printData();
         /**
          * @brief saves the current state of the root layer file to disk
          *
          * @return
          */
-        AR_AYONUSDRESOLVER_API
         bool save();
 
         /**
@@ -106,7 +90,6 @@ class redirectionFile {
          * @param savePath
          * @return
          */
-        AR_AYONUSDRESOLVER_API
         bool saveToFile(const std::string &savePath);
         /**
          * @brief adds a redirection entry to the current root layer
@@ -115,16 +98,13 @@ class redirectionFile {
          * @param val
          * @return
          */
-        AR_AYONUSDRESOLVER_API
         bool addRedirection(const std::string &key, const std::string &val);
 
-        AR_AYONUSDRESOLVER_API
         bool
         operator==(const redirectionFile &rdf) const {
             return m_redirectionData == rdf.m_redirectionData && m_loadedLayers == rdf.m_loadedLayers
                    && m_subLayers == rdf.m_subLayers && m_internalData == rdf.m_internalData;
         }
-        AR_AYONUSDRESOLVER_API
         bool
         operator!=(const redirectionFile &rdf) const {
             return !(*this == rdf);

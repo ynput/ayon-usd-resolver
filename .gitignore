@@ -27,4 +27,6 @@ tests/testVenv/
 # ignored by lakectl local
 v1/*
 !v1/.lakefs_ref.yaml
+dell\lakeFs-rdf\*
+!dell\lakeFs-rdf\.lakefs_ref.yaml
 # End ignored by lakectl local

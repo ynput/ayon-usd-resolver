@@ -13,7 +13,7 @@
 
 #include <string>
 
-class AyonUsdResolverContext {
+class  AyonUsdResolverContext {
     public:
         // Constructors
         AR_AYONUSDRESOLVER_API
@@ -22,7 +22,7 @@ class AyonUsdResolverContext {
         AyonUsdResolverContext(const AyonUsdResolverContext &ctx);
         AR_AYONUSDRESOLVER_API
         AyonUsdResolverContext(const std::string &configPath);
-
+    
         AR_AYONUSDRESOLVER_API
         ~AyonUsdResolverContext();
 
