@@ -1,15 +1,9 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <algorithm>
 #include <array>
 #include <cstdint>
-#include <memory>
-#include <stdexcept>
-#include <string>
 #include <string_view>
-
-#include "appDataFoulder.h"
 
 #define PRECACHE_SIZE                      64
 
