@@ -12,7 +12,6 @@ else()
 	set(InstallName $ENV{INSTALLNAME} CACHE PATH "install suffix for the resolver")
 endif()
 
-
 add_compile_definitions(MACRO_REMOVE_SDF_FORMAT_ARGS=1)
 
 set(AR_PROJECT_NAME UsdAssetResolver)
@@ -47,8 +46,11 @@ else()
 endif()
 include_directories(${OPENSSL_ROOT_DIR}/include)
 
+
+
 # shared library setup commands
 if (WIN32)
+    add_link_options("/NODEFAULTLIB:LIBCMTD")
     set(AR_ARCH_LIB_SUFFIX "dll")
     message(STATUS "AR_ARCH_LIB_SUFFIX dll")
 else()
@@ -58,7 +60,7 @@ endif()
 
 if (WIN32)
     add_compile_definitions(NOMINMAX)
-    add_compile_options(/Zc:inline- /w)
+    add_compile_options(/Zc:inline- )
 else()
     add_compile_options(-fPIC  -Wno-deprecated -Wno-deprecated-declarations)
 endif()  
@@ -84,9 +86,8 @@ message(STATUS "SDF_FORMAT_ARGS = ${MACRO_REMOVE_SDF_FORMAT_ARGS}")
 add_compile_definitions(MACRO_REMOVE_SDF_FORMAT_ARGS=${MACRO_REMOVE_SDF_FORMAT_ARGS})
 
 # Include AyonDevTools
+
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-dev-tools")
-
-
 
 # Include AyonCppApi 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/ayon-cpp-api")

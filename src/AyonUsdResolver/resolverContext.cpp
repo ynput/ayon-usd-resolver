@@ -1,15 +1,19 @@
+#include <filesystem>
+#include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "codes/debugCodes.h"
+
+#include "redirectionFileHanlder/redirectionHanlder.h"
 #define CONVERT_STRING(string) #string
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
 
 #include "resolverContext.h"
 
 #include "pxr/pxr.h"
-
-#include <vector>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -38,14 +42,48 @@ getStringEndswithStrings(const std::string &value, const std::vector<std::string
 
 AyonUsdResolverContext::AyonUsdResolverContext(): cache(std::shared_ptr(GlobalCache)) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
-    this->Initialize();
+    // this->Initialize();
+    auto [rdf, id] = getRdFile();
+    this->m_redirectionFile.emplace(rdf);
+}
+
+AyonUsdResolverContext::AyonUsdResolverContext(const std::string &configPath): cache(std::shared_ptr(GlobalCache)) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("ResolverContext::ResolverContext(const std::string &configPath) \n");
+
+    redirectionFile* rdf = getRdFile(std::filesystem::path(configPath));
+    this->m_redirectionFile.emplace(rdf);
 }
 
 AyonUsdResolverContext::AyonUsdResolverContext(const AyonUsdResolverContext &ctx) = default;
 
 AyonUsdResolverContext::~AyonUsdResolverContext() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::~ResolverContext() - Destructed Context\n");
+    std::ostringstream oss;
+    oss << static_cast<const void*>(this);
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("ResolverContext::~ResolverContext(M_ADD: '%s', M_SIZE: '%s' bytes S_CACHE: '%s', R_FILE: `%s`)\n",
+             oss.str().c_str(), std::to_string(sizeof(*this)).c_str(),
+             this->getCachePtr()->isCacheStatic() ? "True" : "False",
+             this->getRedirectionFile() != nullptr ? "True" : "False");
 }
+
+const redirectionFile*
+AyonUsdResolverContext::getRedirectionFile() const {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::getRedirectionFile \n");
+    if (this->m_redirectionFile.has_value()) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::getRedirectionFile(found) \n");
+        return this->m_redirectionFile.value();
+    }
+
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::getRedirectionFile(none) \n");
+    return nullptr;
+};
+
+void
+AyonUsdResolverContext::setRedirectionFile(const std::string &rdfPath) const {
+    redirectionFile* rdf = getRdFile(std::filesystem::path(rdfPath));
+    m_redirectionFile.emplace(rdf);
+};
 
 bool
 AyonUsdResolverContext::operator<(const AyonUsdResolverContext &ctx) const {
@@ -66,16 +104,12 @@ size_t
 hash_value(const AyonUsdResolverContext &ctx) {
     return TfHash()(&ctx);
 }
-void
-AyonUsdResolverContext::Initialize() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::Initialize\n");
-}
 
 void
-AyonUsdResolverContext::ClearAndReinitialize() {
+AyonUsdResolverContext::ClearAndReinitialize() const {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ClearAndReinitialize()\n");
-    dropCache();
-    this->Initialize();
+    std::vector<std::string> lCache = cache->getLCache();
+    cache = std::make_shared<resolverContextCache>(lCache);
 }
 
 void
@@ -96,7 +130,9 @@ AyonUsdResolverContext::clearCache() {
     cache->clearCache();
 };
 
+// TODO might be better to be a Weak pointer
 std::shared_ptr<resolverContextCache>
 AyonUsdResolverContext::getCachePtr() const {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::getCachePtr\n");
     return this->cache;
 };

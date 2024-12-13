@@ -1,34 +1,19 @@
 #ifndef AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
 #define AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
 
-#include <filesystem>
 #include <optional>
 #include <shared_mutex>
 #include <string>
-#include <unordered_map>
 
 #include "AyonCppApi.h"
 #include "../cache/assetIdentDef.h"
+#include "../ayonFileHandler/ayonFileHandler.h"
 #include <nlohmann/json.hpp>
+#include <vector>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
 enum cacheName { AYONCACHE, COMMONCACHE };
-
-class pinningFileHandler {
-    public:
-        pinningFileHandler(const std::string &pinningFilePath,
-                           const std::unordered_map<std::string, std::string> &rootReplaceData);
-        ~pinningFileHandler() = default;
-
-        assetIdent getAssetData(const std::string &resolveKey);
-
-    private:
-        std::filesystem::path m_pinningFilePath;
-        nlohmann::json m_pinningFileData;
-
-        std::unordered_map<std::string, std::string> m_rootReplaceData;
-};
 
 /**
  * @class resolverContextCache
@@ -38,6 +23,8 @@ class pinningFileHandler {
 class resolverContextCache {
     public:
         resolverContextCache();
+
+        resolverContextCache(std::vector<std::string> &assetIdentInit);
         ~resolverContextCache();
 
         /**
@@ -90,7 +77,7 @@ class resolverContextCache {
         /**
          * @brief clear the complete cache
          */
-        void clearCache();
+        bool clearCache();
 
         /**
          * @brief print out every object in the cache for debugging
@@ -98,6 +85,11 @@ class resolverContextCache {
         void printCache() const;
 
         bool isCacheStatic() const;
+
+        /**
+         * @brief returns a vector of the left side from all caches.
+         */
+        std::vector<std::string> getLCache();
 
     private:
         std::unordered_set<assetIdent, assetIdentHash> m_PreCache;
@@ -111,7 +103,7 @@ class resolverContextCache {
         std::optional<AyonApi> m_ayon;
         bool m_static_cache;
 
-        std::optional<pinningFileHandler> m_pinningFileHandler;
+        std::optional<ayonDataFileHandler> m_pinningFileHandler;
 };
 
 #endif   // AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
