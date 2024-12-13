@@ -120,6 +120,8 @@ redirectionFile::init(const std::filesystem::path &entryFile) {
         std::cout << "Cant Read data from LayerStack" << std::endl;
     }
     // TODO this violates the DRY principle and also causes 1 more read
+    // we read the data from our entry file into internal data so that we can save it later without having to decompose
+    // the redireciotn data
     std::ifstream ifs(entryFile);
     nlohmann::json entryJson = nlohmann::json::parse(ifs);
 
@@ -130,6 +132,10 @@ redirectionFile::init(const std::filesystem::path &entryFile) {
             layerFile = std::filesystem::absolute(entryFile.parent_path() / layerFile);
         }
         this->m_subLayers.push_back(layerIdent);
+    }
+    // TODO save the data into the this
+    for (const std::pair<std::string, std::string> &dataEntry: entryJson.at("data")) {
+        this->m_internalData[dataEntry.first] = dataEntry.second;
     }
 }
 
@@ -165,9 +171,11 @@ redirectionFile::readLayerStackData() {
                 this->m_redirectionData[entry.key()] = entry.value();
                 continue;
             }
-            this->m_redirectionData[entry.key()] = std::filesystem::weakly_canonical(
-                std::filesystem::absolute(std::filesystem::path(it->string()).parent_path()
-                                          / std::filesystem::path(entry.value().get<std::string>()))).string();
+            this->m_redirectionData[entry.key()]
+                = std::filesystem::weakly_canonical(
+                      std::filesystem::absolute(std::filesystem::path(it->string()).parent_path()
+                                                / std::filesystem::path(entry.value().get<std::string>())))
+                      .string();
         }
     }
 
@@ -176,6 +184,7 @@ redirectionFile::readLayerStackData() {
 
 bool
 redirectionFile::getLayerStack(const std::filesystem::path &entryFile) {
+    std::cout << "redirectionFile::getLayerStack" << std::endl;
     std::unique_lock<std::shared_mutex> WLock(m_loadedLayersMutex);
 
     if (std::find(m_loadedLayers.begin(), m_loadedLayers.end(), entryFile) != m_loadedLayers.end()) {
@@ -189,7 +198,7 @@ redirectionFile::getLayerStack(const std::filesystem::path &entryFile) {
     nlohmann::json entryJson = nlohmann::json::parse(ifs);
     WLock.unlock();
 
-    for (const std::string  &layerIdent: entryJson.at("subLayers")) {
+    for (const std::string &layerIdent: entryJson.at("subLayers")) {
         std::filesystem::path layerFile(layerIdent);
         if (!layerFile.is_absolute()) {
             layerFile = std::filesystem::absolute(entryFile.parent_path() / layerFile);
@@ -298,7 +307,7 @@ redirectionFile::reload() {
     if (!m_loadedLayers.at(0).is_absolute()) {
         throw std::runtime_error("Cant save to a file to" + m_loadedLayers.at(0).string());
     }
-
+    RLockLoadedLayers.unlock();
     this->init(this->m_loadedLayers.at(0));
     return true;
 };

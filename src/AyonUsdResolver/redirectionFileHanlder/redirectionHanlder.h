@@ -25,7 +25,6 @@
 
 class AR_AYONUSDRESOLVER_API redirectionFile {
     public:
-        
         redirectionFile();
         redirectionFile(const std::string &entryFile);
         redirectionFile(const std::filesystem::path &entryFile);
@@ -35,6 +34,7 @@ class AR_AYONUSDRESOLVER_API redirectionFile {
         redirectionFile &operator=(const redirectionFile &) = delete;
         redirectionFile(redirectionFile &&) = delete;
         redirectionFile &operator=(redirectionFile &&) = delete;
+
         void init(const std::filesystem::path &entryFile);
 
         /**
