@@ -8,16 +8,10 @@
 
 std::unique_ptr<AyonApi>
 getAyonApiFromEnv() {
-    std::string AYONLOGGERLOGLVL("CRITICAL");
-    std::string AYONLOGGERFILELOGGING("OFF");
-
     std::string AYON_SITE_ID;
     const char* AYON_API_KEY = std::getenv("AYON_API_KEY");
     const char* AYON_SERVER_URL = std::getenv("AYON_SERVER_URL");
     const char* AYON_PROJECT_NAME = std::getenv("AYON_PROJECT_NAME");
-
-    const char* envVarFileLoggingPath = std::getenv("AYONLOGGERFILEPOS");
-    const char* envVarFileLogging = std::getenv("AYONLOGGERFILELOGGING");
 
     if (AYON_API_KEY == nullptr || AYON_SERVER_URL == nullptr || AYON_PROJECT_NAME == nullptr) {
         throw std::runtime_error(
@@ -38,9 +32,13 @@ getAyonApiFromEnv() {
         AYON_SITE_ID = AYON_SITE_ID_ENV;
     }
 
+    const char* envVarLogLvl = std::getenv("AYON_USD_RESOLVER_LOG_LVL");
+    const char* envVarFileLoggingPath = std::getenv("AYON_USD_RESOLVER_LOG_FILE");
+    const char* envVarFileLogging_enabled = std::getenv("AYON_USD_RESOLVER_LOG_FILE_ENABLED");
+
     std::string fileLoggerFilePath;
-    if (envVarFileLoggingPath != nullptr && envVarFileLogging != nullptr) {
-        switch (envVarFileLogging[1]) {
+    if (envVarFileLoggingPath != nullptr && envVarFileLogging_enabled != nullptr) {
+        switch (envVarFileLogging_enabled[1]) {
             case 'F':
                 break;
             default:
