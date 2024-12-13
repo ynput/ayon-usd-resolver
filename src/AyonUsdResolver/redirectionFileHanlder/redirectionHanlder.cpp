@@ -101,7 +101,7 @@ redirectionFile::~redirectionFile() {
 
 void
 redirectionFile::init(const std::filesystem::path &entryFile) {
-    std::cout << "redirectionFile: " << entryFile << std::endl;
+    std::cout << "redirectionFile(): " << entryFile << std::endl;
     if (!std::filesystem::exists(entryFile)) {
         std::cout << "Warn: Cant find redirectionFile. Redirection File will be created" << std::endl;
         std::ofstream ofs(entryFile);
@@ -113,8 +113,6 @@ redirectionFile::init(const std::filesystem::path &entryFile) {
     if (!this->getLayerStack(entryFile)) {
         std::cout << "Cant Get Layer Stack" << std::endl;
     }
-
-    std::cout << std::endl;
 
     if (!this->readLayerStackData()) {
         std::cout << "Cant Read data from LayerStack" << std::endl;
@@ -134,8 +132,12 @@ redirectionFile::init(const std::filesystem::path &entryFile) {
         this->m_subLayers.push_back(layerIdent);
     }
     // TODO save the data into the this
-    for (const std::pair<std::string, std::string> &dataEntry: entryJson.at("data")) {
-        this->m_internalData[dataEntry.first] = dataEntry.second;
+    for (const auto &entry: entryJson["data"].items()) {
+        if (!entry.value().is_string()) {
+            std::cerr << "Error: Value for key '" << entry.key() << "' is not a string." << std::endl;
+            continue;
+        }
+        this->m_internalData[entry.key()] = entry.value();
     }
 }
 
@@ -153,13 +155,22 @@ redirectionFile::getRedirectionForKey(const std::string &key) const {
 
 bool
 redirectionFile::readLayerStackData() {
+    std::cout << "redirectionFile::readLayerStackData" << std::endl;
+
     std::shared_lock<std::shared_mutex> RLock(m_loadedLayersMutex);
     std::unique_lock<std::shared_mutex> WLock(m_redirectionDataMutex);
+
     for (std::vector<std::filesystem::path>::reverse_iterator it = this->m_loadedLayers.rbegin();
          it != this->m_loadedLayers.rend(); it++) {
         std::ifstream ifs(it->string());
         nlohmann::json entryJson = nlohmann::json::parse(ifs);
-        for (const auto &entry: entryJson.at("data").items()) {
+
+        for (const auto &entry: entryJson["data"].items()) {
+            if (!entry.value().is_string()) {
+                std::cerr << "Error: Value for key '" << entry.key() << "' is not a string." << std::endl;
+                continue;
+            }
+
             if (_IsAyonPath(entry.value())) {
                 AyonApi api;
                 std::pair<std::string, std::string> asset = api.resolvePath(entry.value());
