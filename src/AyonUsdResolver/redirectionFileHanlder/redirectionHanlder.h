@@ -100,6 +100,38 @@ class AR_AYONUSDRESOLVER_API redirectionFile {
          */
         bool addRedirection(const std::string &key, const std::string &val);
 
+        /**
+         * @brief return a copy of the redirection data vor client purposes
+         */
+        std::unordered_map<std::string, std::string> getRedirections() const;
+
+        /**
+         * @brief removes a sublayer and its contribution. also saves the changes to the sublayers to disk
+         *
+         * @param layerIdenifier
+         * @return
+         */
+        bool removeLayer(const std::string &layerIdenifier);
+        /**
+         * @brief removes a redirectoin from the m_internalData saves to disk and reloads.
+         *
+         * @param redirectoinIdentifier
+         * @return
+         */
+        bool removeRedirection(const std::string &redirectoinIdentifier);
+        /**
+         * @brief delets all sublayers saves to disk and reloads
+         *
+         * @return
+         */
+        bool clearLayers();
+        /**
+         * @brief delets all data in m_internalData saves to disk and reloads.
+         *
+         * @return
+         */
+        bool clearRedirections();
+
         bool
         operator==(const redirectionFile &rdf) const {
             return m_redirectionData == rdf.m_redirectionData && m_loadedLayers == rdf.m_loadedLayers

@@ -231,6 +231,7 @@ redirectionFile::getLayersStr() const {
 
 bool
 redirectionFile::addLayer(const std::filesystem::path &layerPath, bool strongOrder) {
+    std::cout << "redirectionFile::addLayer" << std::endl;
     // add the layer to our sublayers
     // check if the layer is the strongest or the weakest
     // if the layer is strongest overwrite the data present if its not in the root file
@@ -239,8 +240,12 @@ redirectionFile::addLayer(const std::filesystem::path &layerPath, bool strongOrd
     std::vector<std::filesystem::path>::iterator hit = std::find(m_subLayers.begin(), m_subLayers.end(), layerPath);
 
     if (hit != m_subLayers.end()) {
+        std::cout << "found layerPath" << std::endl;
         return true;
     }
+
+    std::cout << "inserting layerPath: " << layerPath << "With order: " << (strongOrder ? "Strong" : "weakest")
+              << std::endl;
     if (strongOrder) {
         m_subLayers.insert(m_subLayers.begin(), layerPath);
     }
@@ -271,18 +276,18 @@ redirectionFile::save() {
 
     std::shared_lock<std::shared_mutex> RLock(m_subLayersMutex);
     std::shared_lock<std::shared_mutex> RLockB(m_internalDataMutex);
-
     std::shared_lock<std::shared_mutex> RLockLoadedLayers(m_loadedLayersMutex);
+
     if (!m_loadedLayers.at(0).is_absolute()) {
         throw std::runtime_error("Cant save to a file to" + m_loadedLayers.at(0).string());
     }
-
-    entryJson["subLayers"] = this->m_subLayers;
-    entryJson["data"] = this->m_internalData;
+    entryJson["subLayers"] = m_subLayers;
+    entryJson["data"] = m_internalData;
 
     std::ofstream ofs(m_loadedLayers.at(0));
 
     if (ofs) {
+        std::cout << "Writing data to disk: " << entryJson.dump(4) << std::endl;
         ofs << entryJson.dump(4);
     }
     else {
@@ -327,5 +332,87 @@ redirectionFile::addRedirection(const std::string &key, const std::string &val) 
 
     m_redirectionData[key] = resolvedVal;
     m_internalData[key] = val;
+    return true;
+};
+
+/**
+ * @brief return a copy of the redirection data vor client purposes
+ */
+std::unordered_map<std::string, std::string>
+redirectionFile::getRedirections() const {
+    return m_redirectionData;
+};
+
+/**
+ * @brief removes a sublayer and its contribution. also saves the changes to the sublayers to disk
+ *
+ * @param layerIdenifier
+ * @return
+ */
+bool
+redirectionFile::removeLayer(const std::string &layerIdenifier) {
+    std::unique_lock<std::shared_mutex> WLock(m_subLayersMutex);
+    std::vector<std::filesystem::path>::iterator hit
+        = std::find(m_subLayers.begin(), m_subLayers.end(), std::filesystem::path(layerIdenifier));
+
+    if (hit == m_subLayers.end()) {
+        return false;
+    }
+    m_subLayers.erase(hit);
+
+    WLock.unlock();
+    this->save();
+    this->reload();
+    return true;
+};
+/**
+ * @brief removes a redirectoin from the m_internalData saves to disk and reloads.
+ *
+ * @param redirectoinIdentifier
+ * @return
+ */
+bool
+redirectionFile::removeRedirection(const std::string &redirectoinIdentifier) {
+    std::unique_lock<std::shared_mutex> WLock(m_internalDataMutex);
+
+    std::unordered_map<std::string, std::string>::iterator hit = m_internalData.find(redirectoinIdentifier);
+    if (hit == m_internalData.end()) {
+        return false;
+    }
+    m_internalData.erase(hit);
+
+    WLock.unlock();
+    this->save();
+    this->reload();
+    return true;
+};
+/**
+ * @brief delets all sublayers saves to disk and reloads
+ *
+ * @return
+ */
+bool
+redirectionFile::clearLayers() {
+    std::unique_lock<std::shared_mutex> WLock(m_subLayersMutex);
+    m_subLayers.clear();
+
+    WLock.unlock();
+    this->save();
+    this->reload();
+    return true;
+};
+/**
+ * @brief delets all data in m_internalData saves to disk and reloads.
+ *
+ * @return
+ */
+bool
+redirectionFile::clearRedirections() {
+    std::unique_lock<std::shared_mutex> WLock(m_internalDataMutex);
+    m_internalData.clear();
+
+    WLock.unlock();
+    this->save();
+    this->reload();
     return true;
 };

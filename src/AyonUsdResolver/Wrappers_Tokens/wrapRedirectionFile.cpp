@@ -1,6 +1,8 @@
+#include <netinet/tcp.h>
 #include <filesystem>
 #include <functional>
 #include <string>
+#include <utility>
 
 #include "../redirectionFileHanlder/redirectionHanlder.h"
 
@@ -13,6 +15,7 @@
 #include BOOST_INCLUDE(python/operators.hpp)
 #include BOOST_INCLUDE(python/return_value_policy.hpp)
 #include BOOST_INCLUDE(python/copy_const_reference.hpp)
+#include BOOST_INCLUDE(python/dict.hpp)
 // clang-format on
 
 using namespace AR_BOOST_NAMESPACE::python;
@@ -38,6 +41,15 @@ _getLayers(const redirectionFile &rfl) {
     return pyList;
 }
 
+AR_BOOST_NAMESPACE::python::dict
+_getRedirections(const redirectionFile &rfl) {
+    AR_BOOST_NAMESPACE::python::dict pyDict;
+    for (const std::pair<std::string, std::string> &p: rfl.getRedirections()) {
+        pyDict[p.first] = p.second;
+    }
+    return pyDict;
+}
+
 void
 wrapredirectionFile() {
     using This = redirectionFile;
@@ -52,7 +64,12 @@ wrapredirectionFile() {
         .def("reload", &This::reload, "reloads the Redirection Stack from disk without saving the current state")
         .def("save", &This::save)
         .def("addRedirection", &This::addRedirection)
-        .def("saveToFile", &This::saveToFile);
+        .def("saveToFile", &This::saveToFile)
+        .def("getRedirections", _getRedirections)
+        .def("removeLayer", &This::removeLayer)
+        .def("removeRedirection", &This::removeRedirection)
+        .def("clearLayers", &This::clearLayers)
+        .def("clearRedirections", &This::clearRedirections);
 }
 
 redirectionFile*
