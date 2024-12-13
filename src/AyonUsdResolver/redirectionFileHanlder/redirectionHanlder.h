@@ -87,8 +87,8 @@ class AR_AYONUSDRESOLVER_API redirectionFile {
         /**
          * @brief saves the rdf to a given file and sets the m_loadedLayers[0] aka the root layer to the end path
          *
-         * @param savePath
-         * @return
+         * @param savePath the path that will replace the root path (should be abs path)
+         * @return true if the rdf was able to save
          */
         bool saveToFile(const std::string &savePath);
         /**
@@ -113,7 +113,8 @@ class AR_AYONUSDRESOLVER_API redirectionFile {
          */
         bool removeLayer(const std::string &layerIdenifier);
         /**
-         * @brief removes a redirectoin from the m_internalData saves to disk and reloads.
+         * @brief removes a redirectoin from the m_internalData saves to disk and reloads. (this function allows you to
+         * remove the root layer, this is UB as then the next layer will be used as the root layer)
          *
          * @param redirectoinIdentifier
          * @return
@@ -157,18 +158,36 @@ class AR_AYONUSDRESOLVER_API redirectionFile {
          * @return
          */
         bool readLayerStackData();
+
+        /**
+         * @brief the file used to generate the rdf instance (can be use to compare against root file in case the root
+         * file is changed)
+         */
         std::filesystem::path entryFile;
 
         mutable std::shared_mutex m_redirectionDataMutex;
+        /**
+         * @brief this is the composed redirectoin data so that we can avoid runtime composition
+         */
         std::unordered_map<std::string, std::string> m_redirectionData;
 
         mutable std::shared_mutex m_loadedLayersMutex;
+        /**
+         * @brief those are all the layers that where loaded and build the composition from weakest to strongest
+         */
         std::vector<std::filesystem::path> m_loadedLayers;
 
         mutable std::shared_mutex m_subLayersMutex;
+        /**
+         * @brief those are the sublayers of the current rdf file. they are stored seperatly to ensure that we have an
+         * easy time saving them to disk
+         */
         std::vector<std::filesystem::path> m_subLayers;
 
         mutable std::shared_mutex m_internalDataMutex;
+        /**
+         * @brief this is the redirection data of this rdf, we need it to save to disk
+         */
         std::unordered_map<std::string, std::string> m_internalData;
 };
 

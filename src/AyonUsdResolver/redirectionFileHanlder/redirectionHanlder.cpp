@@ -360,6 +360,8 @@ redirectionFile::getRedirections() const {
  * @param layerIdenifier
  * @return
  */
+
+// TODO consider ensuring that this system will never delet the root layer
 bool
 redirectionFile::removeLayer(const std::string &layerIdenifier) {
     std::unique_lock<std::shared_mutex> WLock(m_subLayersMutex);
