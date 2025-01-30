@@ -62,9 +62,9 @@ pinningFileHandler::pinningFileHandler(const std::string &pinningFilePath,
  * @param resolveKey UsdAssetIdent
  * @return populated assetIdent if key was found in pinning file. Empty assetIdent if key was not found
  */
-assetIdent
+assetIdent*
 pinningFileHandler::getAssetData(const std::string &resolveKey) {
-    assetIdent assetEntry;
+    assetIdent* assetEntry = nullptr;
 
     std::string pinnedAssetPath;
     try {
@@ -74,9 +74,11 @@ pinningFileHandler::getAssetData(const std::string &resolveKey) {
         return assetEntry;
     }
 
+    assetEntry = new assetIdent();
+
     if (!pinnedAssetPath.empty()) {
-        assetEntry.setAssetIdentifier(resolveKey);
-        assetEntry.setResolvedAssetPath(pinnedAssetPath);
+        assetEntry->setAssetIdentifier(resolveKey);
+        assetEntry->setResolvedAssetPath(pinnedAssetPath);
     }
 
     return assetEntry;
@@ -159,32 +161,31 @@ resolverContextCache::migratePreCacheIntoAyonCache() {
     m_PreCache.clear();
 };
 
-assetIdent
+assetIdent*
 resolverContextCache::getAsset(const std::string &assetIdentifier,
                                const cacheName &selectedCache,
                                const bool &isAyonPath) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::getAsset: (%s) \n", assetIdentifier.c_str());
 
-    assetIdent asset;
-
     if (assetIdentifier.empty()) {
-        return asset;
+        return nullptr;
     }
     if (this->m_static_cache) {
         return this->m_pinningFileHandler->getAssetData(assetIdentifier);
     }
 
     std::unordered_set<assetIdent, assetIdentHash>::iterator hit;
+    assetIdent* asset = nullptr;
 
     std::shared_lock<std::shared_mutex> PreCachesharedLock(m_PreCachesharedMutex);
     hit = m_PreCache.find(assetIdentifier);
     if (hit != m_PreCache.end()) {
-        asset = *hit;
+        asset = const_cast<assetIdent*>(&(*hit)); // get the pointer without making a copy of the object
         PreCachesharedLock.unlock();
 
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("resolverContextCache::getAsset: PreCache Hit on (%s) with (%s) \n",
-                 asset.getAssetIdentifier().c_str(), asset.getResolvedAssetPath().GetPathString().c_str());
+                 asset->getAssetIdentifier().c_str(), asset->getResolvedAssetPath().GetPathString().c_str());
         return asset;
     }
     PreCachesharedLock.unlock();
@@ -195,7 +196,7 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
                 std::shared_lock<std::shared_mutex> AyonCacheSharedLock(m_AyonCachesharedMutex);
                 hit = m_AyonCache.find(assetIdentifier);
                 if (hit != m_AyonCache.end()) {
-                    asset = *hit;
+                    asset = const_cast<assetIdent*>(&(*hit)); // get the pointer without making a copy of the object
                     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::getAsset: AyonCache Hit \n");
                 }
 
@@ -208,7 +209,7 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
                 std::shared_lock<std::shared_mutex> CommonCacheSharedLock(m_CommonCachesharedMutex);
                 hit = m_CommonCache.find(assetIdentifier);
                 if (hit != m_CommonCache.end()) {
-                    asset = *hit;
+                    asset = const_cast<assetIdent*>(&(*hit)); // get the pointer without making a copy of the object
                     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
                         .Msg("resolverContextCache::getAsset: CommonCache Hit \n");
                 }
@@ -217,37 +218,39 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
                 break;
             }
     }
-    if (!asset.is_empty()) {
+    if (asset != nullptr) {
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
-            .Msg("resolverContextCache::getAsset: Cache Hit with (%s) with (%s) \n", asset.getAssetIdentifier().c_str(),
-                 asset.getResolvedAssetPath().GetPathString().c_str());
+            .Msg("resolverContextCache::getAsset: Cache Hit with (%s) with (%s) \n", asset->getAssetIdentifier().c_str(),
+                 asset->getResolvedAssetPath().GetPathString().c_str());
         return asset;
     }
+
+    asset = new assetIdent();
 
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::getAsset: No Cache Hit \n");
     if (isAyonPath) {
         std::pair<std::string, std::string> resolvedAsset = m_ayon->resolvePath(assetIdentifier);
-        asset.setAssetIdentifier(std::move(resolvedAsset.first));
-        asset.setResolvedAssetPath(std::move(resolvedAsset.second));
+        asset->setAssetIdentifier(std::move(resolvedAsset.first));
+        asset->setResolvedAssetPath(std::move(resolvedAsset.second));
 
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::getAsset: called ayon.resolvePath() \n");
-        this->insert(asset);
+        this->insert(*asset);
     }
     else {
         if (_IsRelativePath(assetIdentifier)) {
-            asset.setResolvedAssetPath(_ResolveAnchored(ArchGetCwd(), assetIdentifier));
+            asset->setResolvedAssetPath(_ResolveAnchored(ArchGetCwd(), assetIdentifier));
         }
         else {
-            asset.setResolvedAssetPath(ArResolvedPath(TfNormPath(TfAbsPath(assetIdentifier))));
+            asset->setResolvedAssetPath(ArResolvedPath(TfNormPath(TfAbsPath(assetIdentifier))));
         }
-        if (!asset.getResolvedAssetPath().empty()) {
-            asset.setAssetIdentifier(assetIdentifier);
+        if (!asset->getResolvedAssetPath().empty()) {
+            asset->setAssetIdentifier(assetIdentifier);
 
             std::shared_lock<std::shared_mutex> CommonCacheSharedLock(m_CommonCachesharedMutex);
 
             TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
                 .Msg("resolverContextCache::getAsset: insert into CommonCache \n");
-            m_CommonCache.insert(asset);
+            m_CommonCache.insert(*asset);
         }
     }
 
