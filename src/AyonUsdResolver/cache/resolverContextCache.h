@@ -21,7 +21,7 @@ class pinningFileHandler {
                            const std::unordered_map<std::string, std::string> &rootReplaceData);
         ~pinningFileHandler() = default;
 
-        assetIdent getAssetData(const std::string &resolveKey);
+        assetIdent* getAssetData(const std::string &resolveKey);
 
     private:
         std::filesystem::path m_pinningFilePath;
@@ -62,7 +62,7 @@ class resolverContextCache {
          * @param assetIdentifier
          * @return
          */
-        assetIdent getAsset(const std::string &assetIdentifier, const cacheName &selectedCache, const bool &isAyonPath);
+        assetIdent* getAsset(const std::string &assetIdentifier, const cacheName &selectedCache, const bool &isAyonPath);
 
         /**
          * @brief set up the cache from a pinning file
@@ -100,6 +100,8 @@ class resolverContextCache {
         bool isCacheStatic() const;
 
     private:
+        // assetIdent - cache element class used to represent an Usd asset in cache for the resolver (m_assetIdent, m_resolvedAssetPath)
+        // assetIdentHash - string equals to assetIdent 
         std::unordered_set<assetIdent, assetIdentHash> m_PreCache;
         std::unordered_set<assetIdent, assetIdentHash> m_AyonCache;
         std::unordered_set<assetIdent, assetIdentHash> m_CommonCache;
