@@ -99,7 +99,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
         for (const AyonUsdResolverContext* ctx: contexts) {
             if (ctx) {
-                assetIdent asset;
+                assetIdent* asset = nullptr;
 
                 std::shared_ptr<resolverContextCache> resolverCache = ctx->getCachePtr();
                 std::string cleanAssetPath = assetPath;
@@ -112,8 +112,10 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
                 if (pos != std::string::npos) {
                     sdfArgs = assetPath.substr(pos + cleanAssetPath.length());
                 }
-                ArResolvedPath resolvedPath(sdfArgs.empty() ? asset.getResolvedAssetPath() :
-                                                              asset.getResolvedAssetPath().GetPathString() + sdfArgs);
+
+                // currently asset can not be nullptr, but doesn't check if getResolvedAssetPath is empty
+                ArResolvedPath resolvedPath(sdfArgs.empty() ? asset->getResolvedAssetPath() :
+                                                              asset->getResolvedAssetPath().GetPathString() + sdfArgs);
 
                 if (resolvedPath) {
                     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
