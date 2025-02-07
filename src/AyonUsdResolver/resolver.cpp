@@ -99,13 +99,13 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
         for (const AyonUsdResolverContext* ctx: contexts) {
             if (ctx) {
-                assetIdent* asset = nullptr;
-
                 std::shared_ptr<resolverContextCache> resolverCache = ctx->getCachePtr();
                 std::string cleanAssetPath = assetPath;
                 RES_FUNCS_REMOVE_SDF_ARGS(cleanAssetPath);
 
-                asset = resolverCache->getAsset(cleanAssetPath, cacheName::AYONCACHE, true);
+                // currently asset can not be nullptr to match the previous implementation
+                // getAsset can return only empty assetIdent
+                assetIdent* asset = resolverCache->getAsset(cleanAssetPath, cacheName::AYONCACHE, true);
 
                 size_t pos = assetPath.find(cleanAssetPath);
                 std::string sdfArgs;
@@ -113,7 +113,6 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
                     sdfArgs = assetPath.substr(pos + cleanAssetPath.length());
                 }
 
-                // currently asset can not be nullptr, but doesn't check if getResolvedAssetPath is empty
                 ArResolvedPath resolvedPath(sdfArgs.empty() ? asset->getResolvedAssetPath() :
                                                               asset->getResolvedAssetPath().GetPathString() + sdfArgs);
 
