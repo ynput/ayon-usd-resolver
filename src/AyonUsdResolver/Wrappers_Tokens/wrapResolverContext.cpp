@@ -3,33 +3,32 @@
 #include "pxr/base/tf/pyUtils.h"
 #include "pxr/pxr.h"
 #include "pxr/usd/ar/pyResolverContext.h"
-
-#include "boost_include_wrapper.h"
-// clang-format off
-#include BOOST_INCLUDE(python/class.hpp)
-#include BOOST_INCLUDE(python/operators.hpp)
-#include BOOST_INCLUDE(python/return_value_policy.hpp)
-// clang-format on
+#include <pxr/external/boost/python/class.hpp>
+#include <pxr/external/boost/python/operators.hpp>
+#include <pxr/external/boost/python/return_value_policy.hpp>
 #include <string>
-
-using namespace AR_BOOST_NAMESPACE::python;
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
+using namespace pxr_boost::python;
+
 static size_t
 _Hash(const AyonUsdResolverContext &ctx) {
+    // This function requires pxr/base/tf/hash.h, which is likely included via a pxr header.
     return hash_value(ctx);
 }
 
 static std::string
 _Repr(const AyonUsdResolverContext &ctx) {
-    return TF_PY_REPR_PREFIX + "ResolverContext";
+    // Use the simpler representation helper, assuming Tf/pyUtils.h defines TF_PY_REPR_PREFIX.
+    return TF_PY_REPR_PREFIX + "ResolverContext"; 
 }
 
 void
 wrapResolverContext() {
     using This = AyonUsdResolverContext;
 
+    // FIX: Revert to simplified names, relying on 'using namespace pxr_boost::python;'
     class_<This>("ResolverContext")
         .def(self == self)
         .def(self != self)
@@ -44,5 +43,7 @@ wrapResolverContext() {
              "Deletes cached entity from the Connected Cache Class instance.")
         .def("clearCache", &This::clearCache, "Deletes all cached entities from the Connected Cache Class instance.");
 
+    // This should resolve correctly if the PXR_NAMESPACE_USING_DIRECTIVE is used.
+    // PXR_NS::ArWrapResolverContextForPython<This>();
     ArWrapResolverContextForPython<This>();
 }
