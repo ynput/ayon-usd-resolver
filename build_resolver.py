@@ -163,12 +163,25 @@ def main():
     print(f"Zip after build: {args.zip}")
 
     # Build command
+    # cmake_args = [
+    #     f"-DCMAKE_BUILD_TYPE={args.build_type}",
+    #     f"-DUSD_ROOT={env_info['USD_ROOT']}",
+    #     f"-DPYTHON_EXECUTABLE={env_info['PYTHON_EXECUTABLE']}",
+    #     f"-DPYTHON_VERSION={env_info['PYTHON_VERSION']}",
+    #     f"-DCMAKE_INSTALL_PREFIX={install_dir}",
+    # ]
+    houdini_cmake_path = f"{env_info['USD_ROOT']}/toolkit/cmake"
+
     cmake_args = [
+        "-DBUILD_TARGET=Houdini", # Ensure this is set for Houdini builds
         f"-DCMAKE_BUILD_TYPE={args.build_type}",
         f"-DUSD_ROOT={env_info['USD_ROOT']}",
         f"-DPYTHON_EXECUTABLE={env_info['PYTHON_EXECUTABLE']}",
         f"-DPYTHON_VERSION={env_info['PYTHON_VERSION']}",
         f"-DCMAKE_INSTALL_PREFIX={install_dir}",
+        
+        # --- ADD THIS LINE ---
+        f"-DCMAKE_PREFIX_PATH={houdini_cmake_path}" 
     ]
 
     generator = "Ninja" if shutil.which("ninja") else "Unix Makefiles"
