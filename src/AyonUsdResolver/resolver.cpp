@@ -124,7 +124,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
                     return resolvedPath;
                 }
                 std::cout << "No resolved path found in Resolver::_Resolve for context." << std::endl;
-                return ArResolvedPath();
+                return ArResolvedPath(assetPath);
             }
         }
     }
@@ -135,7 +135,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
             return resolvedPath;
         }
 
-        return ArResolvedPath();
+        return ArResolvedPath(assetPath);
     }
 
     return _ResolveAnchored(std::string(), assetPath);
