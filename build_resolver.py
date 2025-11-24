@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Simple build helper for AYON USD Resolver.
 Automatically detects USD/DCC environment and runs CMake build.
@@ -13,10 +12,6 @@ import platform
 import shutil
 
 
-# ------------------------------------------------------------
-# Utility helpers
-# ------------------------------------------------------------
-
 def run(cmd, cwd=None, env=None):
     """Run a shell command with logging."""
     print(f"\n>>> {cmd}")
@@ -27,15 +22,13 @@ def run(cmd, cwd=None, env=None):
 
 def detect_houdini_env(root):
     """Detect paths for Houdini installations (19-21)."""
-    usd_root = root  # Houdini 21 has USD directly under /opt/hfsXX
-    python_exec = os.path.join(root, "python", "bin", "python3.11")
-    return {
-        "DCC": "houdini",
-        "USD_ROOT": usd_root,
-        "PYTHON_EXECUTABLE": python_exec,
-        "PYTHON_VERSION": "3.11",
-    }
-
+    usd_root = root
+    houdini_cmake_path = f"{usd_root}/toolkit/cmake"
+    return [
+        "-DBUILD_TARGET=houdini",
+        f"-DUSD_ROOT={usd_root}",
+        f"-DCMAKE_PREFIX_PATH={houdini_cmake_path}" 
+    ]
 
 def detect_maya_env(root):
     """Detect paths for Maya installations."""
@@ -72,10 +65,6 @@ def detect_dcc_env(dcc, root):
     else:
         raise ValueError(f"Unsupported DCC: {dcc}")
 
-
-# ------------------------------------------------------------
-# Main build logic
-# ------------------------------------------------------------
 
 def main():
     parser = argparse.ArgumentParser(
@@ -121,7 +110,6 @@ def main():
         help="Output zip path (.zip). If omitted, ./dist/<auto-name>.zip is used"
     )
 
-    # Cap parallelism at 4 for safety
     max_jobs = min(os.cpu_count() or 4, 4)
     parser.add_argument(
         "--jobs",
@@ -134,7 +122,9 @@ def main():
 
     project_root = os.path.dirname(os.path.abspath(__file__))
     build_dir = os.path.join(project_root, f"build_{args.dcc}_{args.build_type.lower()}")
-    install_dir = os.path.join(project_root, "install")
+    install_dir = os.path.join(
+        project_root, "install", f"{args.dcc}_{platform.system().lower()}_{args.build_type.lower()}"
+    )
 
     # Clean build
     if args.clean and os.path.exists(build_dir):
@@ -145,44 +135,24 @@ def main():
     os.makedirs(install_dir, exist_ok=True)
 
     # Detect environment
-    env_info = detect_dcc_env(args.dcc, args.dcc_root)
-    if args.python:
-        env_info["PYTHON_VERSION"] = args.python
+    dcc_args = detect_dcc_env(args.dcc, args.dcc_root)
 
     # Print configuration summary
     print("\n=== AYON USD Resolver Build Configuration ===")
     print(f"Platform: {platform.system()} {platform.release()}")
-    print(f"DCC: {env_info['DCC']}")
-    print(f"USD_ROOT: {env_info['USD_ROOT']}")
-    print(f"PYTHON_EXECUTABLE: {env_info['PYTHON_EXECUTABLE']}")
-    print(f"PYTHON_VERSION: {env_info['PYTHON_VERSION']}")
+    print(f"DCC: {args.dcc}")
     print(f"Build type: {args.build_type}")
     print(f"Build dir: {build_dir}")
     print(f"Install dir: {install_dir}")
     print(f"Parallel jobs: {args.jobs}")
     print(f"Zip after build: {args.zip}")
-
-    # Build command
-    # cmake_args = [
-    #     f"-DCMAKE_BUILD_TYPE={args.build_type}",
-    #     f"-DUSD_ROOT={env_info['USD_ROOT']}",
-    #     f"-DPYTHON_EXECUTABLE={env_info['PYTHON_EXECUTABLE']}",
-    #     f"-DPYTHON_VERSION={env_info['PYTHON_VERSION']}",
-    #     f"-DCMAKE_INSTALL_PREFIX={install_dir}",
-    # ]
-    houdini_cmake_path = f"{env_info['USD_ROOT']}/toolkit/cmake"
+    print("\n==================================================")
 
     cmake_args = [
-        "-DBUILD_TARGET=Houdini", # Ensure this is set for Houdini builds
         f"-DCMAKE_BUILD_TYPE={args.build_type}",
-        f"-DUSD_ROOT={env_info['USD_ROOT']}",
-        f"-DPYTHON_EXECUTABLE={env_info['PYTHON_EXECUTABLE']}",
-        f"-DPYTHON_VERSION={env_info['PYTHON_VERSION']}",
         f"-DCMAKE_INSTALL_PREFIX={install_dir}",
-        
-        # --- ADD THIS LINE ---
-        f"-DCMAKE_PREFIX_PATH={houdini_cmake_path}" 
     ]
+    cmake_args.extend(dcc_args)
 
     generator = "Ninja" if shutil.which("ninja") else "Unix Makefiles"
 
@@ -207,7 +177,7 @@ def main():
             sys_name = platform.system().lower()
             base_name = os.path.join(
                 dist_dir,
-                f"ayon-usd-resolver_{args.dcc}_{sys_name}_py{env_info['PYTHON_VERSION']}"
+                f"ayon-usd-resolver_{args.dcc}_{sys_name}"
             )
 
         archive_path = shutil.make_archive(
@@ -216,9 +186,10 @@ def main():
             root_dir=os.path.dirname(install_dir),
             base_dir=os.path.basename(install_dir)
         )
-        print(f"\n📦 Created archive: {archive_path}")
+        print(f"\nCreated archive: {archive_path}")
 
-    print(f"\n✅ Build finished successfully!\nArtifacts installed to: {install_dir}\n")
+    print("\n============================")
+    print(f"\nBuild finished successfully!\nArtifacts installed to: {install_dir}\n")
 
 
 if __name__ == "__main__":
