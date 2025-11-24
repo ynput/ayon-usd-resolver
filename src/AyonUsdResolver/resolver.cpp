@@ -124,6 +124,8 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
                     return resolvedPath;
                 }
                 std::cout << "No resolved path found in Resolver::_Resolve for context." << std::endl;
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                        .Msg("Resolver::_Resolve( '%s' ) wasn't resolved, the AYON URI is incorrect\n", assetPath.c_str());
                 return ArResolvedPath(assetPath);
             }
         }
