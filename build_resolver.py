@@ -21,25 +21,31 @@ def run(cmd, cwd=None, env=None):
 
 
 def detect_houdini_env(root):
-    """Detect paths for Houdini installations (19-21)."""
+    """Detect paths for Houdini installations."""
     usd_root = root
     houdini_cmake_path = f"{usd_root}/toolkit/cmake"
+    python_exec = os.path.join(root, "python", "bin", "python")
     return [
         "-DBUILD_TARGET=houdini",
         f"-DUSD_ROOT={usd_root}",
-        f"-DCMAKE_PREFIX_PATH={houdini_cmake_path}" 
+        f"-DCMAKE_PREFIX_PATH={houdini_cmake_path}",
+        f"-DPYTHON_EXECUTABLE={python_exec}",
     ]
 
-def detect_maya_env(root):
+def detect_maya_env(root, devkit_path=None, usd_root=None):
     """Detect paths for Maya installations."""
-    usd_root = os.path.join(root, "lib", "usd")
-    python_exec = os.path.join(root, "bin", "mayapy")
-    return {
-        "DCC": "maya",
-        "USD_ROOT": usd_root,
-        "PYTHON_EXECUTABLE": python_exec,
-        "PYTHON_VERSION": "3.10",
-    }
+    if devkit_path is None:
+        raise ValueError("Maya devkit path must be provided for Maya builds.")
+    if usd_root is None:
+        raise ValueError("Maya USD root path must be provided for Maya builds.")
+    python_exec = os.path.join(root, "bin", "python")
+    return [
+        "-DBUILD_TARGET=maya",
+        f"-DMAYA_ROOT={root}",
+        f"-DMAYA_USD_DEVKIT_PATH={devkit_path}",
+        f"-DUSD_ROOT={usd_root}",
+        f"-DPYTHON_EXECUTABLE={python_exec}",
+    ]
 
 
 def detect_usd_env(root):
@@ -54,12 +60,12 @@ def detect_usd_env(root):
     }
 
 
-def detect_dcc_env(dcc, root):
+def detect_dcc_env(dcc, root, **kwargs):
     """Dispatch environment detection based on DCC name."""
     if dcc == "houdini":
         return detect_houdini_env(root)
     elif dcc == "maya":
-        return detect_maya_env(root)
+        return detect_maya_env(root, **kwargs)
     elif dcc == "usd":
         return detect_usd_env(root)
     else:
@@ -84,9 +90,14 @@ def main():
         help="Path to DCC or USD SDK root directory"
     )
     parser.add_argument(
-        "--python",
+        "--maya-devkit",
         default=None,
-        help="Python version override (e.g., 3.11)"
+        help="(Maya only) Path to Maya devkit"
+    )
+    parser.add_argument(
+        "--maya-usd-root",
+        default=None,
+        help="(Maya only) Path to Maya USD root"
     )
     parser.add_argument(
         "--build-type",
@@ -135,7 +146,12 @@ def main():
     os.makedirs(install_dir, exist_ok=True)
 
     # Detect environment
-    dcc_args = detect_dcc_env(args.dcc, args.dcc_root)
+    dcc_args = detect_dcc_env(
+        args.dcc,
+        args.dcc_root,
+        devkit_path=args.maya_devkit,
+        usd_root=args.maya_usd_root
+    )
 
     # Print configuration summary
     print("\n=== AYON USD Resolver Build Configuration ===")
@@ -149,6 +165,7 @@ def main():
     print("\n==================================================")
 
     cmake_args = [
+        # f"-DAYON_CPPTOOLS_BUILD_LOGGER=OFF"
         f"-DCMAKE_BUILD_TYPE={args.build_type}",
         f"-DCMAKE_INSTALL_PREFIX={install_dir}",
     ]
