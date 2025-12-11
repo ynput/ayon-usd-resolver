@@ -19,6 +19,8 @@ getAyonApiFromEnv() {
     const char* envVarFileLoggingPath = std::getenv("AYONLOGGERFILEPOS");
     const char* envVarFileLogging = std::getenv("AYONLOGGERFILELOGGING");
 
+    std::cout << AYON_SERVER_URL << ", " << AYON_PROJECT_NAME << ", " << envVarFileLoggingPath << ", " << envVarFileLogging << std::endl;
+
     if (AYON_API_KEY == nullptr || AYON_SERVER_URL == nullptr || AYON_PROJECT_NAME == nullptr) {
         throw std::runtime_error(
             "Cant find 1 or more env variavbles needed to start the AyonCppApi check if the environment is correct");
@@ -38,19 +40,23 @@ getAyonApiFromEnv() {
         AYON_SITE_ID = AYON_SITE_ID_ENV;
     }
 
+    std::cout << "before fileLoggerFilePath - " << envVarFileLoggingPath << std::endl;
     std::string fileLoggerFilePath;
     if (envVarFileLoggingPath != nullptr && envVarFileLogging != nullptr) {
         switch (envVarFileLogging[1]) {
             case 'F':
+                std::cout << "file logging is OFF" << std::endl;
                 break;
             default:
+                std::cout << "file logging is ON" << std::endl;
                 fileLoggerFilePath
                     = std::filesystem::absolute(std::string(envVarFileLoggingPath) + "/logFile.json").string();
                 break;
         }
     }
+    std::cout << "before api init" << std::endl;
     std::unique_ptr<AyonApi> api
         = std::make_unique<AyonApi>(fileLoggerFilePath, AYON_API_KEY, AYON_SERVER_URL, AYON_PROJECT_NAME, AYON_SITE_ID);
-
+    std::cout << "before return" << std::endl;
     return api;
 };

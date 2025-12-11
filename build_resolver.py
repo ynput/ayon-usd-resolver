@@ -10,6 +10,7 @@ import sys
 import subprocess
 import platform
 import shutil
+import tempfile
 
 
 def run(cmd, cwd=None, env=None):
@@ -32,13 +33,19 @@ def detect_houdini_env(root):
         f"-DPYTHON_EXECUTABLE={python_exec}",
     ]
 
+
 def detect_maya_env(root, devkit_path=None, usd_root=None):
     """Detect paths for Maya installations."""
     if devkit_path is None:
         raise ValueError("Maya devkit path must be provided for Maya builds.")
     if usd_root is None:
         raise ValueError("Maya USD root path must be provided for Maya builds.")
-    python_exec = os.path.join(root, "bin", "python")
+    # Check for 'mayapy' (the actual binary)
+    maya_bin = os.path.join(root, "bin")
+    mayapy = os.path.join(maya_bin, "mayapy") 
+    
+    # Fallback to 'python' if mayapy isn't found, but prefer mayapy
+    python_exec = mayapy if os.path.exists(mayapy) else os.path.join(maya_bin, "python")
     return [
         "-DBUILD_TARGET=maya",
         f"-DMAYA_ROOT={root}",
@@ -197,12 +204,22 @@ def main():
                 f"ayon-usd-resolver_{args.dcc}_{sys_name}"
             )
 
-        archive_path = shutil.make_archive(
-            base_name=base_name,
-            format="zip",
-            root_dir=os.path.dirname(install_dir),
-            base_dir=os.path.basename(install_dir)
-        )
+        # Create a staging directory containing only the contents of install_dir (no parent folder)
+        with tempfile.TemporaryDirectory() as staging_dir:
+            for entry in os.listdir(install_dir):
+                src_path = os.path.join(install_dir, entry)
+                dst_path = os.path.join(staging_dir, entry)
+                if os.path.isdir(src_path) and not os.path.islink(src_path):
+                    shutil.copytree(src_path, dst_path)
+                else:
+                    shutil.copy2(src_path, dst_path)
+
+            archive_path = shutil.make_archive(
+                base_name=base_name,
+                format="zip",
+                root_dir=staging_dir,
+                base_dir="."
+            )
         print(f"\nCreated archive: {archive_path}")
 
     print("\n============================")
