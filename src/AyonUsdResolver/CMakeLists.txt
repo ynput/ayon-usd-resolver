@@ -67,36 +67,44 @@ if (BUILD_TARGET STREQUAL "maya")
 endif()
 
 # =========================================================
-# Houdini USD / Boost mode
+# Houdini USD / Boost Configuration
 # =========================================================
 if(_usd_is_houdini)
+    message(STATUS "[AYON] Configuring Boost for Houdini...")
+
+    # Houdini determines Boost location/namespace
     if(EXISTS "${AR_PXR_INCLUDE_DIR}/pxr/external/boost")
         set(AR_BOOST_PXR_EXTERNAL_EXISTS 1)
         set(AR_BOOST_NAMESPACE pxr_boost)
-        set(AR_BOOST_FOLDER_NAMESPACE pxr/external/boost)
+        set(AR_BOOST_INCLUDE_DIR ${AR_PXR_INCLUDE_DIR}/pxr/external)
         if(WIN32)
             set(AR_BOOST_PYTHON_LIB lib${AR_BOOST_NAMESPACE} ${AR_PXR_LIB_PREFIX}python)
         else()
             set(AR_BOOST_PYTHON_LIB ${AR_BOOST_NAMESPACE} ${AR_PXR_LIB_PREFIX}python)
         endif()
-        set(AR_BOOST_LIB_DIR ${AR_HOUDINI_LIB_DIR})
-        set(AR_BOOST_INCLUDE_DIR ${AR_PXR_INCLUDE_DIR}/pxr/external)
     else()
         add_compile_definitions(HBOOST_ALL_NO_LIB)
         set(AR_BOOST_PXR_EXTERNAL_EXISTS 0)
         set(AR_BOOST_NAMESPACE hboost)
-        set(AR_BOOST_FOLDER_NAMESPACE hboost)
+        # Fallback to standard Houdini toolkit location
+        set(AR_BOOST_INCLUDE_DIR ${USD_INCLUDE_DIR}) 
         if(WIN32)
             set(AR_BOOST_PYTHON_LIB ${AR_BOOST_NAMESPACE}_${AR_PYTHON_LIB_NUMBER}-mt-x64)
         else()
             set(AR_BOOST_PYTHON_LIB ${AR_BOOST_NAMESPACE}_${AR_PYTHON_LIB_NUMBER})
         endif()
-        set(AR_BOOST_LIB_DIR ${AR_HOUDINI_LIB_DIR})
-        set(AR_BOOST_INCLUDE_DIR ${AR_HOUDINI_INCLUDE_DIR})
     endif()
-endif()
 
-find_package(Boost REQUIRED)
+    # --- FIX: Manually set Boost variables for Houdini ---
+    # We skip find_package(Boost) because standard Boost isn't installed.
+    set(Boost_FOUND TRUE)
+    set(Boost_INCLUDE_DIRS ${AR_BOOST_INCLUDE_DIR})
+    message(STATUS "[AYON] Houdini Boost Include Dir: ${Boost_INCLUDE_DIRS}")
+
+else()
+    # For Maya or Standalone, assume standard system Boost
+    find_package(Boost REQUIRED)
+endif()
 
 # =========================================================
 # PYTHON (Respect Houdini embedded python & Maya Devkit)
@@ -254,7 +262,6 @@ target_link_libraries(${PYTHON_MOD_TARGET}
 
 # 2. Maya Specific Linking
 # We do this here inside the IF block so the targets exist.
-# Linking "Maya::USDDevkit" automatically adds its INTERFACE_INCLUDE_DIRECTORIES
 if (BUILD_TARGET STREQUAL "maya")
     target_link_libraries(${CORE_LIB_TARGET} PRIVATE Maya::Core Maya::USDDevkit)
     target_link_libraries(${PYTHON_MOD_TARGET} PUBLIC Maya::Core Maya::USDDevkit)
@@ -273,4 +280,3 @@ install(TARGETS ${CORE_LIB_TARGET}
 
 install(TARGETS ${PYTHON_MOD_TARGET}
         DESTINATION ${PLUGIN_BASE_DIR}/lib/python/usdAssetResolver/AyonUsdResolver)
-        
