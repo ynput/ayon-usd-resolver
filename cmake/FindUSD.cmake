@@ -263,7 +263,6 @@
 # message(STATUS "USD_LIB_AR: ${USD_LIB_AR}")
 # message(STATUS "USD_LIB_PLUG: ${USD_LIB_PLUG}")
 # message(STATUS "USD_LIB_ARCH: ${USD_LIB_ARCH}")
-
 message(STATUS "[AYON] Using custom FindUSD.cmake from ${CMAKE_CURRENT_LIST_DIR}")
 
 if (TARGET USD::tf AND TARGET USD::ar)
@@ -290,7 +289,9 @@ endif()
 # Detect Houdini layout (19–21)
 # -----------------------------------------------------------------------------
 set(_usd_is_houdini FALSE)
-if (EXISTS "${USD_ROOT}/dsolib" AND EXISTS "${USD_ROOT}/toolkit/include/pxr/pxr.h")
+# FIX: Removed the strict check for 'dsolib' at root, which might fail on Windows.
+# Instead, we rely on the existence of the toolkit headers, which is consistent.
+if (EXISTS "${USD_ROOT}/toolkit/include/pxr/pxr.h")
     set(_usd_is_houdini TRUE)
     message(STATUS "[AYON] Detected Houdini USD layout at ${USD_ROOT}")
 endif()
@@ -300,11 +301,11 @@ endif()
 # -----------------------------------------------------------------------------
 if (_usd_is_houdini)
     set(USD_INCLUDE_DIR "${USD_ROOT}/toolkit/include")
-# --- ADDED: Check for Maya-USD specific include layout ---
+# --- Check for Maya-USD specific include layout ---
 elseif (EXISTS "${USD_ROOT}/include/maya-usd/pxr/pxr.h")
     set(USD_INCLUDE_DIR "${USD_ROOT}/include/maya-usd")
     message(STATUS "[AYON] Found Include Dir (Maya USD): ${USD_INCLUDE_DIR}")
-# ---------------------------------------------------------
+# --------------------------------------------------
 elseif (EXISTS "${USD_ROOT}/include/pxr/pxr.h")
     set(USD_INCLUDE_DIR "${USD_ROOT}/include")
 elseif (EXISTS "${USD_ROOT}/../include/pxr/pxr.h")
@@ -323,10 +324,15 @@ endif()
 # -----------------------------------------------------------------------------
 if (EXISTS "${USD_ROOT}/dsolib")
     set(USD_LIB_DIR "${USD_ROOT}/dsolib")
-# --- ADDED: Check for Maya-USD specific lib layout ---
+# --- FIX: Check for Windows Houdini SDK lib path ---
+elseif (EXISTS "${USD_ROOT}/custom/houdini/dsolib")
+    set(USD_LIB_DIR "${USD_ROOT}/custom/houdini/dsolib")
+    message(STATUS "[AYON] Found Windows Houdini Libs: ${USD_LIB_DIR}")
+# ---------------------------------------------------
+# --- Check for Maya-USD specific lib layout ---
 elseif (EXISTS "${USD_ROOT}/lib/maya-usd")
     set(USD_LIB_DIR "${USD_ROOT}/lib/maya-usd")
-# -----------------------------------------------------
+# ----------------------------------------------
 elseif (EXISTS "${USD_ROOT}/lib")
     set(USD_LIB_DIR "${USD_ROOT}/lib")
 elseif (EXISTS "${USD_ROOT}/../dsolib")
@@ -335,7 +341,7 @@ elseif (EXISTS "${USD_ROOT}/../dsolib")
 else()
     message(FATAL_ERROR
         "Could not find USD library directory under ${USD_ROOT}. "
-        "Checked dsolib, lib/maya-usd and lib.")
+        "Checked dsolib, custom/houdini/dsolib, lib/maya-usd and lib.")
 endif()
 
 # -----------------------------------------------------------------------------
@@ -343,7 +349,7 @@ endif()
 # -----------------------------------------------------------------------------
 set(_usd_prefix "usd")
 # Added check for .lib (Windows) and .so/.a
-if (EXISTS "${USD_LIB_DIR}/libpxr_tf.so" OR EXISTS "${USD_LIB_DIR}/libpxr_tf.a" OR EXISTS "${USD_LIB_DIR}/pxr_tf.lib")
+if (EXISTS "${USD_LIB_DIR}/libpxr_tf.so" OR EXISTS "${USD_LIB_DIR}/libpxr_tf.a" OR EXISTS "${USD_LIB_DIR}/pxr_tf.lib" OR EXISTS "${USD_LIB_DIR}/libpxr_tf.lib")
     set(_usd_prefix "pxr")
 endif()
 message(STATUS "[AYON] Detected USD library prefix: ${_usd_prefix}_")
@@ -351,10 +357,10 @@ message(STATUS "[AYON] Detected USD library prefix: ${_usd_prefix}_")
 # -----------------------------------------------------------------------------
 # Locate core libraries
 # -----------------------------------------------------------------------------
-find_library(USD_LIB_TF ${_usd_prefix}_tf PATHS "${USD_LIB_DIR}" NO_DEFAULT_PATH)
-find_library(USD_LIB_AR ${_usd_prefix}_ar PATHS "${USD_LIB_DIR}" NO_DEFAULT_PATH)
-find_library(USD_LIB_PLUG ${_usd_prefix}_plug PATHS "${USD_LIB_DIR}" NO_DEFAULT_PATH)
-find_library(USD_LIB_ARCH ${_usd_prefix}_arch PATHS "${USD_LIB_DIR}" NO_DEFAULT_PATH)
+find_library(USD_LIB_TF NAMES ${_usd_prefix}_tf lib${_usd_prefix}_tf PATHS "${USD_LIB_DIR}" NO_DEFAULT_PATH)
+find_library(USD_LIB_AR NAMES ${_usd_prefix}_ar lib${_usd_prefix}_ar PATHS "${USD_LIB_DIR}" NO_DEFAULT_PATH)
+find_library(USD_LIB_PLUG NAMES ${_usd_prefix}_plug lib${_usd_prefix}_plug PATHS "${USD_LIB_DIR}" NO_DEFAULT_PATH)
+find_library(USD_LIB_ARCH NAMES ${_usd_prefix}_arch lib${_usd_prefix}_arch PATHS "${USD_LIB_DIR}" NO_DEFAULT_PATH)
 
 if (NOT USD_LIB_TF OR NOT USD_LIB_AR OR NOT USD_LIB_PLUG OR NOT USD_LIB_ARCH)
     message(FATAL_ERROR
