@@ -8,9 +8,6 @@
 
 std::unique_ptr<AyonApi>
 getAyonApiFromEnv() {
-    std::string AYONLOGGERLOGLVL("CRITICAL");
-    std::string AYONLOGGERFILELOGGING("OFF");
-
     std::string AYON_SITE_ID;
     const char* AYON_API_KEY = std::getenv("AYON_API_KEY");
     const char* AYON_SERVER_URL = std::getenv("AYON_SERVER_URL");
