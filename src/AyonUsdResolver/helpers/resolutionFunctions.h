@@ -1,6 +1,3 @@
-#ifndef AR_AYONUSDRESOLVER_RESOLUTIONFUNCTIONS_H
-#define AR_AYONUSDRESOLVER_RESOLUTIONFUNCTIONS_H
-
 #include "pxr/pxr.h"
 #include "pxr/usd/ar/filesystemAsset.h"
 #include "pxr/usd/ar/resolvedPath.h"
