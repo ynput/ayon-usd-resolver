@@ -180,7 +180,7 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
         return this->m_pinningFileHandler->getAssetData(assetIdentifier);
     }
 
-    std::unordered_set<AssetIdentifier, AssetIdentHash>::iterator hit;
+    std::unordered_set<AssetIdentifier, AssetIdentifierHash>::iterator hit;
 
     std::shared_lock<std::shared_mutex> PreCachesharedLock(m_PreCachesharedMutex);
     hit = m_PreCache.find(assetIdentifier);

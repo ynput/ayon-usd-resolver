@@ -101,9 +101,9 @@ class resolverContextCache {
         bool isCacheStatic() const;
 
     private:
-        std::unordered_set<AssetIdentifier, AssetIdentHash> m_PreCache;
-        std::unordered_set<AssetIdentifier, AssetIdentHash> m_AyonCache;
-        std::unordered_set<AssetIdentifier, AssetIdentHash> m_CommonCache;
+        std::unordered_set<AssetIdentifier, AssetIdentifierHash> m_PreCache;
+        std::unordered_set<AssetIdentifier, AssetIdentifierHash> m_AyonCache;
+        std::unordered_set<AssetIdentifier, AssetIdentifierHash> m_CommonCache;
 
         mutable std::shared_mutex m_PreCachesharedMutex;
         mutable std::shared_mutex m_AyonCachesharedMutex;
