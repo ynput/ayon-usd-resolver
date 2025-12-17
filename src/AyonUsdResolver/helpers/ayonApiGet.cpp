@@ -1,6 +1,6 @@
 #include "ayonApiGet.h"
 
-#include "appDataFoulder.h"
+#include "appDataFolder.h"
 #include "AyonCppApi.h"
 
 #include <memory>
