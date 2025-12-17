@@ -325,7 +325,7 @@ resolverContextCache::removeCachedObject(const std::string &key, const CacheName
     }
     else {
         switch (selectedCache) {
-            case AYONCACHE:
+            case CacheName::AYONCACHE:
                 {
                     std::unique_lock<std::shared_mutex> AyonCachesharedDellLock(m_AyonCachesharedMutex);
 
@@ -339,7 +339,7 @@ resolverContextCache::removeCachedObject(const std::string &key, const CacheName
                     }
                     break;
                 }
-            case COMMONCACHE:
+            case CacheName::COMMONCACHE:
                 {
                     std::unique_lock<std::shared_mutex> CommonCachesharedDellLock(m_CommonCachesharedMutex);
                     hit = m_CommonCache.find(key);
