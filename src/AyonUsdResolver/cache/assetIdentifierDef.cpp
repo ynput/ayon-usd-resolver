@@ -14,18 +14,18 @@ AssetIdentifier::getResolvedAssetPath() const {
 
 bool
 AssetIdentifier::setResolvedAssetPath(const ArResolvedPath &inResolvedAssetPath) {
-    if (!this->isModifiable()) {
+    if (!isModifiable()) {
         return false;
     }
-    this->m_resolvedAssetPath = inResolvedAssetPath;
+    m_resolvedAssetPath = inResolvedAssetPath;
     return true;
 };
 bool
 AssetIdentifier::setResolvedAssetPath(const std::string &inResolvedAssetPath) {
-    if (!this->isModifiable()) {
+    if (!isModifiable()) {
         return false;
     }
-    this->m_resolvedAssetPath = ArResolvedPath(inResolvedAssetPath);
+    m_resolvedAssetPath = ArResolvedPath(inResolvedAssetPath);
     return true;
 };
 
@@ -36,16 +36,16 @@ AssetIdentifier::getAssetIdentifier() const {
 
 bool
 AssetIdentifier::setAssetIdentifier(const std::string &inAssetIdentifier) {
-    if (!this->isModifiable()) {
+    if (!isModifiable()) {
         return false;
     }
-    this->m_assetIdentifier = inAssetIdentifier;
+    m_assetIdentifier = inAssetIdentifier;
     return true;
 };
 
 bool
 AssetIdentifier::isEmpty() const {
-    if (this->m_assetIdentifier.empty() && this->m_resolvedAssetPath.empty()) {
+    if (m_assetIdentifier.empty() && m_resolvedAssetPath.empty()) {
         return true;
     }
 
@@ -54,38 +54,38 @@ AssetIdentifier::isEmpty() const {
 
 bool
 AssetIdentifier::isValid() const {
-    return !this->m_invalidated;
+    return !m_invalidated;
 };
 
 void
 AssetIdentifier::invalidate() {
-    if (!this->isModifiable()) {
+    if (!isModifiable()) {
         return;
     };
 
-    this->m_invalidated = true;
+    m_invalidated = true;
 };
 
 void
 AssetIdentifier::validate() {
-    if (!this->isModifiable()) {
+    if (!isModifiable()) {
         return;
     };
 
-    this->m_invalidated = false;
+    m_invalidated = false;
 };
 
 bool
 AssetIdentifier::isModifiable() const {
-    return !this->m_static;
+    return !m_static;
 };
 
 void
 AssetIdentifier::printInfo() const {
     std::ostringstream oss;
     oss << static_cast<const void*>(this);
-    std::cout << "Static; " << this->m_static << " invalidated; " << this->m_invalidated << " AssetIdentifier; "
-              << this->m_assetIdentifier << " ResolvedPath; " << this->m_resolvedAssetPath.GetPathString().c_str()
+    std::cout << "Static; " << m_static << " invalidated; " << m_invalidated << " AssetIdentifier; "
+              << m_assetIdentifier << " ResolvedPath; " << m_resolvedAssetPath.GetPathString().c_str()
               << " Instance_m_Pose; " << oss.str().c_str() << " Instance_m_Size; "
               << std::to_string(sizeof(*this)).c_str() << std::endl;
 };
