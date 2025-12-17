@@ -1,9 +1,10 @@
 #ifndef ASSET_IDENTIFIER_DEF
 #define ASSET_IDENTIFIER_DEF
 
-#include <string>
 #include "pxr/pxr.h"
 #include "pxr/usd/ar/resolvedPath.h"
+
+#include <string>
 
 /**
  * @brief cache element class used to represent an Usd asset in cache for the resolver

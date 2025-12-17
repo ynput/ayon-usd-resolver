@@ -1,27 +1,27 @@
 #include "resolverContextCache.h"
+
+#include "../codes/debugCodes.h"
 #include "../config.h"
 #include "../helpers/ayonApiGet.h"
-#include "../codes/debugCodes.h"
-#include "nlohmann/json_fwd.hpp"
 #include "../helpers/resolutionFunctions.h"
-
-#include "pxr/usd/ar/resolvedPath.h"
-#include "pxr/base/arch/systemInfo.h"
-#include "pxr/base/tf/pathUtils.h"
-
-#include <map>
-#include <memory>
 #include <ynput/core/iostd/envVarHelpers.hpp>
 #include <ynput/tool/ayon/rootHelpers.hpp>
 
-#include <stdexcept>
-#include <unordered_map>
+#include "nlohmann/json_fwd.hpp"
+#include "pxr/base/arch/systemInfo.h"
+#include "pxr/base/tf/pathUtils.h"
+#include "pxr/usd/ar/resolvedPath.h"
+
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <map>
+#include <memory>
 #include <mutex>
 #include <shared_mutex>
+#include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 PXR_NAMESPACE_USING_DIRECTIVE

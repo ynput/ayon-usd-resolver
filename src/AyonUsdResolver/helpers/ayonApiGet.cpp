@@ -1,10 +1,11 @@
+#include "ayonApiGet.h"
+
+#include "appDataFoulder.h"
+#include "AyonCppApi.h"
+
 #include <memory>
 #include <stdexcept>
 #include <string>
-
-#include "ayonApiGet.h"
-#include "AyonCppApi.h"
-#include "appDataFoulder.h"
 
 std::unique_ptr<AyonApi>
 getAyonApiFromEnv() {
