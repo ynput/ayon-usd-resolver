@@ -198,7 +198,7 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
     std::cout << "[resolver context] No PreCache hit for assetIdentifier: " << assetIdentifier << std::endl;
 
     switch (selectedCache) {
-        case AYONCACHE:
+        case CacheName::AYONCACHE:
             {
                 std::shared_lock<std::shared_mutex> AyonCacheSharedLock(m_AyonCachesharedMutex);
                 hit = m_AyonCache.find(assetIdentifier);
@@ -211,7 +211,7 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
                 break;
             }
 
-        case COMMONCACHE:
+        case CacheName::COMMONCACHE:
             {
                 std::shared_lock<std::shared_mutex> CommonCacheSharedLock(m_CommonCachesharedMutex);
                 hit = m_CommonCache.find(assetIdentifier);
