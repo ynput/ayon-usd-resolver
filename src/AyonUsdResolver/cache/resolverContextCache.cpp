@@ -90,9 +90,7 @@ ResolverContextCache::ResolverContextCache(): m_AyonCache(), m_CommonCache(), m_
 
     const char* enable_static_env_var = std::getenv(ENABLE_STATIC_GLOBAL_CACHE_ENV_KEY);
     if (enable_static_env_var == nullptr || std::strcmp(enable_static_env_var, "false") == 0) {
-        std::cout << "Initializing dynamic ResolverContextCache" << std::endl;
         std::unique_ptr<AyonApi> api = getAyonApiFromEnv();
-        std::cout << "AyonApi instance created inside ResolverContextCache" << std::endl;
         m_ayon.emplace(std::move(api));
 
         this->m_staticCache = false;
@@ -195,8 +193,6 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
     }
     preCacheSharedLock.unlock();
 
-    std::cout << "[resolver context] No PreCache hit for assetIdentifier: " << assetIdentifier << std::endl;
-
     switch (selectedCache) {
         case CacheName::AYONCACHE:
             {
@@ -234,9 +230,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
 
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: No Cache Hit \n");
     if (isAyonPath) {
-        std::cout << "[resolver context] Get from server: " << assetIdentifier << std::endl;
         std::pair<std::string, std::string> resolvedAsset = m_ayon->get()->resolvePath(assetIdentifier);
-
 
         asset.setAssetIdentifier(std::move(resolvedAsset.first));
         asset.setResolvedAssetPath(std::move(resolvedAsset.second));
