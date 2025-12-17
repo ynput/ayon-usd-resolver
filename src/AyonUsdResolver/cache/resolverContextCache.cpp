@@ -27,14 +27,14 @@
 PXR_NAMESPACE_USING_DIRECTIVE
 // TODO pinning file hanlder should construct its cache directly at construction getAssetData should not call
 // rootReplace
-pinningFileHandler::pinningFileHandler(const std::string &pinningFilePath,
+PinningFileHandler::PinningFileHandler(const std::string &pinningFilePath,
                                        const std::unordered_map<std::string, std::string> &rootReplaceData):
     m_pinningFilePath(pinningFilePath),
     m_rootReplaceData(rootReplaceData) {
     std::ifstream pinningFile(this->m_pinningFilePath);
 
     if (!pinningFile.is_open()) {
-        throw std::runtime_error("pinningFileHandler was not able to open PinningFile: "
+        throw std::runtime_error("PinningFileHandler was not able to open PinningFile: "
                                  + this->m_pinningFilePath.string());
     }
 
@@ -65,7 +65,7 @@ pinningFileHandler::pinningFileHandler(const std::string &pinningFilePath,
  * @return populated AssetIdentifier if key was found in pinning file. Empty AssetIdentifier if key was not found
  */
 AssetIdentifier
-pinningFileHandler::getAssetData(const std::string &resolveKey) {
+PinningFileHandler::getAssetData(const std::string &resolveKey) {
     AssetIdentifier assetEntry;
 
     std::string pinnedAssetPath;

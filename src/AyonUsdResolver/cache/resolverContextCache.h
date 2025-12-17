@@ -16,11 +16,11 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 enum class CacheName { AYONCACHE, COMMONCACHE };
 
-class pinningFileHandler {
+class PinningFileHandler {
     public:
-        pinningFileHandler(const std::string &pinningFilePath,
+        PinningFileHandler(const std::string &pinningFilePath,
                            const std::unordered_map<std::string, std::string> &rootReplaceData);
-        ~pinningFileHandler() = default;
+        ~PinningFileHandler() = default;
 
         AssetIdentifier getAssetData(const std::string &resolveKey);
 
