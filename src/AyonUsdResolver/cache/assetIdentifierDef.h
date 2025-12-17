@@ -108,7 +108,7 @@ class AssetIdentifier {
         std::string m_assetIdentifier;
 };
 
-struct AssetIdentHash {
+struct AssetIdentifierHash {
         size_t
         operator()(const AssetIdentifier &instance) const {
             return std::hash<std::string>()(instance.getAssetIdentifier());
