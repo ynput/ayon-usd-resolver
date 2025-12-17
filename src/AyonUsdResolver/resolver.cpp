@@ -99,7 +99,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         for (const AyonUsdResolverContext* ctx: contexts) {
             if (ctx) {
                 AssetIdentifier asset;
-                std::shared_ptr<resolverContextCache> resolverCache = ctx->getCachePtr();
+                std::shared_ptr<ResolverContextCache> resolverCache = ctx->getCachePtr();
                 std::string cleanAssetPath = assetPath;
                 RES_FUNCS_REMOVE_SDF_ARGS(cleanAssetPath);
                 asset = resolverCache->getAsset(cleanAssetPath, CacheName::AYONCACHE, true);
