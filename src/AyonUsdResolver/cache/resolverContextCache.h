@@ -32,14 +32,14 @@ class PinningFileHandler {
 };
 
 /**
- * @class resolverContextCache
+ * @class ResolverContextCache
  * @brief this class handles everything related to asset caching
  *
  */
-class resolverContextCache {
+class ResolverContextCache {
     public:
-        resolverContextCache();
-        ~resolverContextCache();
+        ResolverContextCache();
+        ~ResolverContextCache();
 
         /**
          * @brief move the pair into the preCache by using the move operator it will also check if there
