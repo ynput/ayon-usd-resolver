@@ -13,10 +13,10 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-std::shared_ptr<resolverContextCache> GlobalCache = std::make_shared<resolverContextCache>();
+std::shared_ptr<ResolverContextCache> GlobalCache = std::make_shared<ResolverContextCache>();
 
-// resolverContextCache& GetGlobalResolverContextCache() {
-//     static resolverContextCache instance;   // lazy init on first use
+// ResolverContextCache& GetGlobalResolverContextCache() {
+//     static ResolverContextCache instance;   // lazy init on first use
 //     return instance;
 // }
 
@@ -49,9 +49,9 @@ AyonUsdResolverContext::AyonUsdResolverContext(): cache(std::shared_ptr(GlobalCa
 
 // AyonUsdResolverContext::AyonUsdResolverContext() {
 //     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
-//     cache = std::shared_ptr<resolverContextCache>(
+//     cache = std::shared_ptr<ResolverContextCache>(
 //         &GetGlobalResolverContextCache(),
-//         [](resolverContextCache*) {}  // no-op deleter
+//         [](ResolverContextCache*) {}  // no-op deleter
 //     );
 //     this->Initialize();
 // }
@@ -96,14 +96,14 @@ AyonUsdResolverContext::ClearAndReinitialize() {
 void
 AyonUsdResolverContext::dropCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::dropCache()\n");
-    this->cache = std::make_shared<resolverContextCache>();
+    this->cache = std::make_shared<ResolverContextCache>();
 };
 
 // void AyonUsdResolverContext::dropCache() {
 //     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::dropCache()\n");
-//     cache = std::shared_ptr<resolverContextCache>(
+//     cache = std::shared_ptr<ResolverContextCache>(
 //         &GetGlobalResolverContextCache(),
-//         [](resolverContextCache*) {}
+//         [](ResolverContextCache*) {}
 //     );
 //     cache->clearCache();
 // }
@@ -120,7 +120,7 @@ AyonUsdResolverContext::clearCache() {
     cache->clearCache();
 };
 
-std::shared_ptr<resolverContextCache>
+std::shared_ptr<ResolverContextCache>
 AyonUsdResolverContext::getCachePtr() const {
     return this->cache;
 };
