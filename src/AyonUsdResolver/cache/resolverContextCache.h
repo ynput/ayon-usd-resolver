@@ -9,7 +9,7 @@
 #include <unordered_map>
 
 #include "AyonCppApi.h"
-#include "../cache/assetIdentDef.h"
+#include "../cache/assetIdentifierDef.h"
 #include <nlohmann/json.hpp>
 
 PXR_NAMESPACE_USING_DIRECTIVE
@@ -22,7 +22,7 @@ class pinningFileHandler {
                            const std::unordered_map<std::string, std::string> &rootReplaceData);
         ~pinningFileHandler() = default;
 
-        assetIdent getAssetData(const std::string &resolveKey);
+        AssetIdentifier getAssetData(const std::string &resolveKey);
 
     private:
         std::filesystem::path m_pinningFilePath;
@@ -48,7 +48,7 @@ class resolverContextCache {
          *
          * @param sourcePair the data that you want to add to the cache as an std::pair
          */
-        void insert(assetIdent &sourceAssetIdent);
+        void insert(AssetIdentifier &sourceAssetIdent);
 
         /**
          * @brief move the precache into the AyonCache in order to free the precache
@@ -63,7 +63,7 @@ class resolverContextCache {
          * @param assetIdentifier
          * @return
          */
-        assetIdent getAsset(const std::string &assetIdentifier, const cacheName &selectedCache, const bool &isAyonPath);
+        AssetIdentifier getAsset(const std::string &assetIdentifier, const cacheName &selectedCache, const bool &isAyonPath);
 
         /**
          * @brief set up the cache from a pinning file
@@ -101,9 +101,9 @@ class resolverContextCache {
         bool isCacheStatic() const;
 
     private:
-        std::unordered_set<assetIdent, assetIdentHash> m_PreCache;
-        std::unordered_set<assetIdent, assetIdentHash> m_AyonCache;
-        std::unordered_set<assetIdent, assetIdentHash> m_CommonCache;
+        std::unordered_set<AssetIdentifier, AssetIdentHash> m_PreCache;
+        std::unordered_set<AssetIdentifier, AssetIdentHash> m_AyonCache;
+        std::unordered_set<AssetIdentifier, AssetIdentHash> m_CommonCache;
 
         mutable std::shared_mutex m_PreCachesharedMutex;
         mutable std::shared_mutex m_AyonCachesharedMutex;

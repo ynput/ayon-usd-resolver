@@ -57,16 +57,16 @@ pinningFileHandler::pinningFileHandler(const std::string &pinningFilePath,
 };
 
 /**
- * @brief return assetIdent populated with root rootReplaceData from the pinning file using the pinning file data loaded
+ * @brief return AssetIdentifier populated with root rootReplaceData from the pinning file using the pinning file data loaded
  * at construction and the PROJECT_ROOTS env variable.
- * this is not a cached function it will reconstruct the assetIdent. it will not reload the file or the env var however.
+ * this is not a cached function it will reconstruct the AssetIdentifier. it will not reload the file or the env var however.
  *
  * @param resolveKey UsdAssetIdent
- * @return populated assetIdent if key was found in pinning file. Empty assetIdent if key was not found
+ * @return populated AssetIdentifier if key was found in pinning file. Empty AssetIdentifier if key was not found
  */
-assetIdent
+AssetIdentifier
 pinningFileHandler::getAssetData(const std::string &resolveKey) {
-    assetIdent assetEntry;
+    AssetIdentifier assetEntry;
 
     std::string pinnedAssetPath;
     try {
@@ -121,16 +121,16 @@ resolverContextCache::printCache() const {
     std::cout << "Printing out the Cache Entries \n";
 
     std::cout << "PreCache size: " << this->m_PreCache.size() << "\n";
-    for (const auto &assetIdentInstance: this->m_PreCache) {
-        assetIdentInstance.printInfo();
+    for (const auto &assetIdentifierInstance: this->m_PreCache) {
+        assetIdentifierInstance.printInfo();
     }
     std::cout << "AyonCache size: " << m_AyonCache.size() << "\n";
-    for (const auto &assetIdentInstance: m_AyonCache) {
-        assetIdentInstance.printInfo();
+    for (const auto &assetIdentifierInstance: m_AyonCache) {
+        assetIdentifierInstance.printInfo();
     }
     std::cout << "CommonCache size: " << m_CommonCache.size() << "\n";
-    for (const auto &assetIdentInstance: m_CommonCache) {
-        assetIdentInstance.printInfo();
+    for (const auto &assetIdentifierInstance: m_CommonCache) {
+        assetIdentifierInstance.printInfo();
     }
     std::ostringstream oss;
     oss << static_cast<const void*>(this);
@@ -141,7 +141,7 @@ resolverContextCache::printCache() const {
 };
 
 void
-resolverContextCache::insert(assetIdent &sourceAssetIdent) {
+resolverContextCache::insert(AssetIdentifier &sourceAssetIdent) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
         .Msg("resolverContextCache::insert(%s) \n", sourceAssetIdent.getAssetIdentifier().c_str());
     if (m_PreCache.size() == PRECACHE_SIZE) {
@@ -165,13 +165,13 @@ resolverContextCache::migratePreCacheIntoAyonCache() {
     m_PreCache.clear();
 };
 
-assetIdent
+AssetIdentifier
 resolverContextCache::getAsset(const std::string &assetIdentifier,
                                const cacheName &selectedCache,
                                const bool &isAyonPath) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::getAsset: (%s) \n", assetIdentifier.c_str());
 
-    assetIdent asset;
+    AssetIdentifier asset;
 
     if (assetIdentifier.empty()) {
         return asset;
@@ -180,7 +180,7 @@ resolverContextCache::getAsset(const std::string &assetIdentifier,
         return this->m_pinningFileHandler->getAssetData(assetIdentifier);
     }
 
-    std::unordered_set<assetIdent, assetIdentHash>::iterator hit;
+    std::unordered_set<AssetIdentifier, AssetIdentHash>::iterator hit;
 
     std::shared_lock<std::shared_mutex> PreCachesharedLock(m_PreCachesharedMutex);
     hit = m_PreCache.find(assetIdentifier);
@@ -269,7 +269,7 @@ void
 resolverContextCache::removeCachedObject(const std::string &key) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::removeCachedObject (%s) \n", key.c_str());
 
-    std::unordered_set<assetIdent>::iterator hit;
+    std::unordered_set<AssetIdentifier>::iterator hit;
 
     std::unique_lock<std::shared_mutex> PreCachesharedWriteLock(m_PreCachesharedMutex);
 
@@ -311,7 +311,7 @@ void
 resolverContextCache::removeCachedObject(const std::string &key, const cacheName &selectedCache) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::removeCachedObject (%s) \n", key.c_str());
 
-    std::unordered_set<assetIdent>::iterator hit;
+    std::unordered_set<AssetIdentifier>::iterator hit;
 
     std::unique_lock<std::shared_mutex> PreCachesharedDellLock(m_PreCachesharedMutex);
     hit = m_PreCache.find(key);

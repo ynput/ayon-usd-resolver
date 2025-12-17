@@ -95,21 +95,16 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
     }
 
     if (_IsAyonPath(assetPath)) {
-        std::cout << "Ayon Path detected in Resolver::_Resolve: " << assetPath << std::endl;
         const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
         for (const AyonUsdResolverContext* ctx: contexts) {
-            std::cout << "Trying context in Resolver::_Resolve: " << std::endl;
             if (ctx) {
-                assetIdent asset;
-                std::cout << "Context found in Resolver::_Resolve: " << std::endl;
+                AssetIdentifier asset;
                 std::shared_ptr<resolverContextCache> resolverCache = ctx->getCachePtr();
                 std::string cleanAssetPath = assetPath;
                 RES_FUNCS_REMOVE_SDF_ARGS(cleanAssetPath);
-                std::cout << "Cleaned asset path in Resolver::_Resolve: " << cleanAssetPath << std::endl;
                 asset = resolverCache->getAsset(cleanAssetPath, cacheName::AYONCACHE, true);
 
                 size_t pos = assetPath.find(cleanAssetPath);
-                std::cout << "Position of clean asset path in Resolver::_Resolve: " << pos << std::endl;
                 std::string sdfArgs;
                 if (pos != std::string::npos) {
                     sdfArgs = assetPath.substr(pos + cleanAssetPath.length());
@@ -118,18 +113,12 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
                                                               asset.getResolvedAssetPath().GetPathString() + sdfArgs);
                 
                 if (resolvedPath) {
-                    std::cout << "Resolved path in Resolver::_Resolve: " << resolvedPath.GetPathString() << std::endl;
                     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
                         .Msg("Resolver::_Resolve( '%s' ) resolved \n", resolvedPath.GetPathString().c_str());
                     return resolvedPath;
                 }
-                // std::cout << "No resolved path found in Resolver::_Resolve for context." << std::endl;
-                // TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                //     .Msg("Resolver::_Resolve( '%s' ) wasn't resolved, the AYON URI is incorrect\n", assetPath.c_str());
-                // // DEBUG
-                // ArResolvedPath invalid_path = ArResolvedPath(assetPath);
-                // std::cout << "Returning invalid path in Resolver::_Resolve: " << invalid_path.GetPathString() << std::endl;
-                // // ----------
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                    .Msg("Resolver::_Resolve( '%s' ) wasn't resolved, the AYON URI is incorrect\n", assetPath.c_str());
                 return ArResolvedPath(assetPath);
             }
         }

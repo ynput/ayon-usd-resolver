@@ -7,12 +7,12 @@
 PXR_NAMESPACE_USING_DIRECTIVE
 
 ArResolvedPath
-assetIdent::getResolvedAssetPath() const {
+AssetIdentifier::getResolvedAssetPath() const {
     return m_resolvedAssetPath;
 };
 
 bool
-assetIdent::setResolvedAssetPath(const ArResolvedPath &inResolvedAssetPath) {
+AssetIdentifier::setResolvedAssetPath(const ArResolvedPath &inResolvedAssetPath) {
     if (!this->is_modifiable()) {
         return false;
     }
@@ -20,7 +20,7 @@ assetIdent::setResolvedAssetPath(const ArResolvedPath &inResolvedAssetPath) {
     return true;
 };
 bool
-assetIdent::setResolvedAssetPath(const std::string &inResolvedAssetPath) {
+AssetIdentifier::setResolvedAssetPath(const std::string &inResolvedAssetPath) {
     if (!this->is_modifiable()) {
         return false;
     }
@@ -29,12 +29,12 @@ assetIdent::setResolvedAssetPath(const std::string &inResolvedAssetPath) {
 };
 
 std::string
-assetIdent::getAssetIdentifier() const {
+AssetIdentifier::getAssetIdentifier() const {
     return m_assetIdentifier;
 };
 
 bool
-assetIdent::setAssetIdentifier(const std::string inAssetIdentifier) {
+AssetIdentifier::setAssetIdentifier(const std::string inAssetIdentifier) {
     if (!this->is_modifiable()) {
         return false;
     }
@@ -43,7 +43,7 @@ assetIdent::setAssetIdentifier(const std::string inAssetIdentifier) {
 };
 
 bool
-assetIdent::is_empty() const {
+AssetIdentifier::is_empty() const {
     if (this->m_assetIdentifier.empty() && this->m_resolvedAssetPath.empty()) {
         return true;
     }
@@ -52,12 +52,12 @@ assetIdent::is_empty() const {
 };
 
 bool
-assetIdent::is_valid() const {
+AssetIdentifier::is_valid() const {
     return !this->m_invalidated;
 }
 
 void
-assetIdent::invalidate() {
+AssetIdentifier::invalidate() {
     if (!this->is_modifiable()) {
         return;
     };
@@ -66,7 +66,7 @@ assetIdent::invalidate() {
 };
 
 void
-assetIdent::validate() {
+AssetIdentifier::validate() {
     if (!this->is_modifiable()) {
         return;
     };
@@ -75,12 +75,12 @@ assetIdent::validate() {
 };
 
 bool
-assetIdent::is_modifiable() const {
+AssetIdentifier::is_modifiable() const {
     return !this->m_static;
 };
 
 void
-assetIdent::printInfo() const {
+AssetIdentifier::printInfo() const {
     std::ostringstream oss;
     oss << static_cast<const void*>(this);
     std::cout << "Static; " << this->m_static << " invalidated; " << this->m_invalidated << " AssetIdentifier; "
@@ -90,12 +90,12 @@ assetIdent::printInfo() const {
 };
 
 bool
-assetIdent::operator==(const assetIdent &other) const {
+AssetIdentifier::operator==(const AssetIdentifier &other) const {
     return m_assetIdentifier == other.m_assetIdentifier;
 };
 
-assetIdent &
-assetIdent::operator=(const assetIdent &other) {
+AssetIdentifier &
+AssetIdentifier::operator=(const AssetIdentifier &other) {
     if (this != &other) {
         m_resolvedAssetPath = other.m_resolvedAssetPath;
         m_assetIdentifier = other.m_assetIdentifier;
