@@ -31,10 +31,10 @@ class PinningFileHandler {
         std::unordered_map<std::string, std::string> m_rootReplaceData;
 };
 
+
 /**
  * @class ResolverContextCache
- * @brief this class handles everything related to asset caching
- *
+ * @brief Handles everything related to asset caching
  */
 class ResolverContextCache {
     public:
@@ -42,62 +42,59 @@ class ResolverContextCache {
         ~ResolverContextCache();
 
         /**
-         * @brief move the pair into the preCache by using the move operator it will also check if there
-         * is enough space in the preCache and move the preCache if needed. This function is both locking and blocking
-         * so no access will be granted to ayonCache or preCache for the scope of this function
-         *
-         * @param sourcePair the data that you want to add to the cache as an std::pair
+         * @brief Move the asset into the preCache. Checks space and migrates if needed.
+         * This function is both locking and blocking.
+         * @param sourceAssetIdent The asset data to add to the cache
          */
         void insert(AssetIdentifier &sourceAssetIdent);
 
         /**
-         * @brief move the precache into the AyonCache in order to free the precache
-         *
+         * @brief Move the precache into the AyonCache to free the precache
          */
         void migratePreCacheIntoAyonCache();
 
         /**
-         * @brief return a struct by first searching through the selected CacheName if no cache hit. then the function
-         * will resolve the path against ayon if even that doesn't work it will return an empty path
-         *
-         * @param assetIdentifier
-         * @return
+         * @brief Return an asset by searching the selected cache. If not found, resolve
+         * against AYON. Returns empty path if resolution fails.
+         * @param assetIdentifier The asset URI to resolve
+         * @param selectedCache Which cache to search first
+         * @param isAyonPath Whether this is an AYON URI
+         * @return AssetIdentifier with resolved path
          */
-        AssetIdentifier getAsset(const std::string &assetIdentifier, const CacheName &selectedCache, const bool isAyonPath);
+        AssetIdentifier getAsset(const std::string &assetIdentifier, const CacheName selectedCache, const bool isAyonPath);
 
         /**
-         * @brief set up the cache from a pinning file
-         *
-         * @param pinningFilePath
+         * @brief Set up the cache from a pinning file
+         * @param pinningFilePath Path to the pinning file
          */
         void setCacheFromPinningFile(const std::string &pinningFilePath);
 
         /**
-         * @brief this function allows the deletion of an entry in the cache
-         *
-         * @param key the asset identifier / uri of the usd object.
+         * @brief Delete an entry from the cache
+         * @param key The asset identifier/URI
          */
         void removeCachedObject(const std::string &key);
 
         /**
-         * @brief delete an entry in a selected cache. the PreCache will always we
-         * searched for the entry.
-         *
-         * @param key the asset identifier / uri of the usd object.
-         * @param selectedCache enum that allows you to select the cache (CacheName enum)
+         * @brief Delete an entry from a selected cache. PreCache is always searched.
+         * @param key The asset identifier/URI
+         * @param selectedCache Which cache to remove from
          */
-        void removeCachedObject(const std::string &key, const CacheName &selectedCache);
+        void removeCachedObject(const std::string &key, const CacheName selectedCache);
 
         /**
-         * @brief clear the complete cache
+         * @brief Clear the complete cache
          */
         void clearCache();
 
         /**
-         * @brief print out every object in the cache for debugging
+         * @brief Print every object in the cache for debugging
          */
         void printCache() const;
 
+        /**
+         * @brief Check if cache is static (no dynamic resolution)
+         */
         bool isCacheStatic() const;
 
     private:
