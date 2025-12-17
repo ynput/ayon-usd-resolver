@@ -13,7 +13,7 @@ AssetIdentifier::getResolvedAssetPath() const {
 
 bool
 AssetIdentifier::setResolvedAssetPath(const ArResolvedPath &inResolvedAssetPath) {
-    if (!this->is_modifiable()) {
+    if (!this->isModifiable()) {
         return false;
     }
     this->m_resolvedAssetPath = inResolvedAssetPath;
@@ -21,7 +21,7 @@ AssetIdentifier::setResolvedAssetPath(const ArResolvedPath &inResolvedAssetPath)
 };
 bool
 AssetIdentifier::setResolvedAssetPath(const std::string &inResolvedAssetPath) {
-    if (!this->is_modifiable()) {
+    if (!this->isModifiable()) {
         return false;
     }
     this->m_resolvedAssetPath = ArResolvedPath(inResolvedAssetPath);
@@ -35,7 +35,7 @@ AssetIdentifier::getAssetIdentifier() const {
 
 bool
 AssetIdentifier::setAssetIdentifier(const std::string &inAssetIdentifier) {
-    if (!this->is_modifiable()) {
+    if (!this->isModifiable()) {
         return false;
     }
     this->m_assetIdentifier = inAssetIdentifier;
@@ -43,7 +43,7 @@ AssetIdentifier::setAssetIdentifier(const std::string &inAssetIdentifier) {
 };
 
 bool
-AssetIdentifier::is_empty() const {
+AssetIdentifier::isEmpty() const {
     if (this->m_assetIdentifier.empty() && this->m_resolvedAssetPath.empty()) {
         return true;
     }
@@ -52,13 +52,13 @@ AssetIdentifier::is_empty() const {
 };
 
 bool
-AssetIdentifier::is_valid() const {
+AssetIdentifier::isValid() const {
     return !this->m_invalidated;
-}
+};
 
 void
 AssetIdentifier::invalidate() {
-    if (!this->is_modifiable()) {
+    if (!this->isModifiable()) {
         return;
     };
 
@@ -67,7 +67,7 @@ AssetIdentifier::invalidate() {
 
 void
 AssetIdentifier::validate() {
-    if (!this->is_modifiable()) {
+    if (!this->isModifiable()) {
         return;
     };
 
@@ -75,7 +75,7 @@ AssetIdentifier::validate() {
 };
 
 bool
-AssetIdentifier::is_modifiable() const {
+AssetIdentifier::isModifiable() const {
     return !this->m_static;
 };
 

@@ -53,7 +53,7 @@ class AssetIdentifier {
          * @param inAssetIdentifier
          * @return
          */
-        bool setAssetIdentifier(const std::string &inAssetIdentifier);
+        bool setAssetIdentifier(const std::string inAssetIdentifier);
 
         /**
          * @brief can be used to know if given AssetIdentifier has data in it
@@ -108,7 +108,7 @@ class AssetIdentifier {
         std::string m_assetIdentifier;
 };
 
-struct AssetIdentifierHash {
+struct AssetIdentHash {
         size_t
         operator()(const AssetIdentifier &instance) const {
             return std::hash<std::string>()(instance.getAssetIdentifier());

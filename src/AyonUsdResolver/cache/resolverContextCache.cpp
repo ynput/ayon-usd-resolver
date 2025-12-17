@@ -221,7 +221,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
                 break;
             }
     }
-    if (!asset.is_empty()) {
+    if (!asset.isEmpty()) {
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("ResolverContextCache::getAsset: Cache Hit with (%s) with (%s) \n", asset.getAssetIdentifier().c_str(),
                  asset.getResolvedAssetPath().GetPathString().c_str());
