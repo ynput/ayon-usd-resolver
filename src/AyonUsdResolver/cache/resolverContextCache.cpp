@@ -31,11 +31,11 @@ PinningFileHandler::PinningFileHandler(const std::string &pinningFilePath,
                                        const std::unordered_map<std::string, std::string> &rootReplaceData):
     m_pinningFilePath(pinningFilePath),
     m_rootReplaceData(rootReplaceData) {
-    std::ifstream pinningFile(this->m_pinningFilePath);
+    std::ifstream pinningFile(m_pinningFilePath);
 
     if (!pinningFile.is_open()) {
         throw std::runtime_error("PinningFileHandler was not able to open PinningFile: "
-                                 + this->m_pinningFilePath.string());
+                                 + m_pinningFilePath.string());
     }
 
     nlohmann::json raw_pinning_file;
@@ -50,9 +50,9 @@ PinningFileHandler::PinningFileHandler(const std::string &pinningFilePath,
     pinningData.erase("ayon_pinning_data_entry_scene");
 
     for (auto &entry: pinningData.items()) {
-        std::string pathed_key = ynput::tool::ayon::rootReplace(entry.key(), this->m_rootReplaceData);
-        std::string pathed_val = ynput::tool::ayon::rootReplace(entry.value(), this->m_rootReplaceData);
-        this->m_pinningFileData[pathed_key] = pathed_val;
+        std::string pathed_key = ynput::tool::ayon::rootReplace(entry.key(), m_rootReplaceData);
+        std::string pathed_val = ynput::tool::ayon::rootReplace(entry.value(), m_rootReplaceData);
+        m_pinningFileData[pathed_key] = pathed_val;
     }
 };
 
@@ -70,7 +70,7 @@ PinningFileHandler::getAssetData(const std::string &resolveKey) {
 
     std::string pinnedAssetPath;
     try {
-        pinnedAssetPath = this->m_pinningFileData.at(resolveKey);
+        pinnedAssetPath = m_pinningFileData.at(resolveKey);
     }
     catch (const nlohmann::json::out_of_range &e) {
         return assetEntry;
@@ -93,13 +93,13 @@ ResolverContextCache::ResolverContextCache(): m_AyonCache(), m_CommonCache(), m_
         std::unique_ptr<AyonApi> api = getAyonApiFromEnv();
         m_ayon.emplace(std::move(api));
 
-        this->m_staticCache = false;
+        m_staticCache = false;
     }
     else {
         std::map<std::string, std::string> projectRootsEnvMap = ynput::core::iostd::getEnvMap(PROJECT_ROOTS_ENV_KEY);
         std::unordered_map<std::string, std::string> projectRootsEnvUMap(
             std::make_move_iterator(projectRootsEnvMap.begin()), std::make_move_iterator(projectRootsEnvMap.end()));
-        this->m_pinningFileHandler.emplace(ynput::core::iostd::getEnvKey(PINNING_FILE_PATH_ENV_KEY),
+        m_pinningFileHandler.emplace(ynput::core::iostd::getEnvKey(PINNING_FILE_PATH_ENV_KEY),
                                            projectRootsEnvUMap);
     }
 };
@@ -113,13 +113,13 @@ void
 ResolverContextCache::printCache() const {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::printCache \n");
 
-    std::shared_lock<std::shared_mutex> PreCacheReadLock(this->m_PreCacheSharedMutex);
-    std::shared_lock<std::shared_mutex> AyonCacheReadLock(this->m_AyonCacheSharedMutex);
-    std::shared_lock<std::shared_mutex> CommonCacheReadLock(this->m_CommonCacheSharedMutex);
+    std::shared_lock<std::shared_mutex> PreCacheReadLock(m_PreCacheSharedMutex);
+    std::shared_lock<std::shared_mutex> AyonCacheReadLock(m_AyonCacheSharedMutex);
+    std::shared_lock<std::shared_mutex> CommonCacheReadLock(m_CommonCacheSharedMutex);
     std::cout << "Printing out the Cache Entries \n";
 
-    std::cout << "PreCache size: " << this->m_PreCache.size() << "\n";
-    for (const auto &assetIdentifierInstance: this->m_PreCache) {
+    std::cout << "PreCache size: " << m_PreCache.size() << "\n";
+    for (const auto &assetIdentifierInstance: m_PreCache) {
         assetIdentifierInstance.printInfo();
     }
     std::cout << "AyonCache size: " << m_AyonCache.size() << "\n";
@@ -146,17 +146,17 @@ ResolverContextCache::insert(AssetIdentifier &sourceAssetIdent) {
         migratePreCacheIntoAyonCache();
     }
 
-    std::unique_lock<std::shared_mutex> PreCacheWriteLock(this->m_PreCacheSharedMutex);
-    std::unique_lock<std::shared_mutex> AyonCacheWriteLock(this->m_AyonCacheSharedMutex);
+    std::unique_lock<std::shared_mutex> PreCacheWriteLock(m_PreCacheSharedMutex);
+    std::unique_lock<std::shared_mutex> AyonCacheWriteLock(m_AyonCacheSharedMutex);
 
-    this->m_PreCache.insert(std::move(sourceAssetIdent));
+    m_PreCache.insert(std::move(sourceAssetIdent));
 };
 
 void
 ResolverContextCache::migratePreCacheIntoAyonCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::migratePreCacheIntoAyonCache \n");
-    std::unique_lock<std::shared_mutex> PreCacheWriteLock(this->m_PreCacheSharedMutex);
-    std::unique_lock<std::shared_mutex> AyonCacheWriteLock(this->m_AyonCacheSharedMutex);
+    std::unique_lock<std::shared_mutex> PreCacheWriteLock(m_PreCacheSharedMutex);
+    std::unique_lock<std::shared_mutex> AyonCacheWriteLock(m_AyonCacheSharedMutex);
 
     m_AyonCache.reserve(m_AyonCache.size() + m_PreCache.size());
     m_AyonCache.insert(std::make_move_iterator(m_PreCache.begin()), std::make_move_iterator(m_PreCache.end()));
@@ -174,8 +174,8 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
     if (assetIdentifier.empty()) {
         return asset;
     }
-    if (this->m_staticCache) {
-        return this->m_pinningFileHandler->getAssetData(assetIdentifier);
+    if (m_staticCache) {
+        return m_pinningFileHandler->getAssetData(assetIdentifier);
     }
 
     std::unordered_set<AssetIdentifier, AssetIdentifierHash>::iterator hit;
@@ -367,5 +367,5 @@ ResolverContextCache::clearCache() {
 
 bool
 ResolverContextCache::isCacheStatic() const {
-    return this->m_staticCache;
+    return m_staticCache;
 };
