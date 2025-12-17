@@ -34,7 +34,7 @@ AssetIdentifier::getAssetIdentifier() const {
 };
 
 bool
-AssetIdentifier::setAssetIdentifier(const std::string inAssetIdentifier) {
+AssetIdentifier::setAssetIdentifier(const std::string &inAssetIdentifier) {
     if (!this->is_modifiable()) {
         return false;
     }

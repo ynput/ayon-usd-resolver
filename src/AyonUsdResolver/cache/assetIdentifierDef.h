@@ -53,7 +53,7 @@ class AssetIdentifier {
          * @param inAssetIdentifier
          * @return
          */
-        bool setAssetIdentifier(const std::string inAssetIdentifier);
+        bool setAssetIdentifier(const std::string &inAssetIdentifier);
 
         /**
          * @brief can be used to know if given AssetIdentifier has data in it
