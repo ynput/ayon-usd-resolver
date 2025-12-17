@@ -15,6 +15,11 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 std::shared_ptr<resolverContextCache> GlobalCache = std::make_shared<resolverContextCache>();
 
+// resolverContextCache& GetGlobalResolverContextCache() {
+//     static resolverContextCache instance;   // lazy init on first use
+//     return instance;
+// }
+
 bool
 getStringEndswithString(const std::string &value, const std::string &compareValue) {
     if (compareValue.size() > value.size()) {
@@ -37,9 +42,19 @@ getStringEndswithStrings(const std::string &value, const std::vector<std::string
 }
 
 AyonUsdResolverContext::AyonUsdResolverContext(): cache(std::shared_ptr(GlobalCache)) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Build timestamp: {} {}\n", __DATE__, __TIME__);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
     this->Initialize();
 }
+
+// AyonUsdResolverContext::AyonUsdResolverContext() {
+//     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
+//     cache = std::shared_ptr<resolverContextCache>(
+//         &GetGlobalResolverContextCache(),
+//         [](resolverContextCache*) {}  // no-op deleter
+//     );
+//     this->Initialize();
+// }
 
 AyonUsdResolverContext::AyonUsdResolverContext(const AyonUsdResolverContext &ctx) = default;
 
@@ -83,6 +98,15 @@ AyonUsdResolverContext::dropCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::dropCache()\n");
     this->cache = std::make_shared<resolverContextCache>();
 };
+
+// void AyonUsdResolverContext::dropCache() {
+//     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::dropCache()\n");
+//     cache = std::shared_ptr<resolverContextCache>(
+//         &GetGlobalResolverContextCache(),
+//         [](resolverContextCache*) {}
+//     );
+//     cache->clearCache();
+// }
 
 void
 AyonUsdResolverContext::deleteFromCache(const std::string &key) {
