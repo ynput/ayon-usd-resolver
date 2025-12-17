@@ -112,7 +112,7 @@ class resolverContextCache {
         std::optional<std::unique_ptr<AyonApi>> m_ayon;
         bool m_static_cache;
 
-        std::optional<pinningFileHandler> m_pinningFileHandler;
+        std::optional<PinningFileHandler> m_pinningFileHandler;
 };
 
 #endif   // AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
