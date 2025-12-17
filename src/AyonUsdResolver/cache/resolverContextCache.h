@@ -14,7 +14,7 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-enum cacheName { AYONCACHE, COMMONCACHE };
+enum class CacheName { AYONCACHE, COMMONCACHE };
 
 class pinningFileHandler {
     public:
@@ -57,13 +57,13 @@ class resolverContextCache {
         void migratePreCacheIntoAyonCache();
 
         /**
-         * @brief return a struct by first searching through the selected cacheName if no cache hit. then the function
+         * @brief return a struct by first searching through the selected CacheName if no cache hit. then the function
          * will resolve the path against ayon if even that doesn't work it will return an empty path
          *
          * @param assetIdentifier
          * @return
          */
-        AssetIdentifier getAsset(const std::string &assetIdentifier, const cacheName &selectedCache, const bool &isAyonPath);
+        AssetIdentifier getAsset(const std::string &assetIdentifier, const CacheName &selectedCache, const bool &isAyonPath);
 
         /**
          * @brief set up the cache from a pinning file
@@ -84,9 +84,9 @@ class resolverContextCache {
          * searched for the entry.
          *
          * @param key the asset identifier / uri of the usd object.
-         * @param selectedCache enum that allows you to select the cache (cacheName enum)
+         * @param selectedCache enum that allows you to select the cache (CacheName enum)
          */
-        void removeCachedObject(const std::string &key, const cacheName &selectedCache);
+        void removeCachedObject(const std::string &key, const CacheName &selectedCache);
 
         /**
          * @brief clear the complete cache

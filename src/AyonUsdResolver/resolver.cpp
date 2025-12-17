@@ -102,7 +102,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
                 std::shared_ptr<resolverContextCache> resolverCache = ctx->getCachePtr();
                 std::string cleanAssetPath = assetPath;
                 RES_FUNCS_REMOVE_SDF_ARGS(cleanAssetPath);
-                asset = resolverCache->getAsset(cleanAssetPath, cacheName::AYONCACHE, true);
+                asset = resolverCache->getAsset(cleanAssetPath, CacheName::AYONCACHE, true);
 
                 size_t pos = assetPath.find(cleanAssetPath);
                 std::string sdfArgs;

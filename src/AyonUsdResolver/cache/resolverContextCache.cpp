@@ -167,7 +167,7 @@ resolverContextCache::migratePreCacheIntoAyonCache() {
 
 AssetIdentifier
 resolverContextCache::getAsset(const std::string &assetIdentifier,
-                               const cacheName &selectedCache,
+                               const CacheName &selectedCache,
                                const bool &isAyonPath) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::getAsset: (%s) \n", assetIdentifier.c_str());
 
@@ -308,7 +308,7 @@ resolverContextCache::removeCachedObject(const std::string &key) {
 };
 
 void
-resolverContextCache::removeCachedObject(const std::string &key, const cacheName &selectedCache) {
+resolverContextCache::removeCachedObject(const std::string &key, const CacheName &selectedCache) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("resolverContextCache::removeCachedObject (%s) \n", key.c_str());
 
     std::unordered_set<AssetIdentifier>::iterator hit;
