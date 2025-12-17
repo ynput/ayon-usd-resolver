@@ -63,7 +63,7 @@ class ResolverContextCache {
          * @param assetIdentifier
          * @return
          */
-        AssetIdentifier getAsset(const std::string &assetIdentifier, const CacheName &selectedCache, const bool &isAyonPath);
+        AssetIdentifier getAsset(const std::string &assetIdentifier, const CacheName &selectedCache, const bool isAyonPath);
 
         /**
          * @brief set up the cache from a pinning file
@@ -105,12 +105,12 @@ class ResolverContextCache {
         std::unordered_set<AssetIdentifier, AssetIdentifierHash> m_AyonCache;
         std::unordered_set<AssetIdentifier, AssetIdentifierHash> m_CommonCache;
 
-        mutable std::shared_mutex m_PreCachesharedMutex;
-        mutable std::shared_mutex m_AyonCachesharedMutex;
-        mutable std::shared_mutex m_CommonCachesharedMutex;
+        mutable std::shared_mutex m_PreCacheSharedMutex;
+        mutable std::shared_mutex m_AyonCacheSharedMutex;
+        mutable std::shared_mutex m_CommonCacheSharedMutex;
 
         std::optional<std::unique_ptr<AyonApi>> m_ayon;
-        bool m_static_cache;
+        bool m_staticCache;
 
         std::optional<PinningFileHandler> m_pinningFileHandler;
 };

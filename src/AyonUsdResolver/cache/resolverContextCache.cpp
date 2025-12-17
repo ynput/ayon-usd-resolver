@@ -84,7 +84,7 @@ PinningFileHandler::getAssetData(const std::string &resolveKey) {
     return assetEntry;
 };
 
-ResolverContextCache::ResolverContextCache(): m_AyonCache(), m_CommonCache(), m_PreCache(), m_static_cache(true) {
+ResolverContextCache::ResolverContextCache(): m_AyonCache(), m_CommonCache(), m_PreCache(), m_staticCache(true) {
     m_PreCache.reserve(PRECACHE_SIZE);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::ResolverContextCache() \n");
 
@@ -95,7 +95,7 @@ ResolverContextCache::ResolverContextCache(): m_AyonCache(), m_CommonCache(), m_
         std::cout << "AyonApi instance created inside ResolverContextCache" << std::endl;
         m_ayon.emplace(std::move(api));
 
-        this->m_static_cache = false;
+        this->m_staticCache = false;
     }
     else {
         std::map<std::string, std::string> projectRootsEnvMap = ynput::core::iostd::getEnvMap(PROJECT_ROOTS_ENV_KEY);
@@ -115,9 +115,9 @@ void
 ResolverContextCache::printCache() const {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::printCache \n");
 
-    std::shared_lock<std::shared_mutex> PreCacheReadLock(this->m_PreCachesharedMutex);
-    std::shared_lock<std::shared_mutex> AyonCacheReadLock(this->m_AyonCachesharedMutex);
-    std::shared_lock<std::shared_mutex> CommonCacheReadLock(this->m_CommonCachesharedMutex);
+    std::shared_lock<std::shared_mutex> PreCacheReadLock(this->m_PreCacheSharedMutex);
+    std::shared_lock<std::shared_mutex> AyonCacheReadLock(this->m_AyonCacheSharedMutex);
+    std::shared_lock<std::shared_mutex> CommonCacheReadLock(this->m_CommonCacheSharedMutex);
     std::cout << "Printing out the Cache Entries \n";
 
     std::cout << "PreCache size: " << this->m_PreCache.size() << "\n";
@@ -148,8 +148,8 @@ ResolverContextCache::insert(AssetIdentifier &sourceAssetIdent) {
         migratePreCacheIntoAyonCache();
     }
 
-    std::unique_lock<std::shared_mutex> PreCacheWriteLock(this->m_PreCachesharedMutex);
-    std::unique_lock<std::shared_mutex> AyonCacheWriteLock(this->m_AyonCachesharedMutex);
+    std::unique_lock<std::shared_mutex> PreCacheWriteLock(this->m_PreCacheSharedMutex);
+    std::unique_lock<std::shared_mutex> AyonCacheWriteLock(this->m_AyonCacheSharedMutex);
 
     this->m_PreCache.insert(std::move(sourceAssetIdent));
 };
@@ -157,8 +157,8 @@ ResolverContextCache::insert(AssetIdentifier &sourceAssetIdent) {
 void
 ResolverContextCache::migratePreCacheIntoAyonCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::migratePreCacheIntoAyonCache \n");
-    std::unique_lock<std::shared_mutex> PreCacheWriteLock(this->m_PreCachesharedMutex);
-    std::unique_lock<std::shared_mutex> AyonCacheWriteLock(this->m_AyonCachesharedMutex);
+    std::unique_lock<std::shared_mutex> PreCacheWriteLock(this->m_PreCacheSharedMutex);
+    std::unique_lock<std::shared_mutex> AyonCacheWriteLock(this->m_AyonCacheSharedMutex);
 
     m_AyonCache.reserve(m_AyonCache.size() + m_PreCache.size());
     m_AyonCache.insert(std::make_move_iterator(m_PreCache.begin()), std::make_move_iterator(m_PreCache.end()));
@@ -168,7 +168,7 @@ ResolverContextCache::migratePreCacheIntoAyonCache() {
 AssetIdentifier
 ResolverContextCache::getAsset(const std::string &assetIdentifier,
                                const CacheName &selectedCache,
-                               const bool &isAyonPath) {
+                               const bool isAyonPath) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: (%s) \n", assetIdentifier.c_str());
 
     AssetIdentifier asset;
@@ -176,13 +176,13 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
     if (assetIdentifier.empty()) {
         return asset;
     }
-    if (this->m_static_cache) {
+    if (this->m_staticCache) {
         return this->m_pinningFileHandler->getAssetData(assetIdentifier);
     }
 
     std::unordered_set<AssetIdentifier, AssetIdentifierHash>::iterator hit;
 
-    std::shared_lock<std::shared_mutex> PreCachesharedLock(m_PreCachesharedMutex);
+    std::shared_lock<std::shared_mutex> PreCachesharedLock(m_PreCacheSharedMutex);
     hit = m_PreCache.find(assetIdentifier);
     if (hit != m_PreCache.end()) {
         asset = *hit;
@@ -200,7 +200,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
     switch (selectedCache) {
         case CacheName::AYONCACHE:
             {
-                std::shared_lock<std::shared_mutex> AyonCacheSharedLock(m_AyonCachesharedMutex);
+                std::shared_lock<std::shared_mutex> AyonCacheSharedLock(m_AyonCacheSharedMutex);
                 hit = m_AyonCache.find(assetIdentifier);
                 if (hit != m_AyonCache.end()) {
                     asset = *hit;
@@ -213,7 +213,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
 
         case CacheName::COMMONCACHE:
             {
-                std::shared_lock<std::shared_mutex> CommonCacheSharedLock(m_CommonCachesharedMutex);
+                std::shared_lock<std::shared_mutex> CommonCacheSharedLock(m_CommonCacheSharedMutex);
                 hit = m_CommonCache.find(assetIdentifier);
                 if (hit != m_CommonCache.end()) {
                     asset = *hit;
@@ -254,7 +254,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
         if (!asset.getResolvedAssetPath().empty()) {
             asset.setAssetIdentifier(assetIdentifier);
 
-            std::shared_lock<std::shared_mutex> CommonCacheSharedLock(m_CommonCachesharedMutex);
+            std::shared_lock<std::shared_mutex> CommonCacheSharedLock(m_CommonCacheSharedMutex);
 
             TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
                 .Msg("ResolverContextCache::getAsset: insert into CommonCache \n");
@@ -271,7 +271,7 @@ ResolverContextCache::removeCachedObject(const std::string &key) {
 
     std::unordered_set<AssetIdentifier>::iterator hit;
 
-    std::unique_lock<std::shared_mutex> PreCachesharedWriteLock(m_PreCachesharedMutex);
+    std::unique_lock<std::shared_mutex> PreCachesharedWriteLock(m_PreCacheSharedMutex);
 
     hit = m_PreCache.find(key);
     if (hit != m_PreCache.end()) {
@@ -282,7 +282,7 @@ ResolverContextCache::removeCachedObject(const std::string &key) {
         return;
     }
 
-    std::unique_lock<std::shared_mutex> AyonCachesharedWriteLock(m_AyonCachesharedMutex);
+    std::unique_lock<std::shared_mutex> AyonCachesharedWriteLock(m_AyonCacheSharedMutex);
 
     hit = m_AyonCache.find(key);
     if (hit != m_AyonCache.end()) {
@@ -293,7 +293,7 @@ ResolverContextCache::removeCachedObject(const std::string &key) {
         return;
     }
 
-    std::unique_lock<std::shared_mutex> CommonCachesharedWriteLock(m_CommonCachesharedMutex);
+    std::unique_lock<std::shared_mutex> CommonCachesharedWriteLock(m_CommonCacheSharedMutex);
     hit = m_CommonCache.find(key);
     if (hit != m_CommonCache.end()) {
         m_CommonCache.erase(hit);
@@ -313,7 +313,7 @@ ResolverContextCache::removeCachedObject(const std::string &key, const CacheName
 
     std::unordered_set<AssetIdentifier>::iterator hit;
 
-    std::unique_lock<std::shared_mutex> PreCachesharedDellLock(m_PreCachesharedMutex);
+    std::unique_lock<std::shared_mutex> PreCachesharedDellLock(m_PreCacheSharedMutex);
     hit = m_PreCache.find(key);
     if (hit != m_PreCache.end()) {
         m_PreCache.erase(hit);
@@ -327,7 +327,7 @@ ResolverContextCache::removeCachedObject(const std::string &key, const CacheName
         switch (selectedCache) {
             case CacheName::AYONCACHE:
                 {
-                    std::unique_lock<std::shared_mutex> AyonCachesharedDellLock(m_AyonCachesharedMutex);
+                    std::unique_lock<std::shared_mutex> AyonCachesharedDellLock(m_AyonCacheSharedMutex);
 
                     hit = m_AyonCache.find(key);
                     if (hit != m_AyonCache.end()) {
@@ -341,7 +341,7 @@ ResolverContextCache::removeCachedObject(const std::string &key, const CacheName
                 }
             case CacheName::COMMONCACHE:
                 {
-                    std::unique_lock<std::shared_mutex> CommonCachesharedDellLock(m_CommonCachesharedMutex);
+                    std::unique_lock<std::shared_mutex> CommonCachesharedDellLock(m_CommonCacheSharedMutex);
                     hit = m_CommonCache.find(key);
                     if (hit != m_CommonCache.end()) {
                         m_CommonCache.erase(hit);
@@ -363,9 +363,9 @@ void
 ResolverContextCache::clearCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::clearCache \n");
 
-    std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(m_PreCachesharedMutex);
-    std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(m_AyonCachesharedMutex);
-    std::unique_lock<std::shared_mutex> CommonCachesharedMutexLock(m_CommonCachesharedMutex);
+    std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(m_PreCacheSharedMutex);
+    std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(m_AyonCacheSharedMutex);
+    std::unique_lock<std::shared_mutex> CommonCachesharedMutexLock(m_CommonCacheSharedMutex);
     m_CommonCache.clear();
     m_AyonCache.clear();
     m_PreCache.clear();
@@ -373,5 +373,5 @@ ResolverContextCache::clearCache() {
 
 bool
 ResolverContextCache::isCacheStatic() const {
-    return this->m_static_cache;
+    return this->m_staticCache;
 };
