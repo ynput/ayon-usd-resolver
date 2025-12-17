@@ -41,16 +41,30 @@ AYON compatible entity URIs through the
 
 ### Tested Platforms:
 
-- Alma Linux 9
+- Rocky 9 Linux
+  - Hou 21.0.512
+  - Maya 2026 (UsdAddon_0.25.5)
+
+Run build (Houdini):
+```
+python build_resolver.py --dcc houdini --dcc-root "houdini/installation/location" --clean --zip
+```
+or see the help:
+```
+python build_resolver.py --help
+```
+
+
+~~- Alma Linux 9
   - Hou 19.5.805
   - Hou 19.5.900
   - Hou 20.0.590
   - Hou 20.0.630
   - Maya 2024.2(UsdAddon_0.25.0)
   - Unreal5.4
-  - AyonUsd23_5_py39 (System Python install)
+  - AyonUsd23_5_py39 (System Python install)~~
 
-- Windows 10
+~~- Windows 10
   - Hou 19.5.805
   - Hou 19.5.900
   - Hou 20.0.590
@@ -58,7 +72,7 @@ AYON compatible entity URIs through the
   - AyonUsd23_5_py39 (Pyenv-Win)
   - Maya2024_2
   - Maya2025_2
-  - Unreal5_4
+  - Unreal5_4~~
 
 ## Download the repo and its submodules:
 
