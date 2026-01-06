@@ -1,30 +1,23 @@
-#include <iostream>
-#include <ostream>
-#include <string>
-
-#define CONVERT_STRING(string) #string
-#define DEFINE_STRING(string)  CONVERT_STRING(string)
-
 #include "resolver.h"
 #include "resolverContext.h"
 #include "codes/debugCodes.h"
 #include "cache/resolverContextCache.h"
 #include "helpers/resolutionFunctions.h"
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
+#include <pxr/base/arch/systemInfo.h>
+#include <pxr/base/tf/pathUtils.h>
+#include <pxr/base/tf/debug.h>
+#include <pxr/usd/ar/resolverContext.h>
+#include <pxr/usd/ar/writableAsset.h>
+#include <pxr/usd/ar/resolvedPath.h>
+#include <pxr/usd/ar/defineResolver.h>
+#include <pxr/usd/ar/filesystemAsset.h>
+#include <pxr/usd/ar/filesystemWritableAsset.h>
+#include <pxr/usd/ar/notice.h>
 
-#include "pxr/base/arch/systemInfo.h"
-
-#include "pxr/base/tf/pathUtils.h"
-#include "pxr/base/tf/debug.h"
-
-#include "pxr/usd/ar/resolverContext.h"
-#include "pxr/usd/ar/writableAsset.h"
-#include "pxr/usd/ar/resolvedPath.h"
-#include "pxr/usd/ar/defineResolver.h"
-#include "pxr/usd/ar/filesystemAsset.h"
-#include "pxr/usd/ar/filesystemWritableAsset.h"
-#include "pxr/usd/ar/notice.h"
+#include <sstream>
+#include <string>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -38,7 +31,7 @@ AyonUsdResolver::~AyonUsdResolver() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
         .Msg("Resolver::~AyonUsdResolver(M_ADD: '%s', M_SIZE: '%s' bytes)\n", oss.str().c_str(),
              std::to_string(sizeof(*this)).c_str());
-};
+}
 
 std::string
 AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolvedPath &anchorAssetPath) const {
@@ -50,7 +43,7 @@ AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolve
     }
 
     if (_IsAyonPath(assetPath)) {
-        return _Resolve(assetPath);
+        return _Resolve(assetPath).GetPathString();
     }
     if (!anchorAssetPath) {
         return TfNormPath(assetPath);
@@ -76,7 +69,7 @@ AyonUsdResolver::_CreateIdentifierForNewAsset(const std::string &assetPath,
     }
 
     if (_IsAyonPath(assetPath)) {
-        return _Resolve(assetPath);
+        return _Resolve(assetPath).GetPathString();
     }
 
     if (_IsRelativePath(assetPath)) {
@@ -100,6 +93,12 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
             if (ctx) {
                 AssetIdentifier asset;
                 std::shared_ptr<ResolverContextCache> resolverCache = ctx->getCachePtr();
+                if (!resolverCache) {
+                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                        .Msg("Resolver::_Resolve: Context has no cache, skipping\n");
+                    continue;
+                }
+
                 std::string cleanAssetPath = assetPath;
                 RES_FUNCS_REMOVE_SDF_ARGS(cleanAssetPath);
                 asset = resolverCache->getAsset(cleanAssetPath, CacheName::AYONCACHE, true);
@@ -109,19 +108,23 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
                 if (pos != std::string::npos) {
                     sdfArgs = assetPath.substr(pos + cleanAssetPath.length());
                 }
-                ArResolvedPath resolvedPath(sdfArgs.empty() ? asset.getResolvedAssetPath() :
-                                                              asset.getResolvedAssetPath().GetPathString() + sdfArgs);
+                std::string resolvedPathStr = asset.getResolvedAssetPath().GetPathString() + sdfArgs;
+                ArResolvedPath resolvedPath(resolvedPathStr);
                 
                 if (resolvedPath) {
                     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
                         .Msg("Resolver::_Resolve( '%s' ) resolved \n", resolvedPath.GetPathString().c_str());
                     return resolvedPath;
                 }
+
                 TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                    .Msg("Resolver::_Resolve( '%s' ) wasn't resolved, the AYON URI is incorrect\n", assetPath.c_str());
-                return ArResolvedPath(assetPath);
+                    .Msg("Resolver::_Resolve( '%s' ) not found in this context, trying next\n", assetPath.c_str());
             }
         }
+
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                .Msg("Resolver::_Resolve( '%s' ) AYON URI could not be resolved\n", assetPath.c_str());
+        return ArResolvedPath(assetPath);
     }
 
     if (_IsRelativePath(assetPath)) {
@@ -205,6 +208,6 @@ AyonUsdResolver::_GetCurrentContextPtr() const {
 const AyonUsdResolverContext*
 AyonUsdResolver::GetConnectedContext() const {
     return &_fallbackContext;
-};
+}
 
 PXR_NAMESPACE_CLOSE_SCOPE
