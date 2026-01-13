@@ -26,11 +26,8 @@ AR_DEFINE_RESOLVER(AyonUsdResolver, ArResolver);
 AyonUsdResolver::AyonUsdResolver() = default;
 
 AyonUsdResolver::~AyonUsdResolver() {
-    std::ostringstream oss;
-    oss << static_cast<const void*>(this);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-        .Msg("Resolver::~AyonUsdResolver(M_ADD: '%s', M_SIZE: '%s' bytes)\n", oss.str().c_str(),
-             std::to_string(sizeof(*this)).c_str());
+        .Msg("Resolver::~AyonUsdResolver() (size: %zu bytes)\n", sizeof(*this));
 }
 
 std::string
@@ -90,36 +87,40 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
     if (_IsAyonPath(assetPath)) {
         const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
         for (const AyonUsdResolverContext* ctx: contexts) {
-            if (ctx) {
-                AssetIdentifier asset;
-                std::shared_ptr<ResolverContextCache> resolverCache = ctx->getCachePtr();
-                if (!resolverCache) {
-                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                        .Msg("Resolver::_Resolve: Context has no cache, skipping\n");
-                    continue;
-                }
-
-                std::string cleanAssetPath = assetPath;
-                RES_FUNCS_REMOVE_SDF_ARGS(cleanAssetPath);
-                asset = resolverCache->getAsset(cleanAssetPath, CacheName::AYONCACHE, true);
-
-                size_t pos = assetPath.find(cleanAssetPath);
-                std::string sdfArgs;
-                if (pos != std::string::npos) {
-                    sdfArgs = assetPath.substr(pos + cleanAssetPath.length());
-                }
-                std::string resolvedPathStr = asset.getResolvedAssetPath().GetPathString() + sdfArgs;
-                ArResolvedPath resolvedPath(resolvedPathStr);
-                
-                if (resolvedPath) {
-                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                        .Msg("Resolver::_Resolve( '%s' ) resolved \n", resolvedPath.GetPathString().c_str());
-                    return resolvedPath;
-                }
-
+            if (!ctx) {
                 TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                    .Msg("Resolver::_Resolve( '%s' ) not found in this context, trying next\n", assetPath.c_str());
+                    .Msg("Resolver::_Resolve: Context is null, skipping\n");
+                continue;
             }
+
+            std::shared_ptr<ResolverContextCache> resolverCache = ctx->getCachePtr();
+            if (!resolverCache) {
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                    .Msg("Resolver::_Resolve: Context has no cache, skipping\n");
+                continue;
+            }
+
+            AssetIdentifier asset;
+            std::string cleanAssetPath = assetPath;
+            RES_FUNCS_REMOVE_SDF_ARGS(cleanAssetPath);
+            asset = resolverCache->getAsset(cleanAssetPath, CacheName::AYONCACHE, true);
+
+            size_t pos = assetPath.find(cleanAssetPath);
+            std::string sdfArgs;
+            if (pos != std::string::npos) {
+                sdfArgs = assetPath.substr(pos + cleanAssetPath.length());
+            }
+            std::string resolvedPathStr = asset.getResolvedAssetPath().GetPathString() + sdfArgs;
+            ArResolvedPath resolvedPath(resolvedPathStr);
+            
+            if (resolvedPath) {
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                    .Msg("Resolver::_Resolve( '%s' ) resolved \n", resolvedPath.GetPathString().c_str());
+                return resolvedPath;
+            }
+
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                .Msg("Resolver::_Resolve( '%s' ) not found in this context, trying next\n", assetPath.c_str());
         }
 
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
