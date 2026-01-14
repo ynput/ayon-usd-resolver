@@ -1,30 +1,23 @@
-#include <iostream>
-#include <ostream>
-#include <string>
-
-#define CONVERT_STRING(string) #string
-#define DEFINE_STRING(string)  CONVERT_STRING(string)
-
 #include "resolver.h"
 #include "resolverContext.h"
 #include "codes/debugCodes.h"
 #include "cache/resolverContextCache.h"
 #include "helpers/resolutionFunctions.h"
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
+#include <pxr/base/arch/systemInfo.h>
+#include <pxr/base/tf/pathUtils.h>
+#include <pxr/base/tf/debug.h>
+#include <pxr/usd/ar/resolverContext.h>
+#include <pxr/usd/ar/writableAsset.h>
+#include <pxr/usd/ar/resolvedPath.h>
+#include <pxr/usd/ar/defineResolver.h>
+#include <pxr/usd/ar/filesystemAsset.h>
+#include <pxr/usd/ar/filesystemWritableAsset.h>
+#include <pxr/usd/ar/notice.h>
 
-#include "pxr/base/arch/systemInfo.h"
-
-#include "pxr/base/tf/pathUtils.h"
-#include "pxr/base/tf/debug.h"
-
-#include "pxr/usd/ar/resolverContext.h"
-#include "pxr/usd/ar/writableAsset.h"
-#include "pxr/usd/ar/resolvedPath.h"
-#include "pxr/usd/ar/defineResolver.h"
-#include "pxr/usd/ar/filesystemAsset.h"
-#include "pxr/usd/ar/filesystemWritableAsset.h"
-#include "pxr/usd/ar/notice.h"
+#include <sstream>
+#include <string>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -33,12 +26,9 @@ AR_DEFINE_RESOLVER(AyonUsdResolver, ArResolver);
 AyonUsdResolver::AyonUsdResolver() = default;
 
 AyonUsdResolver::~AyonUsdResolver() {
-    std::ostringstream oss;
-    oss << static_cast<const void*>(this);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-        .Msg("Resolver::~AyonUsdResolver(M_ADD: '%s', M_SIZE: '%s' bytes)\n", oss.str().c_str(),
-             std::to_string(sizeof(*this)).c_str());
-};
+        .Msg("Resolver::~AyonUsdResolver() (size: %zu bytes)\n", sizeof(*this));
+}
 
 std::string
 AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolvedPath &anchorAssetPath) const {
@@ -50,7 +40,7 @@ AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolve
     }
 
     if (_IsAyonPath(assetPath)) {
-        return _Resolve(assetPath);
+        return _Resolve(assetPath).GetPathString();
     }
     if (!anchorAssetPath) {
         return TfNormPath(assetPath);
@@ -76,7 +66,7 @@ AyonUsdResolver::_CreateIdentifierForNewAsset(const std::string &assetPath,
     }
 
     if (_IsAyonPath(assetPath)) {
-        return _Resolve(assetPath);
+        return _Resolve(assetPath).GetPathString();
     }
 
     if (_IsRelativePath(assetPath)) {
@@ -95,44 +85,47 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
     }
 
     if (_IsAyonPath(assetPath)) {
-        std::cout << "Ayon Path detected in Resolver::_Resolve: " << assetPath << std::endl;
         const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
         for (const AyonUsdResolverContext* ctx: contexts) {
-            std::cout << "Trying context in Resolver::_Resolve: " << std::endl;
-            if (ctx) {
-                assetIdent asset;
-                std::cout << "Context found in Resolver::_Resolve: " << std::endl;
-                std::shared_ptr<resolverContextCache> resolverCache = ctx->getCachePtr();
-                std::string cleanAssetPath = assetPath;
-                RES_FUNCS_REMOVE_SDF_ARGS(cleanAssetPath);
-                std::cout << "Cleaned asset path in Resolver::_Resolve: " << cleanAssetPath << std::endl;
-                asset = resolverCache->getAsset(cleanAssetPath, cacheName::AYONCACHE, true);
-
-                size_t pos = assetPath.find(cleanAssetPath);
-                std::cout << "Position of clean asset path in Resolver::_Resolve: " << pos << std::endl;
-                std::string sdfArgs;
-                if (pos != std::string::npos) {
-                    sdfArgs = assetPath.substr(pos + cleanAssetPath.length());
-                }
-                ArResolvedPath resolvedPath(sdfArgs.empty() ? asset.getResolvedAssetPath() :
-                                                              asset.getResolvedAssetPath().GetPathString() + sdfArgs);
-                
-                if (resolvedPath) {
-                    std::cout << "Resolved path in Resolver::_Resolve: " << resolvedPath.GetPathString() << std::endl;
-                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                        .Msg("Resolver::_Resolve( '%s' ) resolved \n", resolvedPath.GetPathString().c_str());
-                    return resolvedPath;
-                }
-                // std::cout << "No resolved path found in Resolver::_Resolve for context." << std::endl;
-                // TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                //     .Msg("Resolver::_Resolve( '%s' ) wasn't resolved, the AYON URI is incorrect\n", assetPath.c_str());
-                // // DEBUG
-                // ArResolvedPath invalid_path = ArResolvedPath(assetPath);
-                // std::cout << "Returning invalid path in Resolver::_Resolve: " << invalid_path.GetPathString() << std::endl;
-                // // ----------
-                return ArResolvedPath(assetPath);
+            if (!ctx) {
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                    .Msg("Resolver::_Resolve: Context is null, skipping\n");
+                continue;
             }
+
+            std::shared_ptr<ResolverContextCache> resolverCache = ctx->getCachePtr();
+            if (!resolverCache) {
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                    .Msg("Resolver::_Resolve: Context has no cache, skipping\n");
+                continue;
+            }
+
+            AssetIdentifier asset;
+            std::string cleanAssetPath = assetPath;
+            RES_FUNCS_REMOVE_SDF_ARGS(cleanAssetPath);
+            asset = resolverCache->getAsset(cleanAssetPath, CacheName::AYONCACHE, true);
+
+            size_t pos = assetPath.find(cleanAssetPath);
+            std::string sdfArgs;
+            if (pos != std::string::npos) {
+                sdfArgs = assetPath.substr(pos + cleanAssetPath.length());
+            }
+            std::string resolvedPathStr = asset.getResolvedAssetPath().GetPathString() + sdfArgs;
+            ArResolvedPath resolvedPath(resolvedPathStr);
+            
+            if (resolvedPath) {
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                    .Msg("Resolver::_Resolve( '%s' ) resolved \n", resolvedPath.GetPathString().c_str());
+                return resolvedPath;
+            }
+
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                .Msg("Resolver::_Resolve( '%s' ) not found in this context, trying next\n", assetPath.c_str());
         }
+
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                .Msg("Resolver::_Resolve( '%s' ) AYON URI could not be resolved\n", assetPath.c_str());
+        return ArResolvedPath(assetPath);
     }
 
     if (_IsRelativePath(assetPath)) {
@@ -216,6 +209,6 @@ AyonUsdResolver::_GetCurrentContextPtr() const {
 const AyonUsdResolverContext*
 AyonUsdResolver::GetConnectedContext() const {
     return &_fallbackContext;
-};
+}
 
 PXR_NAMESPACE_CLOSE_SCOPE

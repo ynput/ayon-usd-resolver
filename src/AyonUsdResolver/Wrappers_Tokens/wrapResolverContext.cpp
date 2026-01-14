@@ -1,11 +1,12 @@
 #include "../resolverContext.h"
 
-#include "pxr/base/tf/pyUtils.h"
 #include "pxr/pxr.h"
-#include "pxr/usd/ar/pyResolverContext.h"
+#include "pxr/base/tf/pyUtils.h"
 #include <pxr/external/boost/python/class.hpp>
 #include <pxr/external/boost/python/operators.hpp>
 #include <pxr/external/boost/python/return_value_policy.hpp>
+#include "pxr/usd/ar/pyResolverContext.h"
+
 #include <string>
 
 PXR_NAMESPACE_USING_DIRECTIVE

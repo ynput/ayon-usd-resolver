@@ -28,6 +28,7 @@ def detect_houdini_env(root):
     python_exec = os.path.join(root, "python", "bin", "python")
     return [
         "-DBUILD_TARGET=houdini",
+        "-DUSE_OPENSSL3=OFF",
         f"-DUSD_ROOT={usd_root}",
         f"-DCMAKE_PREFIX_PATH={houdini_cmake_path}",
         f"-DPYTHON_EXECUTABLE={python_exec}",
@@ -48,6 +49,7 @@ def detect_maya_env(root, devkit_path=None, usd_root=None):
     python_exec = mayapy if os.path.exists(mayapy) else os.path.join(maya_bin, "python")
     return [
         "-DBUILD_TARGET=maya",
+        "-DUSE_OPENSSL3=ON",
         f"-DMAYA_ROOT={root}",
         f"-DMAYA_USD_DEVKIT_PATH={devkit_path}",
         f"-DUSD_ROOT={usd_root}",
@@ -117,16 +119,6 @@ def main():
         action="store_true",
         help="Remove build directory before building"
     )
-    parser.add_argument(
-        "--zip",
-        action="store_true",
-        help="Create a zip archive of the install directory after building"
-    )
-    parser.add_argument(
-        "--zip-name",
-        default=None,
-        help="Output zip path (.zip). If omitted, ./dist/<auto-name>.zip is used"
-    )
 
     max_jobs = min(os.cpu_count() or 4, 4)
     parser.add_argument(
@@ -168,7 +160,6 @@ def main():
     print(f"Build dir: {build_dir}")
     print(f"Install dir: {install_dir}")
     print(f"Parallel jobs: {args.jobs}")
-    print(f"Zip after build: {args.zip}")
     print("\n==================================================")
 
     cmake_args = [
@@ -185,42 +176,6 @@ def main():
 
     # Build + Install
     run(f'cmake --build "{build_dir}" --target install -j {args.jobs}')
-
-    # Optional zip step
-    if args.zip:
-        # Decide base name (without .zip) and ensure destination dir exists
-        if args.zip_name:
-            base_name = args.zip_name[:-4] if args.zip_name.lower().endswith(".zip") else args.zip_name
-            base_name = os.path.abspath(base_name)
-            out_dir = os.path.dirname(base_name)
-            if out_dir and not os.path.exists(out_dir):
-                os.makedirs(out_dir, exist_ok=True)
-        else:
-            dist_dir = os.path.join(project_root, "dist")
-            os.makedirs(dist_dir, exist_ok=True)
-            sys_name = platform.system().lower()
-            base_name = os.path.join(
-                dist_dir,
-                f"ayon-usd-resolver_{args.dcc}_{sys_name}"
-            )
-
-        # Create a staging directory containing only the contents of install_dir (no parent folder)
-        with tempfile.TemporaryDirectory() as staging_dir:
-            for entry in os.listdir(install_dir):
-                src_path = os.path.join(install_dir, entry)
-                dst_path = os.path.join(staging_dir, entry)
-                if os.path.isdir(src_path) and not os.path.islink(src_path):
-                    shutil.copytree(src_path, dst_path)
-                else:
-                    shutil.copy2(src_path, dst_path)
-
-            archive_path = shutil.make_archive(
-                base_name=base_name,
-                format="zip",
-                root_dir=staging_dir,
-                base_dir="."
-            )
-        print(f"\nCreated archive: {archive_path}")
 
     print("\n============================")
     print(f"\nBuild finished successfully!\nArtifacts installed to: {install_dir}\n")

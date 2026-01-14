@@ -157,7 +157,7 @@ set(RESOLVER_SRCS
     resolver.cpp
     resolverContext.cpp
     helpers/resolutionFunctions.cpp
-    cache/assetIdentDef.cpp
+    cache/assetIdentifierDef.cpp
     cache/resolverContextCache.cpp
     helpers/ayonApiGet.cpp
 )

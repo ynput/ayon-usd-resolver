@@ -1,8 +1,7 @@
-#include "pxr/pxr.h"
 #include "resolverTokens.h"
 
+#include "pxr/pxr.h"
 #include <pxr/base/tf/token.h>
-
 #include <pxr/external/boost/python/class.hpp>
 #include <pxr/external/boost/python/return_value_policy.hpp>
 #include <pxr/external/boost/python/make_function.hpp>
