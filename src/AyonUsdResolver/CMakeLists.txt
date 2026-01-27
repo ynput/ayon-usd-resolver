@@ -22,7 +22,7 @@ add_compile_definitions(HBOOST_ALL_NO_LIB)
 if(MSVC)
     # Match Houdini's Release Mode Iterator Debug Level (Crucial for ABI compatibility)
     add_compile_definitions("_ITERATOR_DEBUG_LEVEL=0")
-    
+
     # TBB Flags to match Houdini
     add_compile_definitions("TBB_USE_ASSERT=0")
     add_compile_definitions("TBB_USE_THREADING_TOOLS=0")
@@ -71,8 +71,10 @@ if (BUILD_TARGET STREQUAL "maya")
     if(NOT EXISTS ${MAYA_LIB_DIR})
         message(FATAL_ERROR "Maya lib directory not found: ${MAYA_LIB_DIR}")
     endif()
+
     find_library(MAYA_LIB_FOUNDATION Foundation HINTS "${MAYA_LIB_DIR}" REQUIRED)
     find_library(MAYA_LIB_OPENMAYA OpenMaya HINTS "${MAYA_LIB_DIR}" REQUIRED)
+
     add_library(Maya::Core UNKNOWN IMPORTED)
     set_target_properties(Maya::Core PROPERTIES
         IMPORTED_LOCATION "${MAYA_LIB_OPENMAYA}"
@@ -80,16 +82,20 @@ if (BUILD_TARGET STREQUAL "maya")
         INTERFACE_INCLUDE_DIRECTORIES "${MAYA_ROOT}/include"
         INTERFACE_COMPILE_DEFINITIONS "REQUIRE_IOSTREAM;_BOOL"
     )
+
     if(NOT WIN32)
         set_property(TARGET Maya::Core APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS "LINUX")
     endif()
+
     if(NOT MAYA_USD_DEVKIT_PATH)
         message(FATAL_ERROR "MAYA_USD_DEVKIT_PATH must be set for Maya build.")
     endif()
+
     add_library(Maya::USDDevkit INTERFACE IMPORTED)
     set_target_properties(Maya::USDDevkit PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${MAYA_USD_DEVKIT_PATH}/include"
     )
+
     if(NOT WIN32)
         set(MAYA_PY_INC "${MAYA_ROOT}/include/Python311/Python")
         set(MAYA_PY_LIB "${MAYA_LIB_DIR}/libpython3.11.so")
@@ -109,11 +115,25 @@ if (BUILD_TARGET STREQUAL "maya")
              endif()
         endif()
     endif()
+
     if(WIN32)
         set(MAYA_PYTHON_INCLUDE_HINT "${MAYA_USD_DEVKIT_PATH}/include/Python311/Python")
         list(APPEND CMAKE_INCLUDE_PATH "${MAYA_PYTHON_INCLUDE_HINT}")
         set(Python_INCLUDE_DIR "${MAYA_PYTHON_INCLUDE_HINT}")
+
+        # =========================================================
+        # [FIX] Maya (Windows): link USD's python support lib
+        # Provides pxr_boost::python symbols (usd_python.lib)
+        # =========================================================
+        set(MAYA_USD_PYTHON_LIB "${USD_ROOT}/lib/usd_python.lib")
+        if(EXISTS "${MAYA_USD_PYTHON_LIB}")
+            set(USD_PYTHON_LIBRARIES "${MAYA_USD_PYTHON_LIB}")
+            message(STATUS "[AYON] Found Maya USD python lib: ${MAYA_USD_PYTHON_LIB}")
+        else()
+            message(FATAL_ERROR "[AYON] Missing Maya USD python import lib: ${MAYA_USD_PYTHON_LIB}")
+        endif()
     endif()
+
     list(APPEND CMAKE_PREFIX_PATH "${MAYA_USD_DEVKIT_PATH}")
 endif()
 
@@ -122,7 +142,7 @@ endif()
 # =========================================================
 if(_usd_is_houdini)
     message(STATUS "[AYON] Configuring libraries for Houdini...")
-    
+
     # Note: Global flags (PXR_SET_INTERNAL_NAMESPACE, etc.) are already set at the top.
 
     # [FIX] Find libpxr_python.lib to prevent LNK2019 errors
@@ -142,7 +162,7 @@ if(_usd_is_houdini)
         set(AR_BOOST_INCLUDE_DIR ${AR_PXR_INCLUDE_DIR}/pxr/external)
     else()
         set(AR_BOOST_NAMESPACE hboost)
-        set(AR_BOOST_INCLUDE_DIR ${USD_INCLUDE_DIR}) 
+        set(AR_BOOST_INCLUDE_DIR ${USD_INCLUDE_DIR})
     endif()
 
     set(Boost_FOUND TRUE)
@@ -154,16 +174,72 @@ endif()
 # =========================================================
 # PYTHON
 # =========================================================
-if(NOT Python_FOUND)
-    if(DEFINED PYTHON_EXECUTABLE)
-        set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
-        if (NOT BUILD_TARGET STREQUAL "maya")
-            get_filename_component(_python_root "${PYTHON_EXECUTABLE}" DIRECTORY)
-            get_filename_component(_python_root "${_python_root}" DIRECTORY)
-            set(Python_ROOT_DIR "${_python_root}")
+# Maya+Windows: CMake FindPython (3.29+) can fail even with correct hints.
+# We already pass Python_EXECUTABLE/INCLUDE/LIB from the build script, so bypass.
+if(WIN32 AND BUILD_TARGET STREQUAL "maya")
+
+    message(STATUS "[AYON] Bypassing FindPython for Maya on Windows (using provided cache vars).")
+
+    # Prefer cache vars passed from command line
+    if(NOT Python_EXECUTABLE AND DEFINED Python_EXECUTABLE)
+        # no-op (Python_EXECUTABLE is the correct var already)
+    endif()
+
+    if(NOT Python_EXECUTABLE)
+        # If caller passed PYTHON_EXECUTABLE instead, accept it.
+        if(DEFINED PYTHON_EXECUTABLE)
+            set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}")
+        else()
+            set(Python_EXECUTABLE "${MAYA_ROOT}/bin/mayapy.exe")
         endif()
     endif()
-    find_package(Python COMPONENTS Interpreter Development REQUIRED)
+
+    if(NOT Python_INCLUDE_DIRS)
+        if(DEFINED Python_INCLUDE_DIR)
+            set(Python_INCLUDE_DIRS "${Python_INCLUDE_DIR}")
+        else()
+            set(Python_INCLUDE_DIRS "${MAYA_ROOT}/include/Python311/Python")
+        endif()
+    endif()
+
+    if(NOT Python_LIBRARIES)
+        if(DEFINED Python_LIBRARY)
+            set(Python_LIBRARIES "${Python_LIBRARY}")
+        else()
+            set(Python_LIBRARIES "${MAYA_ROOT}/lib/python311.lib")
+        endif()
+    endif()
+
+    # Mark as found so downstream checks pass
+    set(Python_FOUND TRUE)
+    set(Python_Interpreter_FOUND TRUE)
+    set(Python_Development_FOUND TRUE)
+    set(Python_Development_Module_FOUND TRUE)
+    set(Python_Development_Embed_FOUND TRUE)
+
+    # Provide imported target if anything expects it
+    if(NOT TARGET Python::Python)
+        add_library(Python::Python UNKNOWN IMPORTED)
+        set_target_properties(Python::Python PROPERTIES
+            IMPORTED_LOCATION "${Python_LIBRARIES}"
+            INTERFACE_INCLUDE_DIRECTORIES "${Python_INCLUDE_DIRS}"
+        )
+    endif()
+
+else()
+
+    if(NOT Python_FOUND)
+        if(DEFINED PYTHON_EXECUTABLE)
+            set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
+            if (NOT BUILD_TARGET STREQUAL "maya")
+                get_filename_component(_python_root "${PYTHON_EXECUTABLE}" DIRECTORY)
+                get_filename_component(_python_root "${_python_root}" DIRECTORY)
+                set(Python_ROOT_DIR "${_python_root}")
+            endif()
+        endif()
+        find_package(Python COMPONENTS Interpreter Development REQUIRED)
+    endif()
+
 endif()
 
 # =========================================================
@@ -214,8 +290,7 @@ set_target_properties(${CORE_LIB_TARGET} PROPERTIES PREFIX "" OUTPUT_NAME "ayonU
 if (MSVC)
     target_compile_options(${CORE_LIB_TARGET} PRIVATE /Zc:inline-)
     target_link_options(${CORE_LIB_TARGET} PRIVATE /OPT:NOREF)
-
-    # Optional extra safety (uncomment if still stripped)
+    # Optional extra safety:
     # target_link_options(${CORE_LIB_TARGET} PRIVATE /OPT:NOICF)
 endif()
 
@@ -226,7 +301,7 @@ add_library(${PYTHON_MOD_TARGET} MODULE
     Wrappers_Tokens/wrapResolverContext.cpp
     Wrappers_Tokens/wrapResolver.cpp
     Wrappers_Tokens/wrapResolverTokens.cpp
-    pluginData/module.cpp 
+    pluginData/module.cpp
 )
 
 target_include_directories(${PYTHON_MOD_TARGET} PRIVATE ${RESOLVER_INCLUDE_DIRS})
@@ -279,11 +354,11 @@ set(PLUGIN_BASE_DIR "ayonUsdResolver")
 
 set(AR_AYONUSDRESOLVER_USD_CXX_CLASS_NAME "AyonUsdResolver")
 set(AR_AYONUSDRESOLVER_USD_PLUGIN_NAME "ayonUsdResolver")
-set(AR_AYONUSDRESOLVER_TARGET_LIB "ayonUsdResolver") 
+set(AR_AYONUSDRESOLVER_TARGET_LIB "ayonUsdResolver")
 
 if(WIN32)
     set(AR_ARCH_LIB_SUFFIX "dll")
-    set_target_properties(${PYTHON_MOD_TARGET} PROPERTIES PREFIX "" SUFFIX ".pyd" OUTPUT_NAME "_ayonUsdResolver") 
+    set_target_properties(${PYTHON_MOD_TARGET} PROPERTIES PREFIX "" SUFFIX ".pyd" OUTPUT_NAME "_ayonUsdResolver")
 else()
     set(AR_ARCH_LIB_SUFFIX "so")
     set_target_properties(${PYTHON_MOD_TARGET} PROPERTIES PREFIX "" SUFFIX ".so" OUTPUT_NAME "_ayonUsdResolver")
@@ -308,17 +383,15 @@ endif()
 # =========================================================
 if(WIN32)
     message(STATUS "[AYON] Configuring install for OpenSSL DLLs from: ${OPENSSL_ROOT_DIR}")
-    
-    # We install the specific DLLs required for OpenSSL 3
-    # We check both the root and /bin in case you copied them to a subfolder
+
     if(EXISTS "${OPENSSL_ROOT_DIR}/libcrypto-3-x64.dll")
-        install(FILES 
+        install(FILES
             "${OPENSSL_ROOT_DIR}/libcrypto-3-x64.dll"
             "${OPENSSL_ROOT_DIR}/libssl-3-x64.dll"
             DESTINATION ${PLUGIN_BASE_DIR}/lib
         )
     elseif(EXISTS "${OPENSSL_ROOT_DIR}/bin/libcrypto-3-x64.dll")
-        install(FILES 
+        install(FILES
             "${OPENSSL_ROOT_DIR}/bin/libcrypto-3-x64.dll"
             "${OPENSSL_ROOT_DIR}/bin/libssl-3-x64.dll"
             DESTINATION ${PLUGIN_BASE_DIR}/lib
