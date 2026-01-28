@@ -154,7 +154,7 @@ def main():
     parser.add_argument(
         "--install-dir",
         default=None,
-        help="Remove build directory before building"
+        help="Custom installation directory path (defaults to install/{dcc}_{platform}_{build_type})"
     )
     parser.add_argument(
         "--clean",
