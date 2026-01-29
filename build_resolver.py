@@ -36,9 +36,6 @@ def detect_houdini_env(root):
         "-DUSE_OPENSSL3=ON",
         f"-DUSD_ROOT=\"{usd_root}\"",
         f"-DCMAKE_PREFIX_PATH=\"{houdini_cmake_path}\"",
-
-        # Keep legacy, but also set the modern FindPython var:
-        f"-DPYTHON_EXECUTABLE=\"{python_exec}\"",
         f"-DPython_EXECUTABLE=\"{python_exec}\"",
     ]
 
@@ -61,9 +58,14 @@ def detect_maya_env(root, devkit_path=None, usd_root=None):
     else:
         python_exec = os.path.join(maya_bin, "python")
 
-    # 2. Hardcoded Library & Include Paths for Maya 2026 (Python 3.11)
-    python_lib = os.path.join(root, "lib", "python311.lib")
-    python_include = os.path.join(root, "include", "Python311", "Python")
+    # 2. Library & Include Paths for Maya 2026 (Python 3.11)
+    if platform.system() == "Windows":
+        python_lib = os.path.join(root, "lib", "python311.lib")
+        python_include = os.path.join(root, "include", "Python311", "Python")
+    else:
+        # Linux paths
+        python_lib = os.path.join(root, "lib", "libpython3.11.so")
+        python_include = os.path.join(root, "include", "python3.11")
 
     return [
         "-DBUILD_TARGET=maya",
@@ -71,26 +73,9 @@ def detect_maya_env(root, devkit_path=None, usd_root=None):
         f"-DMAYA_ROOT=\"{root}\"",
         f"-DMAYA_USD_DEVKIT_PATH=\"{devkit_path}\"",
         f"-DUSD_ROOT=\"{usd_root}\"",
-
-        # =========================================================
-        # Force CMake FindPython to use MAYA's python only
-        # =========================================================
-        f"-DPython_ROOT_DIR=\"{root}\"",
-        "-DPython_FIND_REGISTRY=NEVER",
-        "-DPython_FIND_VIRTUALENV=NEVER",
-        "-DPython_FIND_STRATEGY=LOCATION",
-        "-DPython_FIND_IMPLEMENTATIONS=CPython",
-
-        # Core paths (what FindPython should use)
         f"-DPython_EXECUTABLE=\"{python_exec}\"",
         f"-DPython_INCLUDE_DIR=\"{python_include}\"",
-        f"-DPython_INCLUDE_DIRS=\"{python_include}\"",
-
-        # Multi-config generators sometimes want both Release+Debug specified
-        f"-DPython_LIBRARY=\"{python_lib}\"",
         f"-DPython_LIBRARIES=\"{python_lib}\"",
-        f"-DPython_LIBRARY_RELEASE=\"{python_lib}\"",
-        f"-DPython_LIBRARY_DEBUG=\"{python_lib}\"",
     ]
 
 
