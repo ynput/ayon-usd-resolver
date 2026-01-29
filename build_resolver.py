@@ -73,6 +73,8 @@ def detect_maya_env(root, devkit_path=None, usd_root=None):
         f"-DMAYA_ROOT=\"{root}\"",
         f"-DMAYA_USD_DEVKIT_PATH=\"{devkit_path}\"",
         f"-DUSD_ROOT=\"{usd_root}\"",
+
+        # Only specify what CMake actually uses
         f"-DPython_EXECUTABLE=\"{python_exec}\"",
         f"-DPython_INCLUDE_DIR=\"{python_include}\"",
         f"-DPython_LIBRARIES=\"{python_lib}\"",
