@@ -208,6 +208,12 @@ void AyonUsdResolverContext::RemoveMappingByValue(const std::string& targetStr) 
     }
 }
 
-const std::unordered_map<std::string, std::string>& AyonUsdResolverContext::GetMappingPairs() const {
+void
+AyonUsdResolverContext::ClearMappingPairs() {
+    mappingPairs.clear();
+}
+
+const std::unordered_map<std::string, std::string> &
+AyonUsdResolverContext::GetMappingPairs() const {
     return mappingPairs;
 }
