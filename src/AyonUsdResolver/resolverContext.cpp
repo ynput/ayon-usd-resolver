@@ -44,7 +44,7 @@ getStringEndswithStrings(const std::string &value, const std::vector<std::string
 AyonUsdResolverContext::AyonUsdResolverContext(): cache(std::shared_ptr(GlobalCache)) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Build timestamp: {} {}\n", __DATE__, __TIME__);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
-    this->Initialize();
+    Initialize();
 }
 
 // AyonUsdResolverContext::AyonUsdResolverContext() {
@@ -57,6 +57,13 @@ AyonUsdResolverContext::AyonUsdResolverContext(): cache(std::shared_ptr(GlobalCa
 // }
 
 AyonUsdResolverContext::AyonUsdResolverContext(const AyonUsdResolverContext &ctx) = default;
+
+AyonUsdResolverContext::AyonUsdResolverContext(const std::string &mappingFilePath) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Build timestamp: {} {}\n", __DATE__, __TIME__);
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
+    mappingFilePath = mappingFilePath;
+    Initialize();
+}
 
 AyonUsdResolverContext::~AyonUsdResolverContext() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::~ResolverContext() - Destructed Context\n");
@@ -84,6 +91,9 @@ hash_value(const AyonUsdResolverContext &ctx) {
 void
 AyonUsdResolverContext::Initialize() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::Initialize\n");
+    if (!mappingFilePath.empty()) {
+        _GetMappingPairsFromUsdFile(mappingFilePath);
+    }
 }
 
 void
@@ -118,9 +128,82 @@ void
 AyonUsdResolverContext::clearCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::clearCache\n");
     cache->clearCache();
-};
+}
+
+std::string&
+AyonUsdResolverContext::GetMappingFilePath() const {
+    return mappingFilePath;
+}
+
+void
+AyonUsdResolverContext::SetMappingFilePath(std::string filePath) {
+    mappingFilePath = filePath;
+}
+
+void
+AyonUsdResolverContext::RefreshFromMappingFilePath() {
+    _GetMappingPairsFromUsdFile(mappingFilePath);
+}
 
 std::shared_ptr<ResolverContextCache>
 AyonUsdResolverContext::getCachePtr() const {
-    return this->cache;
+    return cache;
 };
+
+bool AyonUsdResolverContext::_GetMappingPairsFromUsdFile(const std::string& filePath)
+{
+    mappingPairs.clear();
+    std::vector<std::string> usdFilePathExts{ ".usd", ".usdc", ".usda" };
+    if (!getStringEndswithStrings(filePath, usdFilePathExts))
+    {
+        return false;
+    }
+    auto layer = SdfLayer::FindOrOpen(TfAbsPath(filePath));
+    if (!layer) {
+        return false;
+    }
+    auto layerMetaData = layer->GetCustomLayerData();
+    auto mappingDataPtr = layerMetaData.GetValueAtPath(FileResolverTokens->mappingPairs);
+    if (!mappingDataPtr) {
+        return false;
+    }
+    pxr::VtStringArray mappingDataArray = mappingDataPtr->Get<pxr::VtStringArray>();
+    if (mappingDataArray.size() % 2 != 0) {
+        return false;
+    }
+    for (size_t i = 0; i < mappingDataArray.size(); i+=2) {
+        this->AddMappingPair(mappingDataArray[i], mappingDataArray[i+1]);
+    }
+    return true;
+}
+
+void AyonUsdResolverContext::AddMappingPair(const std::string& sourceStr, const std::string& targetStr) {
+    auto map_find = mappingPairs.find(sourceStr);
+    if(map_find != mappingPairs.end()) {
+        map_find->second = targetStr;
+    }else{
+        mappingPairs.insert(std::pair<std::string, std::string>(sourceStr,targetStr));
+    }
+}
+
+void AyonUsdResolverContext::RemoveMappingByKey(const std::string& sourceStr) {
+    const auto &it = mappingPairs.find(sourceStr);
+    if (it != mappingPairs.end()) {
+        mappingPairs.erase(it);
+    }
+}
+
+void AyonUsdResolverContext::RemoveMappingByValue(const std::string& targetStr) {
+    for (auto it = mappingPairs.cbegin(); it != mappingPairs.cend();) {
+        if (it->second == targetStr) {
+            mappingPairs.erase(it++);
+        } else {
+            ++it;
+        }
+    }
+}
+
+std::unordered_map<std::string, std::string> &
+AyonUsdResolverContext::GetMappingPairs() const {
+    return mappingPairs;
+}

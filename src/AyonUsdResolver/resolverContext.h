@@ -18,6 +18,8 @@ class AyonUsdResolverContext {
         AR_AYONUSDRESOLVER_API
         AyonUsdResolverContext(const AyonUsdResolverContext &ctx);
         AR_AYONUSDRESOLVER_API
+        AyonUsdResolverContext(const std::string &mappingFilePath);
+        AR_AYONUSDRESOLVER_API
         ~AyonUsdResolverContext();
 
         // Standard Ops
@@ -45,11 +47,26 @@ class AyonUsdResolverContext {
         AR_AYONUSDRESOLVER_API
         void clearCache();
 
+        AR_AYONUSDRESOLVER_API
+        const std::string& GetMappingFilePath() const;
+        AR_AYONUSDRESOLVER_API
+        void SetMappingFilePath(std::string filePath);
+        AR_AYONUSDRESOLVER_API
+        void AddMappingPair(const std::string& sourceStr, const std::string& targetStr);
+        AR_AYONUSDRESOLVER_API
+        void RemoveMappingByKey(const std::string& sourceStr);
+        AR_AYONUSDRESOLVER_API
+        void RemoveMappingByValue(const std::string& targetStr);
+
         std::shared_ptr<ResolverContextCache> getCachePtr() const;
 
     private:
         std::shared_ptr<ResolverContextCache> cache;
         ArResolvedPath rootPath;
+        std::string mappingFilePath;
+        std::unordered_map<std::string, std::string> mappingPairs;
+
+        bool _GetMappingPairsFromUsdFile(const std::string& filePath);
 };
 
 PXR_NAMESPACE_OPEN_SCOPE

@@ -84,8 +84,28 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         return ArResolvedPath();
     }
 
-    if (_IsAyonPath(assetPath)) {
-        const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
+    // Check for mapping first (works for any path type: AYON URI, file path, relative path)
+    const std::string* pathToResolve = &assetPath;
+    const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
+    
+    for (const AyonUsdResolverContext* ctx: contexts) {
+        if (ctx) {
+            auto &mappingPairs = ctx->GetMappingPairs();
+            auto map_find = mappingPairs.find(assetPath);
+            
+            if (map_find != mappingPairs.end()) {
+                pathToResolve = &map_find->second;
+                
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                    .Msg("Resolver::_Resolve('%s') - Mapped to '%s'\n", 
+                        assetPath.c_str(),
+                        pathToResolve->c_str());
+            }
+            break; // Only check first valid context for mappings
+        }
+    }
+
+    if (_IsAyonPath(*pathToResolve)) {
         for (const AyonUsdResolverContext* ctx: contexts) {
             if (!ctx) {
                 TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
@@ -101,14 +121,14 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
             }
 
             AssetIdentifier asset;
-            std::string cleanAssetPath = assetPath;
+            std::string cleanAssetPath = *pathToResolve;
             RES_FUNCS_REMOVE_SDF_ARGS(cleanAssetPath);
             asset = resolverCache->getAsset(cleanAssetPath, CacheName::AYONCACHE, true);
 
-            size_t pos = assetPath.find(cleanAssetPath);
+            size_t pos = pathToResolve->find(cleanAssetPath);
             std::string sdfArgs;
             if (pos != std::string::npos) {
-                sdfArgs = assetPath.substr(pos + cleanAssetPath.length());
+                sdfArgs = pathToResolve->substr(pos + cleanAssetPath.length());
             }
             std::string resolvedPathStr = asset.getResolvedAssetPath().GetPathString() + sdfArgs;
             ArResolvedPath resolvedPath(resolvedPathStr);
@@ -120,24 +140,24 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
             }
 
             TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                .Msg("Resolver::_Resolve( '%s' ) not found in this context, trying next\n", assetPath.c_str());
+                .Msg("Resolver::_Resolve( '%s' ) not found in this context, trying next\n", pathToResolve->c_str());
         }
 
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                .Msg("Resolver::_Resolve( '%s' ) AYON URI could not be resolved\n", assetPath.c_str());
-        return ArResolvedPath(assetPath);
+                .Msg("Resolver::_Resolve( '%s' ) AYON URI could not be resolved\n", pathToResolve->c_str());
+        return ArResolvedPath(*pathToResolve);
     }
 
-    if (_IsRelativePath(assetPath)) {
-        ArResolvedPath resolvedPath = _ResolveAnchored(ArchGetCwd(), assetPath);
+    if (_IsRelativePath(*pathToResolve)) {
+        ArResolvedPath resolvedPath = _ResolveAnchored(ArchGetCwd(), *pathToResolve);
         if (resolvedPath) {
             return resolvedPath;
         }
 
-        return ArResolvedPath(assetPath);
+        return ArResolvedPath(*pathToResolve);
     }
 
-    return _ResolveAnchored(std::string(), assetPath);
+    return _ResolveAnchored(std::string(), *pathToResolve);
 }
 
 ArResolvedPath
