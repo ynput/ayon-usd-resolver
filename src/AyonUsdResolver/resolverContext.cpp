@@ -8,6 +8,8 @@
 #include "resolverContext.h"
 
 #include "pxr/pxr.h"
+#include "pxr/base/tf/pathUtils.h"
+#include "pxr/usd/sdf/layer.h"
 
 #include <vector>
 
@@ -130,8 +132,7 @@ AyonUsdResolverContext::clearCache() {
     cache->clearCache();
 }
 
-std::string&
-AyonUsdResolverContext::GetMappingFilePath() const {
+std::string &AyonUsdResolverContext::GetMappingFilePath() const {
     return mappingFilePath;
 }
 
@@ -163,7 +164,7 @@ bool AyonUsdResolverContext::_GetMappingPairsFromUsdFile(const std::string& file
         return false;
     }
     auto layerMetaData = layer->GetCustomLayerData();
-    auto mappingDataPtr = layerMetaData.GetValueAtPath(FileResolverTokens->mappingPairs);
+    auto mappingDataPtr = layerMetaData.GetValueAtPath(AyonUsdResolverTokens->mappingPairs);
     if (!mappingDataPtr) {
         return false;
     }
