@@ -42,5 +42,8 @@ void _AddToken(T &cls, const char* name, const TfToken &token) {
 } // namespace
 
 void wrapResolverTokens() {
-    class_<AyonUsdResolverTokensType, noncopyable>("Tokens", no_init);
+    using This = AyonUsdResolverTokensType;
+
+    class_<This, noncopyable>("Tokens", no_init)
+    .add_static_property("mappingPairs", python::make_function(&GetMappingPairs, python::return_value_policy<python::return_by_value>()));
 }
