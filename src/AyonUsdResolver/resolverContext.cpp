@@ -155,8 +155,8 @@ AyonUsdResolverContext::getCachePtr() const {
     return cache;
 };
 
-bool AyonUsdResolverContext::_GetMappingPairsFromUsdFile(const std::string& filePath)
-{
+bool
+AyonUsdResolverContext::_GetMappingPairsFromUsdFile(const std::string& filePath) {
     mappingPairs.clear();
     std::vector<std::string> usdFilePathExts{ ".usd", ".usdc", ".usda" };
     if (!getStringEndswithStrings(filePath, usdFilePathExts))
@@ -182,7 +182,8 @@ bool AyonUsdResolverContext::_GetMappingPairsFromUsdFile(const std::string& file
     return true;
 }
 
-void AyonUsdResolverContext::AddMappingPair(const std::string& sourceStr, const std::string& targetStr) {
+void
+AyonUsdResolverContext::AddMappingPair(const std::string& sourceStr, const std::string& targetStr) {
     auto map_find = mappingPairs.find(sourceStr);
     if(map_find != mappingPairs.end()) {
         map_find->second = targetStr;
@@ -191,14 +192,16 @@ void AyonUsdResolverContext::AddMappingPair(const std::string& sourceStr, const 
     }
 }
 
-void AyonUsdResolverContext::RemoveMappingByKey(const std::string& sourceStr) {
+void
+AyonUsdResolverContext::RemoveMappingByKey(const std::string& sourceStr) {
     const auto &it = mappingPairs.find(sourceStr);
     if (it != mappingPairs.end()) {
         mappingPairs.erase(it);
     }
 }
 
-void AyonUsdResolverContext::RemoveMappingByValue(const std::string& targetStr) {
+void
+AyonUsdResolverContext::RemoveMappingByValue(const std::string& targetStr) {
     for (auto it = mappingPairs.cbegin(); it != mappingPairs.cend();) {
         if (it->second == targetStr) {
             mappingPairs.erase(it++);
@@ -213,7 +216,7 @@ AyonUsdResolverContext::ClearMappingPairs() {
     mappingPairs.clear();
 }
 
-const std::unordered_map<std::string, std::string> &
+const std::map<std::string, std::string> &
 AyonUsdResolverContext::GetMappingPairs() const {
-    return mappingPairs;
+    return std::map<std::string, std::string>(mappingPairs.begin(), mappingPairs.end());
 }

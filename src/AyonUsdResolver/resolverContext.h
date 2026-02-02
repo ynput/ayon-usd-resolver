@@ -62,7 +62,7 @@ class AyonUsdResolverContext {
         AR_AYONUSDRESOLVER_API
         void ClearMappingPairs();
         AR_AYONUSDRESOLVER_API
-        const std::unordered_map<std::string, std::string>& GetMappingPairs() const;
+        const std::map<std::string, std::string>& GetMappingPairs() const;
 
         std::shared_ptr<ResolverContextCache> getCachePtr() const;
 
