@@ -13,6 +13,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 struct AyonUsdResolverTokensType {
         AR_AYONUSDRESOLVER_API AyonUsdResolverTokensType();
 
+        const TfToken mappingPairs;
         const std::vector<TfToken> allTokens;
 };
 
