@@ -216,7 +216,7 @@ AyonUsdResolverContext::ClearMappingPairs() {
     mappingPairs.clear();
 }
 
-const std::map<std::string, std::string> &
+const std::map<std::string, std::string>
 AyonUsdResolverContext::GetMappingPairs() const {
     return std::map<std::string, std::string>(mappingPairs.begin(), mappingPairs.end());
 }

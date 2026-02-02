@@ -49,5 +49,5 @@ void wrapResolverTokens() {
     using This = AyonUsdResolverTokensType;
 
     class_<This, noncopyable>("Tokens", no_init)
-    .add_static_property("mappingPairs", python::make_function(&GetMappingPairs, python::return_value_policy<python::return_by_value>()));
+    .add_static_property("mappingPairs", make_function(&GetMappingPairs, return_value_policy<return_by_value>()));
 }

@@ -78,6 +78,7 @@ AyonUsdResolver::_CreateIdentifierForNewAsset(const std::string &assetPath,
 
 ArResolvedPath
 AyonUsdResolver::_Resolve(const std::string &assetPath) const {
+    std::cout << "Resolver::_Resolve( " << assetPath << " )" << std::endl;
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_Resolve( '%s' ) \n", assetPath.c_str());
 
     if (assetPath.empty()) {
@@ -86,22 +87,48 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
 
     // Check for mapping first (works for any path type: AYON URI, file path, relative path)
     const std::string* pathToResolve = &assetPath;
+    std::string mappedPath;
     const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
+    
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+        .Msg("Resolver::_Resolve - Current context: %p, Fallback context: %p\n", 
+            contexts[0], contexts[1]);
     
     for (const AyonUsdResolverContext* ctx: contexts) {
         if (ctx) {
-            auto &mappingPairs = ctx->GetMappingPairs();
+            const auto &mappingPairs = ctx->GetMappingPairs();
+            
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                .Msg("Resolver::_Resolve - Checking context with %zu mappings\n", 
+                    mappingPairs.size());
+            
             auto map_find = mappingPairs.find(assetPath);
             
             if (map_find != mappingPairs.end()) {
-                pathToResolve = &map_find->second;
+                mappedPath = map_find->second;
+                pathToResolve = &mappedPath;
                 
                 TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
                     .Msg("Resolver::_Resolve('%s') - Mapped to '%s'\n", 
                         assetPath.c_str(),
                         pathToResolve->c_str());
+                
+                // If mapped to a non-AYON path, resolve it directly
+                if (!_IsAyonPath(mappedPath)) {
+                    if (!_IsRelativePath(mappedPath)) {
+                        // Absolute file path - resolve and return
+                        TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                            .Msg("Resolver::_Resolve - Mapped to absolute path, resolving directly\n");
+                        return _ResolveAnchored(std::string(), mappedPath);
+                    } else {
+                        // Relative path - anchor and resolve
+                        TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                            .Msg("Resolver::_Resolve - Mapped to relative path, anchoring to cwd\n");
+                        return _ResolveAnchored(ArchGetCwd(), mappedPath);
+                    }
+                }
+                break; // Mapping found, use it (even if AYON URI)
             }
-            break; // Only check first valid context for mappings
         }
     }
 
