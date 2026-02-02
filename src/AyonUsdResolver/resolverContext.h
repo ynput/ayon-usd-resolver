@@ -18,7 +18,7 @@ class AyonUsdResolverContext {
         AR_AYONUSDRESOLVER_API
         AyonUsdResolverContext(const AyonUsdResolverContext &ctx);
         AR_AYONUSDRESOLVER_API
-        AyonUsdResolverContext(const std::string &mappingFilePath);
+        AyonUsdResolverContext(const std::string &filePath);
         AR_AYONUSDRESOLVER_API
         ~AyonUsdResolverContext();
 
@@ -52,11 +52,15 @@ class AyonUsdResolverContext {
         AR_AYONUSDRESOLVER_API
         void SetMappingFilePath(std::string filePath);
         AR_AYONUSDRESOLVER_API
+        void RefreshFromMappingFilePath();
+        AR_AYONUSDRESOLVER_API
         void AddMappingPair(const std::string& sourceStr, const std::string& targetStr);
         AR_AYONUSDRESOLVER_API
         void RemoveMappingByKey(const std::string& sourceStr);
         AR_AYONUSDRESOLVER_API
         void RemoveMappingByValue(const std::string& targetStr);
+        AR_AYONUSDRESOLVER_API
+        const std::map<std::string, std::string>& GetMappingPairs() const;
 
         std::shared_ptr<ResolverContextCache> getCachePtr() const;
 

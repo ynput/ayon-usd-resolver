@@ -58,10 +58,10 @@ AyonUsdResolverContext::AyonUsdResolverContext(): cache(std::shared_ptr(GlobalCa
 
 AyonUsdResolverContext::AyonUsdResolverContext(const AyonUsdResolverContext &ctx) = default;
 
-AyonUsdResolverContext::AyonUsdResolverContext(const std::string &mappingFilePath) {
+AyonUsdResolverContext::AyonUsdResolverContext(const std::string &filePath) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Build timestamp: {} {}\n", __DATE__, __TIME__);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
-    mappingFilePath = mappingFilePath;
+    mappingFilePath = filePath;
     Initialize();
 }
 
