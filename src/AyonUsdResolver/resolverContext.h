@@ -60,7 +60,7 @@ class AyonUsdResolverContext {
         AR_AYONUSDRESOLVER_API
         void RemoveMappingByValue(const std::string& targetStr);
         AR_AYONUSDRESOLVER_API
-        const std::map<std::string, std::string>& GetMappingPairs() const;
+        const std::unordered_map<std::string, std::string>& GetMappingPairs() const;
 
         std::shared_ptr<ResolverContextCache> getCachePtr() const;
 
