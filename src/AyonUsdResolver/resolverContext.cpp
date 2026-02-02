@@ -6,7 +6,7 @@
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
 
 #include "resolverContext.h"
-#include "Wrappers_Tokens/ayonUsdResolverTokens.h"
+#include "Wrappers_Tokens/resolverTokens.h"
 
 #include "pxr/pxr.h"
 #include "pxr/base/tf/pathUtils.h"
