@@ -41,6 +41,10 @@ void _AddToken(T &cls, const char* name, const TfToken &token) {
 
 } // namespace
 
+static std::string GetMappingPairs() {
+    return FileResolverTokens->mappingPairs.GetString();
+}
+
 void wrapResolverTokens() {
     using This = AyonUsdResolverTokensType;
 
