@@ -6,6 +6,7 @@
 #define DEFINE_STRING(string)  CONVERT_STRING(string)
 
 #include "resolverContext.h"
+#include "Wrappers_Tokens/ayonUsdResolverTokens.h"
 
 #include "pxr/pxr.h"
 #include "pxr/base/tf/pathUtils.h"
@@ -132,7 +133,8 @@ AyonUsdResolverContext::clearCache() {
     cache->clearCache();
 }
 
-std::string &AyonUsdResolverContext::GetMappingFilePath() const {
+const std::string&
+AyonUsdResolverContext::GetMappingFilePath() const {
     return mappingFilePath;
 }
 
