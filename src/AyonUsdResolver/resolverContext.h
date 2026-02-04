@@ -39,13 +39,13 @@ class AyonUsdResolverContext {
         void ClearAndReinitialize();
 
         AR_AYONUSDRESOLVER_API
-        void dropCache();
+        void DropCache();
 
         AR_AYONUSDRESOLVER_API
-        void deleteFromCache(const std::string &key);
+        void DeleteFromCache(const std::string &key);
 
         AR_AYONUSDRESOLVER_API
-        void clearCache();
+        void ClearCache();
 
         AR_AYONUSDRESOLVER_API
         const std::string& GetMappingFilePath() const;
@@ -64,7 +64,7 @@ class AyonUsdResolverContext {
         AR_AYONUSDRESOLVER_API
         const std::map<std::string, std::string> GetMappingPairs() const;
 
-        std::shared_ptr<ResolverContextCache> getCachePtr() const;
+        std::shared_ptr<ResolverContextCache> GetCachePtr() const;
 
     private:
         std::shared_ptr<ResolverContextCache> cache;
@@ -72,7 +72,9 @@ class AyonUsdResolverContext {
         std::string mappingFilePath;
         std::unordered_map<std::string, std::string> mappingPairs;
 
-        bool _GetMappingPairsFromUsdFile(const std::string& filePath);
+        bool _getMappingPairsFromFile(const std::string& filePath);
+        bool _getMappingPairsFromUsdFile(const std::string& filePath);
+        bool _getMappingPairsFromJsonFile(const std::string& filePath);
 };
 
 PXR_NAMESPACE_OPEN_SCOPE

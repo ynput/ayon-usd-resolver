@@ -86,7 +86,7 @@ class ResolverContextCache {
         /**
          * @brief Clear the complete cache
          */
-        void clearCache();
+        void ClearCache();
 
         /**
          * @brief Print every object in the cache for debugging

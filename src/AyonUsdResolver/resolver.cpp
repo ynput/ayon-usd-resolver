@@ -140,7 +140,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
                 continue;
             }
 
-            std::shared_ptr<ResolverContextCache> resolverCache = ctx->getCachePtr();
+            std::shared_ptr<ResolverContextCache> resolverCache = ctx->GetCachePtr();
             if (!resolverCache) {
                 TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
                     .Msg("Resolver::_Resolve: Context has no cache, skipping\n");

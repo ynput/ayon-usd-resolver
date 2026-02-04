@@ -63,9 +63,9 @@ AyonUsdResolverContext::AyonUsdResolverContext(): cache(std::shared_ptr(GlobalCa
 
 AyonUsdResolverContext::AyonUsdResolverContext(const AyonUsdResolverContext &ctx) = default;
 
-AyonUsdResolverContext::AyonUsdResolverContext(const std::string &filePath) {
+AyonUsdResolverContext::AyonUsdResolverContext(const std::string &filePath) : cache(std::shared_ptr(GlobalCache)) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Build timestamp: {} {}\n", __DATE__, __TIME__);
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context with defined mapping filePath\n");
     mappingFilePath = filePath;
     Initialize();
 }
@@ -97,42 +97,42 @@ void
 AyonUsdResolverContext::Initialize() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::Initialize\n");
     if (!mappingFilePath.empty()) {
-        _GetMappingPairsFromUsdFile(mappingFilePath);
+        _GetMappingPairsFromFile(mappingFilePath);
     }
 }
 
 void
 AyonUsdResolverContext::ClearAndReinitialize() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ClearAndReinitialize()\n");
-    dropCache();
+    DropCache();
     this->Initialize();
 }
 
 void
-AyonUsdResolverContext::dropCache() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::dropCache()\n");
+AyonUsdResolverContext::DropCache() {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::DropCache()\n");
     this->cache = std::make_shared<ResolverContextCache>();
 };
 
-// void AyonUsdResolverContext::dropCache() {
-//     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::dropCache()\n");
+// void AyonUsdResolverContext::DropCache() {
+//     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::DropCache()\n");
 //     cache = std::shared_ptr<ResolverContextCache>(
 //         &GetGlobalResolverContextCache(),
 //         [](ResolverContextCache*) {}
 //     );
-//     cache->clearCache();
+//     cache->ClearCache();
 // }
 
 void
-AyonUsdResolverContext::deleteFromCache(const std::string &key) {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::deleteFromCache(%s)\n", key.c_str());
+AyonUsdResolverContext::DeleteFromCache(const std::string &key) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::DeleteFromCache(%s)\n", key.c_str());
     cache->removeCachedObject(key);
 };
 
 void
-AyonUsdResolverContext::clearCache() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::clearCache\n");
-    cache->clearCache();
+AyonUsdResolverContext::ClearCache() {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ClearCache\n");
+    cache->ClearCache();
 }
 
 const std::string&
@@ -147,22 +147,30 @@ AyonUsdResolverContext::SetMappingFilePath(std::string filePath) {
 
 void
 AyonUsdResolverContext::RefreshFromMappingFilePath() {
-    _GetMappingPairsFromUsdFile(mappingFilePath);
+    _getMappingPairsFromFile(mappingFilePath);
 }
 
 std::shared_ptr<ResolverContextCache>
-AyonUsdResolverContext::getCachePtr() const {
+AyonUsdResolverContext::GetCachePtr() const {
     return cache;
 };
 
 bool
-AyonUsdResolverContext::_GetMappingPairsFromUsdFile(const std::string& filePath) {
+AyonUsdResolverContext::_getMappingPairsFromFile(const std::string& filePath) {
     mappingPairs.clear();
-    std::vector<std::string> usdFilePathExts{ ".usd", ".usdc", ".usda" };
-    if (!getStringEndswithStrings(filePath, usdFilePathExts))
-    {
-        return false;
+    if (getStringEndswithStrings(filePath, std::vector<std::string>{".usd", ".usdc", ".usda"})) {
+        return _getMappingPairsFromUsdFile(filePath);
+    } else if (getStringEndswithStrings(filePath, std::vector<std::string>{".json"})) {
+        return _getMappingPairsFromJsonFile(filePath);
     }
+
+    return false;
+}
+
+bool
+AyonUsdResolverContext::_getMappingPairsFromUsdFile(const std::string& filePath) {
+    mappingPairs.clear();
+
     auto layer = SdfLayer::FindOrOpen(TfAbsPath(filePath));
     if (!layer) {
         return false;
@@ -180,6 +188,50 @@ AyonUsdResolverContext::_GetMappingPairsFromUsdFile(const std::string& filePath)
         this->AddMappingPair(mappingDataArray[i], mappingDataArray[i+1]);
     }
     return true;
+}
+
+bool
+AyonUsdResolverContext::_getMappingPairsFromJsonFile(const std::string& filePath) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("ResolverContext::_getMappingPairsFromJsonFile(%s)\n", filePath.c_str());
+
+    mappingPairs.clear();
+
+    std::ifstream in(TfAbsPath(filePath));
+    if (!in.is_open()) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("ResolverContext::_getMappingPairsFromJsonFile - Failed to open file\n");
+        return false;
+    }
+
+    nlohmann::json j;
+    try {
+        in >> j;
+    } catch (const nlohmann::json::exception& e) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("ResolverContext::_getMappingPairsFromJsonFile - JSON parse error: %s\n", e.what());
+        return false;
+    }
+
+    // Get the mappingPairs key
+    std::string key = AyonUsdResolverTokens->mappingPairs.GetString();
+    if (!j.contains(key) || !j[key].is_object()) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("ResolverContext::_getMappingPairsFromJsonFile - Invalid or missing '%s'\n", key.c_str());
+        return false;
+    }
+
+    for (const auto& [source, target] : j[key].items()) {
+        if (target.is_string()) {
+            AddMappingPair(source, target.get<std::string>());
+        }
+    }
+
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("ResolverContext::_getMappingPairsFromJsonFile - Loaded %zu mappings\n", 
+             mappingPairs.size());
+
+    return !mappingPairs.empty();
 }
 
 void

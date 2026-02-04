@@ -41,11 +41,11 @@ wrapResolverContext() {
         // Existing cache methods
         .def("ClearAndReinitialize", &This::ClearAndReinitialize, 
              "Currently a no op")
-        .def("dropCache", &This::dropCache,
+        .def("DropCache", &This::DropCache,
              "Disconnects the currently used std::shared_ptr from the context class and generates a new Cache Class instance")
-        .def("deleteFromCache", &This::deleteFromCache,
+        .def("DeleteFromCache", &This::DeleteFromCache,
              "Deletes cached entity from the Connected Cache Class instance.")
-        .def("clearCache", &This::clearCache, 
+        .def("ClearCache", &This::ClearCache, 
              "Deletes all cached entities from the Connected Cache Class instance.")
         
         // Mapping file path methods
