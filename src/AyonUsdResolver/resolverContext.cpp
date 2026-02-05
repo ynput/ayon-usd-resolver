@@ -97,7 +97,7 @@ void
 AyonUsdResolverContext::Initialize() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::Initialize\n");
     if (!mappingFilePath.empty()) {
-        _GetMappingPairsFromFile(mappingFilePath);
+        _getMappingPairsFromFile(mappingFilePath);
     }
 }
 
