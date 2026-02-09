@@ -167,27 +167,71 @@ AyonUsdResolverContext::_getMappingPairsFromFile(const std::string& filePath) {
     return false;
 }
 
+// bool
+// AyonUsdResolverContext::_getMappingPairsFromUsdFile(const std::string& filePath) {
+//     mappingPairs.clear();
+
+//     auto layer = SdfLayer::FindOrOpen(TfAbsPath(filePath));
+//     if (!layer) {
+//         return false;
+//     }
+//     auto layerMetaData = layer->GetCustomLayerData();
+//     auto mappingDataPtr = layerMetaData.GetValueAtPath(AyonUsdResolverTokens->mappingPairs);
+//     if (!mappingDataPtr) {
+//         return false;
+//     }
+//     pxr::VtStringArray mappingDataArray = mappingDataPtr->Get<pxr::VtStringArray>();
+//     if (mappingDataArray.size() % 2 != 0) {
+//         return false;
+//     }
+//     for (size_t i = 0; i < mappingDataArray.size(); i+=2) {
+//         this->AddMappingPair(mappingDataArray[i], mappingDataArray[i+1]);
+//     }
+//     return true;
+// }
+
 bool
 AyonUsdResolverContext::_getMappingPairsFromUsdFile(const std::string& filePath) {
     mappingPairs.clear();
+    
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("ResolverContext::_getMappingPairsFromUsdFile(%s)\n", filePath.c_str());
 
     auto layer = SdfLayer::FindOrOpen(TfAbsPath(filePath));
     if (!layer) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("ResolverContext::_getMappingPairsFromUsdFile - Failed to open layer\n");
         return false;
     }
+    
     auto layerMetaData = layer->GetCustomLayerData();
     auto mappingDataPtr = layerMetaData.GetValueAtPath(AyonUsdResolverTokens->mappingPairs);
     if (!mappingDataPtr) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("ResolverContext::_getMappingPairsFromUsdFile - No mappingPairs found in metadata\n");
         return false;
     }
+    
     pxr::VtStringArray mappingDataArray = mappingDataPtr->Get<pxr::VtStringArray>();
     if (mappingDataArray.size() % 2 != 0) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("ResolverContext::_getMappingPairsFromUsdFile - Invalid array size: %zu\n",
+                 mappingDataArray.size());
         return false;
     }
+    
     for (size_t i = 0; i < mappingDataArray.size(); i+=2) {
         this->AddMappingPair(mappingDataArray[i], mappingDataArray[i+1]);
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("ResolverContext::_getMappingPairsFromUsdFile - Added mapping: '%s' -> '%s'\n",
+                 mappingDataArray[i].c_str(), mappingDataArray[i+1].c_str());
     }
-    return true;
+    
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("ResolverContext::_getMappingPairsFromUsdFile - Loaded %zu mappings\n",
+             mappingPairs.size());
+    
+    return !mappingPairs.empty();
 }
 
 bool
@@ -237,10 +281,12 @@ AyonUsdResolverContext::_getMappingPairsFromJsonFile(const std::string& filePath
 void
 AyonUsdResolverContext::AddMappingPair(const std::string& sourceStr, const std::string& targetStr) {
     auto map_find = mappingPairs.find(sourceStr);
-    if(map_find != mappingPairs.end()) {
+    if (map_find != mappingPairs.end()) {
+        TF_WARN("ResolverContext::AddMappingPair - Overwriting existing mapping for '%s' (was '%s', now '%s')",
+                sourceStr.c_str(), map_find->second.c_str(), targetStr.c_str());
         map_find->second = targetStr;
-    }else{
-        mappingPairs.insert(std::pair<std::string, std::string>(sourceStr,targetStr));
+    } else {
+        mappingPairs.insert(std::pair<std::string, std::string>(sourceStr, targetStr));
     }
 }
 

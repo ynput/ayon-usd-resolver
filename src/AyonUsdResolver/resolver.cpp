@@ -8,6 +8,7 @@
 #include <pxr/base/arch/systemInfo.h>
 #include <pxr/base/tf/pathUtils.h>
 #include <pxr/base/tf/debug.h>
+#include <pxr/usd/ar/defaultResolver.h>
 #include <pxr/usd/ar/resolverContext.h>
 #include <pxr/usd/ar/writableAsset.h>
 #include <pxr/usd/ar/resolvedPath.h>
@@ -40,8 +41,11 @@ AyonUsdResolver::_CreateIdentifier(const std::string &assetPath, const ArResolve
     }
 
     if (_IsAyonPath(assetPath)) {
-        return _Resolve(assetPath).GetPathString();
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+            .Msg("Resolver::_CreateIdentifier - AYON URI, returning as-is\n");
+        return assetPath;  // Keep AYON URI for later context-dependent resolution
     }
+    
     if (!anchorAssetPath) {
         return TfNormPath(assetPath);
     }
@@ -61,12 +65,15 @@ AyonUsdResolver::_CreateIdentifierForNewAsset(const std::string &assetPath,
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
         .Msg("Resolver::_CreateIdentifierForNewAsset('%s', '%s')\n", assetPath.c_str(),
              anchorAssetPath.GetPathString().c_str());
+    
     if (assetPath.empty()) {
         return assetPath;
     }
 
     if (_IsAyonPath(assetPath)) {
-        return _Resolve(assetPath).GetPathString();
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+            .Msg("Resolver::_CreateIdentifierForNewAsset - AYON URI, returning as-is\n");
+        return assetPath;
     }
 
     if (_IsRelativePath(assetPath)) {
@@ -112,22 +119,8 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
                     .Msg("Resolver::_Resolve('%s') - Mapped to '%s'\n", 
                         assetPath.c_str(),
                         pathToResolve->c_str());
-                
-                // If mapped to a non-AYON path, resolve it directly
-                if (!_IsAyonPath(mappedPath)) {
-                    if (!_IsRelativePath(mappedPath)) {
-                        // Absolute file path - resolve and return
-                        TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                            .Msg("Resolver::_Resolve - Mapped to absolute path, resolving directly\n");
-                        return _ResolveAnchored(std::string(), mappedPath);
-                    } else {
-                        // Relative path - anchor and resolve
-                        TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                            .Msg("Resolver::_Resolve - Mapped to relative path, anchoring to cwd\n");
-                        return _ResolveAnchored(ArchGetCwd(), mappedPath);
-                    }
-                }
-                break; // Mapping found, use it (even if AYON URI)
+
+                break;
             }
         }
     }
@@ -176,6 +169,8 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
     }
 
     if (_IsRelativePath(*pathToResolve)) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                .Msg("Resolver::_Resolve( '%s' ) is relative path\n", pathToResolve->c_str());
         ArResolvedPath resolvedPath = _ResolveAnchored(ArchGetCwd(), *pathToResolve);
         if (resolvedPath) {
             return resolvedPath;
@@ -183,6 +178,9 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
 
         return ArResolvedPath(*pathToResolve);
     }
+
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                .Msg("Resolver::_Resolve( '%s' ) is absolute path - test\n", pathToResolve->c_str());
 
     return _ResolveAnchored(std::string(), *pathToResolve);
 }
@@ -196,14 +194,63 @@ AyonUsdResolver::_ResolveForNewAsset(const std::string &assetPath) const {
 ArResolverContext
 AyonUsdResolver::_CreateDefaultContext() const {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_CreateDefaultContext()\n");
+    
+    const AyonUsdResolverContext* currentCtx = _GetCurrentContextPtr();
+    if (currentCtx) {
+        return ArResolverContext(*currentCtx);
+    }
+    
     return _fallbackContext;
 }
 
 ArResolverContext
 AyonUsdResolver::_CreateDefaultContextForAsset(const std::string &assetPath) const {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_CreateDefaultContextForAsset\n");
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("Resolver::_CreateDefaultContextForAsset('%s')\n", assetPath.c_str());
 
-    return ArResolverContext(AyonUsdResolverContext());
+    // Check if there's a currently bound context first
+    const AyonUsdResolverContext* currentCtx = _GetCurrentContextPtr();
+    if (currentCtx && !currentCtx->GetMappingPairs().empty()) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("Resolver::_CreateDefaultContextForAsset - Using bound context with %zu mappings\n",
+                 currentCtx->GetMappingPairs().size());
+        return ArResolverContext(*currentCtx);
+    }
+
+    // Check if assetPath is a mapping file (.usd or .json)
+    if (!assetPath.empty() && 
+        (assetPath.find(".usd") != std::string::npos || 
+         assetPath.find(".json") != std::string::npos)) {
+        
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("Resolver::_CreateDefaultContextForAsset - Checking if file contains mappings: '%s'\n", 
+                 assetPath.c_str());
+        
+        // Try to load mappings from the file
+        AyonUsdResolverContext tempContext(assetPath);
+        
+        // Only update fallback context if we actually loaded mappings
+        if (!tempContext.GetMappingPairs().empty()) {
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                .Msg("Resolver::_CreateDefaultContextForAsset - File has mappings, updating fallback context with %zu mappings\n",
+                     tempContext.GetMappingPairs().size());
+            
+            const_cast<AyonUsdResolver*>(this)->_fallbackContext = tempContext;
+            return ArResolverContext(_fallbackContext);
+        }
+        
+        // File has no mappings, preserve existing fallback context
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("Resolver::_CreateDefaultContextForAsset - File has no mappings, preserving existing fallback context with %zu mappings\n",
+                 _fallbackContext.GetMappingPairs().size());
+    }
+
+    // Return existing fallback context (don't overwrite it)
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("Resolver::_CreateDefaultContextForAsset - Using existing fallback context with %zu mappings\n",
+             _fallbackContext.GetMappingPairs().size());
+    
+    return ArResolverContext(_fallbackContext);
 }
 
 bool

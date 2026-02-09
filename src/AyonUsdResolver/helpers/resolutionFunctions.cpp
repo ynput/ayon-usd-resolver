@@ -75,9 +75,13 @@ _AnchorRelativePath(const std::string &anchorPath, const std::string &path) {
 
 ArResolvedPath
 _ResolveAnchored(const std::string &anchorPath, const std::string &path) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                .Msg("_ResolveAnchored( '%s', '%s' )\n", anchorPath.c_str(), path.c_str());
+
     std::string resolvedPath = path;
     if (!anchorPath.empty()) {
         resolvedPath = TfStringCatPaths(anchorPath, path);
     }
+
     return TfPathExists(resolvedPath) ? ArResolvedPath(TfAbsPath(resolvedPath)) : ArResolvedPath();
 }
