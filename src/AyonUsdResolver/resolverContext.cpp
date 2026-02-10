@@ -65,7 +65,7 @@ AyonUsdResolverContext::AyonUsdResolverContext(const AyonUsdResolverContext &ctx
 
 AyonUsdResolverContext::AyonUsdResolverContext(const std::string &filePath) : cache(std::shared_ptr(GlobalCache)) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Build timestamp: {} {}\n", __DATE__, __TIME__);
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context with defined mapping filePath\n");
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context with defined mapping filePath: '%s'\n", filePath.c_str());
     mappingFilePath = filePath;
     Initialize();
 }
