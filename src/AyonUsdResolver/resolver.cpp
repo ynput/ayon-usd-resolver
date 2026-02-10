@@ -193,14 +193,33 @@ AyonUsdResolver::_ResolveForNewAsset(const std::string &assetPath) const {
 
 ArResolverContext
 AyonUsdResolver::_CreateDefaultContext() const {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("Resolver::_CreateDefaultContext()\n");
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("Resolver::_CreateDefaultContext()\n");
     
     const AyonUsdResolverContext* currentCtx = _GetCurrentContextPtr();
+    
     if (currentCtx) {
+        // If there's a bound context, return it
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("Resolver::_CreateDefaultContext - Using bound context with %zu mappings\n",
+                 currentCtx->GetMappingPairs().size());
         return ArResolverContext(*currentCtx);
     }
     
-    return _fallbackContext;
+    // This happens when Configure Stage is disconnected
+    if (!_fallbackContext.GetMappingPairs().empty()) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("Resolver::_CreateDefaultContext - No bound context, clearing fallback mappings (was %zu)\n",
+                 _fallbackContext.GetMappingPairs().size());
+        
+        const_cast<AyonUsdResolver*>(this)->_fallbackContext.ClearMappingPairs();
+    }
+    
+    // Return empty fallback context
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("Resolver::_CreateDefaultContext - Returning empty fallback context\n");
+    
+    return ArResolverContext(_fallbackContext);
 }
 
 ArResolverContext
