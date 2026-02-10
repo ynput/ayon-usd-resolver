@@ -17,12 +17,18 @@ getAyonApiFromEnv() {
     const char* envVarFileLoggingPath = std::getenv("AYONLOGGERFILEPOS");
     const char* envVarFileLogging = std::getenv("AYONLOGGERFILELOGGING");
 
-    std::cout << AYON_SERVER_URL << ", " << AYON_PROJECT_NAME << ", " << envVarFileLoggingPath << ", " << envVarFileLogging << std::endl;
+    if (envVarFileLoggingPath == nullptr || envVarFileLogging == nullptr) {
+        std::cout << "AYONLOGGERFILEPOS or AYONLOGGERFILELOGGING env variables are not set, file logging will be disabled" << std::endl;
+        envVarFileLoggingPath = "";
+        envVarFileLogging = "OFF";
+    }
 
     if (AYON_API_KEY == nullptr || AYON_SERVER_URL == nullptr || AYON_PROJECT_NAME == nullptr) {
         throw std::runtime_error(
             "Cant find 1 or more env variavbles needed to start the AyonCppApi check if the environment is correct");
     }
+
+    std::cout << AYON_SERVER_URL << ", " << AYON_PROJECT_NAME << ", " << envVarFileLoggingPath << ", " << envVarFileLogging << std::endl;
 
     // find the side ID for this system as it might be in the ENV var or in a file
     const char* AYON_SITE_ID_ENV = std::getenv("AYON_SITE_ID");
