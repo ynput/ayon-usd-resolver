@@ -112,9 +112,10 @@ if (BUILD_TARGET STREQUAL "maya")
     endif()
 
     if(WIN32)
-        set(MAYA_PYTHON_INCLUDE_HINT "${MAYA_USD_DEVKIT_PATH}/include/Python311/Python")
+        set(MAYA_PYTHON_INCLUDE_HINT "${MAYA_ROOT}/include/Python311/Python")
         list(APPEND CMAKE_INCLUDE_PATH "${MAYA_PYTHON_INCLUDE_HINT}")
         set(Python_INCLUDE_DIR "${MAYA_PYTHON_INCLUDE_HINT}")
+        set(Python_INCLUDE_DIRS "${MAYA_PYTHON_INCLUDE_HINT}")
 
         # Maya (Windows): link USD's python support lib
         set(MAYA_USD_PYTHON_LIB "${USD_ROOT}/lib/usd_python.lib")
