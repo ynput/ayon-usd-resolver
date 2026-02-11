@@ -246,7 +246,7 @@ endif()
 # =========================================================
 # USD LIBS (Houdini CMake exports vary!)
 # - Some Houdini USD builds do NOT export USD::vt / USD::sdf targets.
-# - We link targets when they exist, otherwise fall back to finding libs.
+# - Maya sometimes needs explicit libusd_sdf/libusd_vt linkage to get DT_NEEDED.
 # =========================================================
 set(AYON_USD_REQUIRED_TARGETS
     USD::ar
@@ -254,6 +254,16 @@ set(AYON_USD_REQUIRED_TARGETS
     USD::plug
     USD::arch
 )
+
+# [FIX] Maya: try to force explicit sdf/vt linkage (adds DT_NEEDED) if targets exist.
+if (BUILD_TARGET STREQUAL "maya")
+    if(TARGET USD::sdf)
+        list(APPEND AYON_USD_REQUIRED_TARGETS USD::sdf)
+    endif()
+    if(TARGET USD::vt)
+        list(APPEND AYON_USD_REQUIRED_TARGETS USD::vt)
+    endif()
+endif()
 
 set(AYON_USD_FALLBACK_LIBS "")
 
@@ -271,33 +281,39 @@ endif()
 
 # ---- SDF ----
 if(TARGET USD::sdf)
-    list(APPEND AYON_USD_REQUIRED_TARGETS USD::sdf)
+    # already handled (and/or appended above for Maya), but keep for non-Maya paths
+    if (NOT BUILD_TARGET STREQUAL "maya")
+        list(APPEND AYON_USD_REQUIRED_TARGETS USD::sdf)
+    endif()
 else()
     find_library(AYON_PXR_SDF_LIB
-        NAMES pxr_sdf libpxr_sdf sdf
+        NAMES usd_sdf libusd_sdf pxr_sdf libpxr_sdf sdf
         HINTS ${_USD_LIB_HINT_DIRS}
     )
     if(AYON_PXR_SDF_LIB)
         message(STATUS "[AYON] Using fallback SDF lib: ${AYON_PXR_SDF_LIB}")
         list(APPEND AYON_USD_FALLBACK_LIBS "${AYON_PXR_SDF_LIB}")
     else()
-        message(WARNING "[AYON] Could not find SDF lib fallback (pxr_sdf). You may get unresolved Sdf/Vt symbols.")
+        message(WARNING "[AYON] Could not find SDF lib fallback (usd_sdf/pxr_sdf). You may get unresolved Sdf/Vt symbols.")
     endif()
 endif()
 
 # ---- VT ----
 if(TARGET USD::vt)
-    list(APPEND AYON_USD_REQUIRED_TARGETS USD::vt)
+    # already handled (and/or appended above for Maya), but keep for non-Maya paths
+    if (NOT BUILD_TARGET STREQUAL "maya")
+        list(APPEND AYON_USD_REQUIRED_TARGETS USD::vt)
+    endif()
 else()
     find_library(AYON_PXR_VT_LIB
-        NAMES pxr_vt libpxr_vt vt
+        NAMES usd_vt libusd_vt pxr_vt libpxr_vt vt
         HINTS ${_USD_LIB_HINT_DIRS}
     )
     if(AYON_PXR_VT_LIB)
         message(STATUS "[AYON] Using fallback VT lib: ${AYON_PXR_VT_LIB}")
         list(APPEND AYON_USD_FALLBACK_LIBS "${AYON_PXR_VT_LIB}")
     else()
-        message(STATUS "[AYON] No USD::vt target and no pxr_vt fallback found. (May still work if pulled transitively.)")
+        message(STATUS "[AYON] No USD::vt target and no usd_vt/pxr_vt fallback found. (May still work if pulled transitively.)")
     endif()
 endif()
 
