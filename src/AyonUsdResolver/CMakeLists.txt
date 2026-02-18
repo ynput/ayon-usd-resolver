@@ -145,17 +145,35 @@ if(_usd_is_houdini)
 
     # Note: Global flags (PXR_SET_INTERNAL_NAMESPACE, etc.) are already set at the top.
 
-    # [FIX] Find libpxr_python.lib to prevent LNK2019 errors
-    if(WIN32)
-        set(HOUDINI_PXR_PYTHON_LIB "${USD_ROOT}/custom/houdini/dsolib/libpxr_python.lib")
-        if(EXISTS ${HOUDINI_PXR_PYTHON_LIB})
-            set(USD_PYTHON_LIBRARIES ${HOUDINI_PXR_PYTHON_LIB})
-            message(STATUS "[AYON] Found libpxr_python: ${HOUDINI_PXR_PYTHON_LIB}")
+    # [FIX] Find python boost/pxr lib to prevent unresolved symbol errors.
+    # Uses USD_LIB_DIR (resolved per-platform by FindUSD.cmake) for portability:
+    #   Windows: custom/houdini/dsolib/   Linux/Mac: dsolib/
+    # Strategy: try pxr_python first (Houdini 21+), fall back to hboost_python (Houdini 20.5)
+    find_library(HOUDINI_PXR_PYTHON_LIB
+        NAMES pxr_python libpxr_python
+        PATHS "${USD_LIB_DIR}"
+        NO_DEFAULT_PATH
+    )
+    if(HOUDINI_PXR_PYTHON_LIB)
+        set(USD_PYTHON_LIBRARIES ${HOUDINI_PXR_PYTHON_LIB})
+        message(STATUS "[AYON] Found pxr_python: ${HOUDINI_PXR_PYTHON_LIB}")
+    else()
+        # Houdini 20.5 and earlier bundle hboost_python instead
+        find_library(HOUDINI_HBOOST_PYTHON_LIB
+            NAMES hboost_python311-mt-x64 hboost_python310-mt-x64 hboost_python39-mt-x64
+                  hboost_python311 hboost_python310 hboost_python39
+                  hboost_python3.11 hboost_python3.10 hboost_python3.9
+            PATHS "${USD_LIB_DIR}"
+            NO_DEFAULT_PATH
+        )
+        if(HOUDINI_HBOOST_PYTHON_LIB)
+            set(USD_PYTHON_LIBRARIES ${HOUDINI_HBOOST_PYTHON_LIB})
+            message(STATUS "[AYON] Found hboost_python: ${HOUDINI_HBOOST_PYTHON_LIB}")
         else()
-            message(WARNING "[AYON] Could not find libpxr_python.lib! Linking may fail.")
+            message(WARNING "[AYON] Could not find pxr_python or hboost_python in ${USD_LIB_DIR}! Linking may fail.")
         endif()
-        set(HOUDINI_SPDLOG_INCLUDE "${USD_ROOT}/toolkit/include")
     endif()
+    set(HOUDINI_SPDLOG_INCLUDE "${USD_ROOT}/toolkit/include")
 
     if(EXISTS "${AR_PXR_INCLUDE_DIR}/pxr/external/boost")
         set(AR_BOOST_NAMESPACE pxr_boost)
@@ -163,6 +181,8 @@ if(_usd_is_houdini)
     else()
         set(AR_BOOST_NAMESPACE hboost)
         set(AR_BOOST_INCLUDE_DIR ${USD_INCLUDE_DIR})
+        # Signal to source files that we use hboost instead of pxr_boost
+        add_compile_definitions(AYON_USE_HBOOST)
     endif()
 
     set(Boost_FOUND TRUE)
