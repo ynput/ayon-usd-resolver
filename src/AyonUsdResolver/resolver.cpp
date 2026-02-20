@@ -92,10 +92,22 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         return ArResolvedPath();
     }
 
-    // Check for mapping first (works for any path type: AYON URI, file path, relative path)
     const std::string* pathToResolve = &assetPath;
     std::string mappedPath;
-    const AyonUsdResolverContext* contexts[2] = {this->_GetCurrentContextPtr(), &_fallbackContext};
+    const AyonUsdResolverContext* currentCtx = this->_GetCurrentContextPtr();
+
+    // KEY FIX: If bound context has mappings, sync them to fallback immediately
+    // This ensures the VERY NEXT resolve with nil context also sees the mappings
+    if (currentCtx && !currentCtx->GetMappingPairs().empty()) {
+        if (currentCtx->GetMappingPairs() != _fallbackContext.GetMappingPairs()) {
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                .Msg("Resolver::_Resolve - Syncing bound context (%zu mappings) to fallback\n",
+                     currentCtx->GetMappingPairs().size());
+            const_cast<AyonUsdResolver*>(this)->_fallbackContext = *currentCtx;
+        }
+    }
+
+    const AyonUsdResolverContext* contexts[2] = {currentCtx, &_fallbackContext};
     
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
         .Msg("Resolver::_Resolve - Current context: %p, Fallback context: %p\n", 
@@ -135,7 +147,6 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
 
             std::shared_ptr<ResolverContextCache> resolverCache = ctx->GetCachePtr();
             if (!resolverCache) {
-                
                 TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
                     .Msg("Resolver::_Resolve: Context has no cache, skipping\n");
                 continue;
@@ -200,26 +211,30 @@ AyonUsdResolver::_CreateDefaultContext() const {
     const AyonUsdResolverContext* currentCtx = _GetCurrentContextPtr();
     
     if (currentCtx) {
-        // If there's a bound context, return it
+        const auto& mappings = currentCtx->GetMappingPairs();
+        if (!mappings.empty()) {
+            // Sync bound context to fallback
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                .Msg("Resolver::_CreateDefaultContext - Syncing bound context (%zu mappings) to fallback\n",
+                     mappings.size());
+            const_cast<AyonUsdResolver*>(this)->_fallbackContext = *currentCtx;
+        }
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("Resolver::_CreateDefaultContext - Using bound context with %zu mappings\n",
-                 currentCtx->GetMappingPairs().size());
+                 mappings.size());
         return ArResolverContext(*currentCtx);
     }
     
-    // This happens when Configure Stage is disconnected
+    // No bound context - Configure Stage disconnected, clear fallback
     if (!_fallbackContext.GetMappingPairs().empty()) {
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("Resolver::_CreateDefaultContext - No bound context, clearing fallback mappings (was %zu)\n",
                  _fallbackContext.GetMappingPairs().size());
-        
         const_cast<AyonUsdResolver*>(this)->_fallbackContext.ClearMappingPairs();
     }
     
-    // Return empty fallback context
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
         .Msg("Resolver::_CreateDefaultContext - Returning empty fallback context\n");
-    
     return ArResolverContext(_fallbackContext);
 }
 
