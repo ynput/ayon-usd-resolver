@@ -135,6 +135,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
 
             std::shared_ptr<ResolverContextCache> resolverCache = ctx->GetCachePtr();
             if (!resolverCache) {
+                
                 TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
                     .Msg("Resolver::_Resolve: Context has no cache, skipping\n");
                 continue;
@@ -169,14 +170,18 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
     }
 
     if (_IsRelativePath(*pathToResolve)) {
-        TF_WARN("Resolver::_Resolve - Received relative path '%s' which should have been "
-                "anchored by _CreateIdentifier().", 
-                pathToResolve->c_str());
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                .Msg("Resolver::_Resolve( '%s' ) is relative path\n", pathToResolve->c_str());
+        ArResolvedPath resolvedPath = _ResolveAnchored(ArchGetCwd(), *pathToResolve);
+        if (resolvedPath) {
+            return resolvedPath;
+        }
+
         return ArResolvedPath(*pathToResolve);
     }
 
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-                .Msg("Resolver::_Resolve( '%s' ) is absolute path\n", pathToResolve->c_str());
+                .Msg("Resolver::_Resolve( '%s' ) is absolute path - test\n", pathToResolve->c_str());
 
     return _ResolveAnchored(std::string(), *pathToResolve);
 }
