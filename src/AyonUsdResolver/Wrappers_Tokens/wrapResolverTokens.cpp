@@ -15,6 +15,18 @@
     using boost_noncopyable = hboost::noncopyable;
     template<typename... Args>
     using boost_type_list = hboost::mpl::vector<Args...>;
+#elif defined(AYON_USE_BOOST)
+    #include <boost/python/class.hpp>
+    #include <boost/python/return_value_policy.hpp>
+    #include <boost/python/make_function.hpp>
+    #include <boost/python/return_by_value.hpp>
+    #include <boost/python/init.hpp>
+    #include <boost/noncopyable.hpp>
+    #include <boost/mpl/vector.hpp>
+    namespace boost_python_ns = boost::python;
+    using boost_noncopyable = boost::noncopyable;
+    template<typename... Args>
+    using boost_type_list = boost::mpl::vector<Args...>;
 #else
     #include <pxr/external/boost/python/class.hpp>
     #include <pxr/external/boost/python/return_value_policy.hpp>

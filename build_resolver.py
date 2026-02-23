@@ -58,14 +58,22 @@ def detect_maya_env(root, devkit_path=None, usd_root=None):
     else:
         python_exec = os.path.join(maya_bin, "python")
 
-    # 2. Library & Include Paths for Maya 2026 (Python 3.11)
+    # 2. Library & Include Paths — auto-detect Python version from mayapy
+    try:
+        pyver_out = subprocess.check_output(
+            [python_exec, "-c", "import sys; print(f'{sys.version_info.major}{sys.version_info.minor}')"],
+            text=True
+        ).strip()
+    except Exception:
+        pyver_out = "310"  # fallback for Maya 2024
+    pyver_dotted = f"{pyver_out[0]}.{pyver_out[1:]}"
+
     if platform.system() == "Windows":
-        python_lib = os.path.join(root, "lib", "python311.lib")
-        python_include = os.path.join(root, "include", "Python311", "Python")
+        python_lib = os.path.join(root, "lib", f"python{pyver_out}.lib")
+        python_include = os.path.join(root, "include", f"Python{pyver_out}", "Python")
     else:
-        # Linux paths
-        python_lib = os.path.join(root, "lib", "libpython3.11.so")
-        python_include = os.path.join(root, "include", "python3.11")
+        python_lib = os.path.join(root, "lib", f"libpython{pyver_dotted}.so")
+        python_include = os.path.join(root, "include", f"python{pyver_dotted}")
 
     return [
         "-DBUILD_TARGET=maya",

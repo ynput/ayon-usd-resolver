@@ -9,6 +9,11 @@
     #include <hboost/python/return_value_policy.hpp>
     #include <hboost/python/self.hpp>
     namespace boost_python_ns = hboost::python;
+#elif defined(AYON_USE_BOOST)
+    #include <boost/python/class.hpp>
+    #include <boost/python/operators.hpp>
+    #include <boost/python/return_value_policy.hpp>
+    namespace boost_python_ns = boost::python;
 #else
     #include <pxr/external/boost/python/class.hpp>
     #include <pxr/external/boost/python/operators.hpp>

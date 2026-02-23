@@ -96,18 +96,41 @@ if (BUILD_TARGET STREQUAL "maya")
         INTERFACE_INCLUDE_DIRECTORIES "${MAYA_USD_DEVKIT_PATH}/include"
     )
 
+    # =========================================================
+    # Auto-detect Maya Python version from the executable
+    # =========================================================
+    if(Python_EXECUTABLE)
+        set(_maya_pyexec "${Python_EXECUTABLE}")
+    elseif(WIN32)
+        set(_maya_pyexec "${MAYA_ROOT}/bin/mayapy.exe")
+    else()
+        set(_maya_pyexec "${MAYA_ROOT}/bin/mayapy")
+    endif()
+    execute_process(
+        COMMAND "${_maya_pyexec}" -c "import sys; print(f'{sys.version_info.major}{sys.version_info.minor}')"
+        OUTPUT_VARIABLE _maya_pyver OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET RESULT_VARIABLE _pyver_result
+    )
+    if(NOT _pyver_result EQUAL 0 OR NOT _maya_pyver)
+        set(_maya_pyver "311")  # fallback
+    endif()
+    string(SUBSTRING "${_maya_pyver}" 0 1 _pyver_major)
+    string(SUBSTRING "${_maya_pyver}" 1 -1 _pyver_minor)
+    set(_maya_pyver_dotted "${_pyver_major}.${_pyver_minor}")
+    message(STATUS "[AYON] Detected Maya Python version: ${_maya_pyver} (${_maya_pyver_dotted})")
+
     if(NOT WIN32)
-        set(MAYA_PY_INC "${MAYA_ROOT}/include/Python311/Python")
-        set(MAYA_PY_LIB "${MAYA_LIB_DIR}/libpython3.11.so")
+        set(MAYA_PY_INC "${MAYA_ROOT}/include/Python${_maya_pyver}/Python")
+        set(MAYA_PY_LIB "${MAYA_LIB_DIR}/libpython${_maya_pyver_dotted}.so")
         if(EXISTS "${MAYA_PY_INC}" AND EXISTS "${MAYA_PY_LIB}")
             set(Python_INCLUDE_DIRS "${MAYA_PY_INC}")
             set(Python_LIBRARIES    "${MAYA_PY_LIB}")
-            set(Python_VERSION      "3.11")
+            set(Python_VERSION      "${_maya_pyver_dotted}")
             set(Python_FOUND TRUE)
             set(Python_Interpreter_FOUND TRUE)
             set(Python_Development_FOUND TRUE)
         else()
-            set(MAYA_PY_INC "${MAYA_USD_DEVKIT_PATH}/include/Python311/Python")
+            set(MAYA_PY_INC "${MAYA_USD_DEVKIT_PATH}/include/Python${_maya_pyver}/Python")
             if(EXISTS "${MAYA_PY_INC}")
                 set(Python_INCLUDE_DIRS "${MAYA_PY_INC}")
                 set(Python_LIBRARIES    "${MAYA_PY_LIB}")
@@ -117,20 +140,32 @@ if (BUILD_TARGET STREQUAL "maya")
     endif()
 
     if(WIN32)
-        set(MAYA_PYTHON_INCLUDE_HINT "${MAYA_USD_DEVKIT_PATH}/include/Python311/Python")
+        set(MAYA_PYTHON_INCLUDE_HINT "${MAYA_ROOT}/include/Python${_maya_pyver}/Python")
         list(APPEND CMAKE_INCLUDE_PATH "${MAYA_PYTHON_INCLUDE_HINT}")
         set(Python_INCLUDE_DIR "${MAYA_PYTHON_INCLUDE_HINT}")
 
         # =========================================================
         # [FIX] Maya (Windows): link USD's python support lib
-        # Provides pxr_boost::python symbols (usd_python.lib)
+        # Try usd_python.lib first (Maya 2026+), fall back to boost_python (Maya 2024)
         # =========================================================
         set(MAYA_USD_PYTHON_LIB "${USD_ROOT}/lib/usd_python.lib")
         if(EXISTS "${MAYA_USD_PYTHON_LIB}")
             set(USD_PYTHON_LIBRARIES "${MAYA_USD_PYTHON_LIB}")
             message(STATUS "[AYON] Found Maya USD python lib: ${MAYA_USD_PYTHON_LIB}")
         else()
-            message(FATAL_ERROR "[AYON] Missing Maya USD python import lib: ${MAYA_USD_PYTHON_LIB}")
+            # Fall back to boost_python from the devkit
+            find_library(_boost_python_lib
+                NAMES boost_python${_maya_pyver}-vc142-mt-x64-1_76
+                      boost_python${_maya_pyver}
+                PATHS "${USD_LIB_DIR}" "${MAYA_USD_DEVKIT_PATH}/lib"
+                NO_DEFAULT_PATH
+            )
+            if(_boost_python_lib)
+                set(USD_PYTHON_LIBRARIES "${_boost_python_lib}")
+                message(STATUS "[AYON] Using boost_python fallback: ${_boost_python_lib}")
+            else()
+                message(FATAL_ERROR "[AYON] Could not find usd_python.lib or boost_python${_maya_pyver} lib")
+            endif()
         endif()
     endif()
 
@@ -187,6 +222,22 @@ if(_usd_is_houdini)
 
     set(Boost_FOUND TRUE)
     set(Boost_INCLUDE_DIRS ${AR_BOOST_INCLUDE_DIR})
+elseif(BUILD_TARGET STREQUAL "maya")
+    # Maya USD: detect boost layout
+    if(EXISTS "${USD_INCLUDE_DIR}/pxr/external/boost")
+        # USD 24+ style (Maya 2026+)
+        find_package(Boost REQUIRED)
+    else()
+        # USD 22.x style (Maya 2024) — plain boost from devkit
+        set(_maya_boost_inc "${MAYA_USD_DEVKIT_PATH}/include/boost-1_76")
+        if(NOT EXISTS "${_maya_boost_inc}")
+            set(_maya_boost_inc "${MAYA_USD_DEVKIT_PATH}/include")
+        endif()
+        set(Boost_FOUND TRUE)
+        set(Boost_INCLUDE_DIRS "${_maya_boost_inc}")
+        add_compile_definitions(AYON_USE_BOOST)
+        message(STATUS "[AYON] Using plain boost for Maya (USD 22.x): ${_maya_boost_inc}")
+    endif()
 else()
     find_package(Boost REQUIRED)
 endif()
@@ -218,7 +269,7 @@ if(WIN32 AND BUILD_TARGET STREQUAL "maya")
         if(DEFINED Python_INCLUDE_DIR)
             set(Python_INCLUDE_DIRS "${Python_INCLUDE_DIR}")
         else()
-            set(Python_INCLUDE_DIRS "${MAYA_ROOT}/include/Python311/Python")
+            set(Python_INCLUDE_DIRS "${MAYA_ROOT}/include/Python${_maya_pyver}/Python")
         endif()
     endif()
 
@@ -226,7 +277,7 @@ if(WIN32 AND BUILD_TARGET STREQUAL "maya")
         if(DEFINED Python_LIBRARY)
             set(Python_LIBRARIES "${Python_LIBRARY}")
         else()
-            set(Python_LIBRARIES "${MAYA_ROOT}/lib/python311.lib")
+            set(Python_LIBRARIES "${MAYA_ROOT}/lib/python${_maya_pyver}.lib")
         endif()
     endif()
 
