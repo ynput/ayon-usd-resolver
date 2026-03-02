@@ -117,14 +117,15 @@ if (BUILD_TARGET STREQUAL "maya")
     endif()
 
     if(WIN32)
-        set(MAYA_PYTHON_INCLUDE_HINT "${MAYA_USD_DEVKIT_PATH}/include/Python311/Python")
-        list(APPEND CMAKE_INCLUDE_PATH "${MAYA_PYTHON_INCLUDE_HINT}")
-        set(Python_INCLUDE_DIR "${MAYA_PYTHON_INCLUDE_HINT}")
+        # [FIX] Ensure Python include points to Maya's CPython dev headers (contains pyconfig.h)
+        if(NOT Python_INCLUDE_DIRS)
+            set(Python_INCLUDE_DIRS "${MAYA_ROOT}/include/Python311/Python")
+        endif()
+        # Also set the single-dir variant if someone passed only that around
+        if(NOT Python_INCLUDE_DIR)
+            set(Python_INCLUDE_DIR "${Python_INCLUDE_DIRS}")
+        endif()
 
-        # =========================================================
-        # [FIX] Maya (Windows): link USD's python support lib
-        # Provides pxr_boost::python symbols (usd_python.lib)
-        # =========================================================
         set(MAYA_USD_PYTHON_LIB "${USD_ROOT}/lib/usd_python.lib")
         if(EXISTS "${MAYA_USD_PYTHON_LIB}")
             set(USD_PYTHON_LIBRARIES "${MAYA_USD_PYTHON_LIB}")
@@ -143,9 +144,6 @@ endif()
 if(_usd_is_houdini)
     message(STATUS "[AYON] Configuring libraries for Houdini...")
 
-    # Note: Global flags (PXR_SET_INTERNAL_NAMESPACE, etc.) are already set at the top.
-
-    # [FIX] Find libpxr_python.lib to prevent LNK2019 errors
     if(WIN32)
         set(HOUDINI_PXR_PYTHON_LIB "${USD_ROOT}/custom/houdini/dsolib/libpxr_python.lib")
         if(EXISTS ${HOUDINI_PXR_PYTHON_LIB})
@@ -174,16 +172,9 @@ endif()
 # =========================================================
 # PYTHON
 # =========================================================
-# Maya+Windows: CMake FindPython (3.29+) can fail even with correct hints.
-# We already pass Python_EXECUTABLE/INCLUDE/LIB from the build script, so bypass.
 if(WIN32 AND BUILD_TARGET STREQUAL "maya")
 
     message(STATUS "[AYON] Bypassing FindPython for Maya on Windows (using provided cache vars).")
-
-    # Prefer cache vars passed from command line
-    if(NOT Python_EXECUTABLE AND DEFINED Python_EXECUTABLE)
-        # no-op (Python_EXECUTABLE is the correct var already)
-    endif()
 
     if(NOT Python_EXECUTABLE)
         # If caller passed PYTHON_EXECUTABLE instead, accept it.
@@ -194,6 +185,7 @@ if(WIN32 AND BUILD_TARGET STREQUAL "maya")
         endif()
     endif()
 
+    # Prefer Python_INCLUDE_DIRS if already set (we set it above to MAYA_ROOT)
     if(NOT Python_INCLUDE_DIRS)
         if(DEFINED Python_INCLUDE_DIR)
             set(Python_INCLUDE_DIRS "${Python_INCLUDE_DIR}")
@@ -284,9 +276,6 @@ endif()
 target_include_directories(${CORE_LIB_TARGET} PUBLIC ${RESOLVER_INCLUDE_DIRS})
 set_target_properties(${CORE_LIB_TARGET} PROPERTIES PREFIX "" OUTPUT_NAME "ayonUsdResolver")
 
-# =========================================================
-# [FIX] MSVC: prevent USD registry/constructor stripping in plugin DLL
-# =========================================================
 if (MSVC)
     target_compile_options(${CORE_LIB_TARGET} PRIVATE /Zc:inline-)
     target_link_options(${CORE_LIB_TARGET} PRIVATE /OPT:NOREF)
