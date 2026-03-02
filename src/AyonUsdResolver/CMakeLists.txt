@@ -4,14 +4,15 @@ if(POLICY CMP0148)
 endif()
 
 project(AyonUsdResolver)
-set(MFB_PACKAGE_NAME "ayonUsdResolver")
 
 # =========================================================
 # GLOBAL COMPILER FLAGS (CRITICAL ABI FIXES)
 # =========================================================
+# We apply these globally to ensure NO part of the code misses the Houdini namespace.
 message(STATUS "[FORCE] Applying Houdini Namespace and Iterator fixes globally.")
 
 # 1. Force plugin to use Houdini's internal USD namespace (pxrInternal_v0_25...)
+#    This fixes the "Failed to manufacture asset resolver" error.
 add_compile_definitions(PXR_SET_INTERNAL_NAMESPACE)
 
 # 2. Prevent linking against boost libraries (Houdini provides them)
@@ -19,7 +20,10 @@ add_compile_definitions(HBOOST_ALL_NO_LIB)
 
 # 3. Windows-specific Safety Flags
 if(MSVC)
+    # Match Houdini's Release Mode Iterator Debug Level (Crucial for ABI compatibility)
     add_compile_definitions("_ITERATOR_DEBUG_LEVEL=0")
+
+    # TBB Flags to match Houdini
     add_compile_definitions("TBB_USE_ASSERT=0")
     add_compile_definitions("TBB_USE_THREADING_TOOLS=0")
     add_compile_definitions("__TBB_NO_IMPLICIT_LINKAGE")
@@ -55,6 +59,7 @@ if(WIN32)
 else()
     set(OPENSSL_ROOT_DIR "${CMAKE_SOURCE_DIR}/ext/ayon-cpp-api/ext/openssl1L")
 endif()
+
 find_package(OpenSSL REQUIRED)
 
 # =========================================================
@@ -112,12 +117,15 @@ if (BUILD_TARGET STREQUAL "maya")
     endif()
 
     if(WIN32)
-        set(MAYA_PYTHON_INCLUDE_HINT "${MAYA_ROOT}/include/Python311/Python")
-        list(APPEND CMAKE_INCLUDE_PATH "${MAYA_PYTHON_INCLUDE_HINT}")
-        set(Python_INCLUDE_DIR "${MAYA_PYTHON_INCLUDE_HINT}")
-        set(Python_INCLUDE_DIRS "${MAYA_PYTHON_INCLUDE_HINT}")
+        # [FIX] Ensure Python include points to Maya's CPython dev headers (contains pyconfig.h)
+        if(NOT Python_INCLUDE_DIRS)
+            set(Python_INCLUDE_DIRS "${MAYA_ROOT}/include/Python311/Python")
+        endif()
+        # Also set the single-dir variant if someone passed only that around
+        if(NOT Python_INCLUDE_DIR)
+            set(Python_INCLUDE_DIR "${Python_INCLUDE_DIRS}")
+        endif()
 
-        # Maya (Windows): link USD's python support lib
         set(MAYA_USD_PYTHON_LIB "${USD_ROOT}/lib/usd_python.lib")
         if(EXISTS "${MAYA_USD_PYTHON_LIB}")
             set(USD_PYTHON_LIBRARIES "${MAYA_USD_PYTHON_LIB}")
@@ -136,10 +144,9 @@ endif()
 if(_usd_is_houdini)
     message(STATUS "[AYON] Configuring libraries for Houdini...")
 
-    # [FIX] Find libpxr_python.lib (helps python wrapping on Houdini builds)
     if(WIN32)
         set(HOUDINI_PXR_PYTHON_LIB "${USD_ROOT}/custom/houdini/dsolib/libpxr_python.lib")
-        if(EXISTS "${HOUDINI_PXR_PYTHON_LIB}")
+        if(EXISTS ${HOUDINI_PXR_PYTHON_LIB})
             set(USD_PYTHON_LIBRARIES ${HOUDINI_PXR_PYTHON_LIB})
             message(STATUS "[AYON] Found libpxr_python: ${HOUDINI_PXR_PYTHON_LIB}")
         else()
@@ -170,6 +177,7 @@ if(WIN32 AND BUILD_TARGET STREQUAL "maya")
     message(STATUS "[AYON] Bypassing FindPython for Maya on Windows (using provided cache vars).")
 
     if(NOT Python_EXECUTABLE)
+        # If caller passed PYTHON_EXECUTABLE instead, accept it.
         if(DEFINED PYTHON_EXECUTABLE)
             set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}")
         else()
@@ -177,6 +185,7 @@ if(WIN32 AND BUILD_TARGET STREQUAL "maya")
         endif()
     endif()
 
+    # Prefer Python_INCLUDE_DIRS if already set (we set it above to MAYA_ROOT)
     if(NOT Python_INCLUDE_DIRS)
         if(DEFINED Python_INCLUDE_DIR)
             set(Python_INCLUDE_DIRS "${Python_INCLUDE_DIR}")
@@ -193,12 +202,14 @@ if(WIN32 AND BUILD_TARGET STREQUAL "maya")
         endif()
     endif()
 
+    # Mark as found so downstream checks pass
     set(Python_FOUND TRUE)
     set(Python_Interpreter_FOUND TRUE)
     set(Python_Development_FOUND TRUE)
     set(Python_Development_Module_FOUND TRUE)
     set(Python_Development_Embed_FOUND TRUE)
 
+    # Provide imported target if anything expects it
     if(NOT TARGET Python::Python)
         add_library(Python::Python UNKNOWN IMPORTED)
         set_target_properties(Python::Python PROPERTIES
@@ -245,102 +256,6 @@ if(_usd_is_houdini AND HOUDINI_SPDLOG_INCLUDE)
 endif()
 
 # =========================================================
-# USD LIBS (Houdini CMake exports vary!)
-# - Some Houdini USD builds do NOT export USD::vt / USD::sdf targets.
-# - Maya sometimes needs explicit libusd_sdf/libusd_vt linkage to get DT_NEEDED.
-# =========================================================
-set(AYON_USD_REQUIRED_TARGETS
-    USD::ar
-    USD::tf
-    USD::plug
-    USD::arch
-)
-
-# [FIX] Maya: try to force explicit sdf/vt linkage (adds DT_NEEDED) if targets exist.
-if (BUILD_TARGET STREQUAL "maya")
-    if(TARGET USD::sdf)
-        list(APPEND AYON_USD_REQUIRED_TARGETS USD::sdf)
-    endif()
-    if(TARGET USD::vt)
-        list(APPEND AYON_USD_REQUIRED_TARGETS USD::vt)
-    endif()
-endif()
-
-set(AYON_USD_FALLBACK_LIBS "")
-
-set(_USD_LIB_HINT_DIRS "")
-if(DEFINED USD_ROOT)
-    list(APPEND _USD_LIB_HINT_DIRS
-        "${USD_ROOT}/lib"
-        "${USD_ROOT}/lib64"
-        "${USD_ROOT}/bin"
-        "${USD_ROOT}/dsolib"
-        "${USD_ROOT}/custom/houdini/dsolib"
-        "${USD_ROOT}/custom/houdini/dso"
-    )
-endif()
-
-# ---- SDF ----
-if(TARGET USD::sdf)
-    # already handled (and/or appended above for Maya), but keep for non-Maya paths
-    if (NOT BUILD_TARGET STREQUAL "maya")
-        list(APPEND AYON_USD_REQUIRED_TARGETS USD::sdf)
-    endif()
-else()
-    find_library(AYON_PXR_SDF_LIB
-        NAMES usd_sdf libusd_sdf pxr_sdf libpxr_sdf sdf
-        HINTS ${_USD_LIB_HINT_DIRS}
-    )
-    if(AYON_PXR_SDF_LIB)
-        message(STATUS "[AYON] Using fallback SDF lib: ${AYON_PXR_SDF_LIB}")
-        list(APPEND AYON_USD_FALLBACK_LIBS "${AYON_PXR_SDF_LIB}")
-    else()
-        message(WARNING "[AYON] Could not find SDF lib fallback (usd_sdf/pxr_sdf). You may get unresolved Sdf/Vt symbols.")
-    endif()
-endif()
-
-# ---- VT ----
-if(TARGET USD::vt)
-    # already handled (and/or appended above for Maya), but keep for non-Maya paths
-    if (NOT BUILD_TARGET STREQUAL "maya")
-        list(APPEND AYON_USD_REQUIRED_TARGETS USD::vt)
-    endif()
-else()
-    find_library(AYON_PXR_VT_LIB
-        NAMES usd_vt libusd_vt pxr_vt libpxr_vt vt
-        HINTS ${_USD_LIB_HINT_DIRS}
-    )
-    if(AYON_PXR_VT_LIB)
-        message(STATUS "[AYON] Using fallback VT lib: ${AYON_PXR_VT_LIB}")
-        list(APPEND AYON_USD_FALLBACK_LIBS "${AYON_PXR_VT_LIB}")
-    else()
-        message(STATUS "[AYON] No USD::vt target and no usd_vt/pxr_vt fallback found. (May still work if pulled transitively.)")
-    endif()
-endif()
-
-# =========================================================
-# Tokens (OBJECT lib)
-# - Fixes Windows LNK2019 for AyonUsdResolverTokens when linking the .pyd
-# =========================================================
-add_library(AyonUsdResolver_tokens OBJECT
-    Wrappers_Tokens/resolverTokens.cpp
-)
-target_include_directories(AyonUsdResolver_tokens PRIVATE ${RESOLVER_INCLUDE_DIRS})
-
-target_compile_definitions(AyonUsdResolver_tokens PRIVATE
-    PXR_SET_INTERNAL_NAMESPACE
-    HBOOST_ALL_NO_LIB
-)
-if(MSVC)
-    target_compile_definitions(AyonUsdResolver_tokens PRIVATE
-        _ITERATOR_DEBUG_LEVEL=0
-        TBB_USE_ASSERT=0
-        TBB_USE_THREADING_TOOLS=0
-        __TBB_NO_IMPLICIT_LINKAGE
-    )
-endif()
-
-# =========================================================
 # Target: Core Library
 # =========================================================
 set(RESOLVER_SRCS
@@ -350,13 +265,9 @@ set(RESOLVER_SRCS
     cache/assetIdentifierDef.cpp
     cache/resolverContextCache.cpp
     helpers/ayonApiGet.cpp
-    # resolverTokens.cpp compiled via OBJECT lib above
 )
 
-add_library(${CORE_LIB_TARGET} SHARED
-    ${RESOLVER_SRCS}
-    $<TARGET_OBJECTS:AyonUsdResolver_tokens>
-)
+add_library(${CORE_LIB_TARGET} SHARED ${RESOLVER_SRCS})
 
 if(WIN32)
     target_compile_definitions(${CORE_LIB_TARGET} PRIVATE AR_AYONUSDRESOLVER_EXPORTS)
@@ -365,12 +276,11 @@ endif()
 target_include_directories(${CORE_LIB_TARGET} PUBLIC ${RESOLVER_INCLUDE_DIRS})
 set_target_properties(${CORE_LIB_TARGET} PROPERTIES PREFIX "" OUTPUT_NAME "ayonUsdResolver")
 
-# =========================================================
-# [FIX] MSVC: prevent USD registry/constructor stripping in plugin DLL
-# =========================================================
 if (MSVC)
     target_compile_options(${CORE_LIB_TARGET} PRIVATE /Zc:inline-)
     target_link_options(${CORE_LIB_TARGET} PRIVATE /OPT:NOREF)
+    # Optional extra safety:
+    # target_link_options(${CORE_LIB_TARGET} PRIVATE /OPT:NOICF)
 endif()
 
 # =========================================================
@@ -381,15 +291,12 @@ add_library(${PYTHON_MOD_TARGET} MODULE
     Wrappers_Tokens/wrapResolver.cpp
     Wrappers_Tokens/wrapResolverTokens.cpp
     pluginData/module.cpp
-    $<TARGET_OBJECTS:AyonUsdResolver_tokens>
 )
 
 target_include_directories(${PYTHON_MOD_TARGET} PRIVATE ${RESOLVER_INCLUDE_DIRS})
 target_compile_definitions(${PYTHON_MOD_TARGET} PRIVATE AR_AYONUSDRESOLVER_EXPORTS)
-target_compile_definitions(${PYTHON_MOD_TARGET} PRIVATE
-    MFB_PACKAGE_NAME=ayonUsdResolver
-)
 
+# (Optional) Apply same MSVC options to python module too, just in case
 if (MSVC)
     target_compile_options(${PYTHON_MOD_TARGET} PRIVATE /Zc:inline-)
     target_link_options(${PYTHON_MOD_TARGET} PRIVATE /OPT:NOREF)
@@ -406,8 +313,10 @@ target_link_libraries(${CORE_LIB_TARGET}
         ${Python_LIBRARIES}
         OpenSSL::SSL
         OpenSSL::Crypto
-        ${AYON_USD_REQUIRED_TARGETS}
-        ${AYON_USD_FALLBACK_LIBS}
+        USD::ar
+        USD::tf
+        USD::plug
+        USD::arch
         ${USD_PYTHON_LIBRARIES}
 )
 
@@ -415,8 +324,10 @@ target_link_libraries(${PYTHON_MOD_TARGET}
     PUBLIC
         ${CORE_LIB_TARGET}
         ${Python_LIBRARIES}
-        ${AYON_USD_REQUIRED_TARGETS}
-        ${AYON_USD_FALLBACK_LIBS}
+        USD::ar
+        USD::tf
+        USD::plug
+        USD::arch
         ${USD_PYTHON_LIBRARIES}
 )
 
