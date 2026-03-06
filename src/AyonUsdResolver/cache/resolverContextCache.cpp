@@ -354,8 +354,8 @@ ResolverContextCache::removeCachedObject(const std::string &key, const CacheName
 };
 
 void
-ResolverContextCache::clearCache() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::clearCache \n");
+ResolverContextCache::ClearCache() {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::ClearCache \n");
 
     std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(m_PreCacheSharedMutex);
     std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(m_AyonCacheSharedMutex);

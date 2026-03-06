@@ -33,6 +33,8 @@ getAyonApiFromEnv() {
             "Cant find 1 or more env variavbles needed to start the AyonCppApi check if the environment is correct");
     }
 
+    std::cout << AYON_SERVER_URL << ", " << AYON_PROJECT_NAME << ", " << envVarFileLoggingPath << ", " << envVarFileLogging << std::endl;
+
     // find the side ID for this system as it might be in the ENV var or in a file
     const char* AYON_SITE_ID_ENV = std::getenv("AYON_SITE_ID");
     if (AYON_SITE_ID_ENV == nullptr) {
