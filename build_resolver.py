@@ -24,14 +24,19 @@ def run(cmd, cwd=None, env=None):
 def detect_houdini_env(root):
     """Detect paths for Houdini installations."""
     usd_root = root
-    houdini_cmake_path = f"{usd_root}/toolkit/cmake"
-    python_exec = os.path.join(root, "python", "bin", "python")
+    houdini_cmake_path = os.path.join(root, "toolkit", "cmake")
+
+    if platform.system() == "Windows":
+        python_exec = os.path.join(root, "python311", "python.exe")
+    else:
+        python_exec = os.path.join(root, "python", "bin", "python")
+
     return [
         "-DBUILD_TARGET=houdini",
-        "-DUSE_OPENSSL3=OFF",
-        f"-DUSD_ROOT={usd_root}",
-        f"-DCMAKE_PREFIX_PATH={houdini_cmake_path}",
-        f"-DPYTHON_EXECUTABLE={python_exec}",
+        "-DUSE_OPENSSL3=ON",
+        f"-DUSD_ROOT=\"{usd_root}\"",
+        f"-DCMAKE_PREFIX_PATH=\"{houdini_cmake_path}\"",
+        f"-DPython_EXECUTABLE=\"{python_exec}\"",
     ]
 
 
@@ -41,19 +46,38 @@ def detect_maya_env(root, devkit_path=None, usd_root=None):
         raise ValueError("Maya devkit path must be provided for Maya builds.")
     if usd_root is None:
         raise ValueError("Maya USD root path must be provided for Maya builds.")
-    # Check for 'mayapy' (the actual binary)
+
+    # 1. Executable
     maya_bin = os.path.join(root, "bin")
-    mayapy = os.path.join(maya_bin, "mayapy") 
-    
-    # Fallback to 'python' if mayapy isn't found, but prefer mayapy
-    python_exec = mayapy if os.path.exists(mayapy) else os.path.join(maya_bin, "python")
+    mayapy = os.path.join(maya_bin, "mayapy")
+
+    if os.path.exists(mayapy + ".exe"):
+        python_exec = mayapy + ".exe"
+    elif os.path.exists(mayapy):
+        python_exec = mayapy
+    else:
+        python_exec = os.path.join(maya_bin, "python")
+
+    # 2. Library & Include Paths for Maya 2026 (Python 3.11)
+    if platform.system() == "Windows":
+        python_lib = os.path.join(root, "lib", "python311.lib")
+        python_include = os.path.join(root, "include", "Python311", "Python")
+    else:
+        # Linux paths
+        python_lib = os.path.join(root, "lib", "libpython3.11.so")
+        python_include = os.path.join(root, "include", "python3.11")
+
     return [
         "-DBUILD_TARGET=maya",
         "-DUSE_OPENSSL3=ON",
-        f"-DMAYA_ROOT={root}",
-        f"-DMAYA_USD_DEVKIT_PATH={devkit_path}",
-        f"-DUSD_ROOT={usd_root}",
-        f"-DPYTHON_EXECUTABLE={python_exec}",
+        f"-DMAYA_ROOT=\"{root}\"",
+        f"-DMAYA_USD_DEVKIT_PATH=\"{devkit_path}\"",
+        f"-DUSD_ROOT=\"{usd_root}\"",
+
+        # Only specify what CMake actually uses
+        f"-DPython_EXECUTABLE=\"{python_exec}\"",
+        f"-DPython_INCLUDE_DIR=\"{python_include}\"",
+        f"-DPython_LIBRARIES=\"{python_lib}\"",
     ]
 
 
@@ -115,6 +139,11 @@ def main():
         help="CMake build type"
     )
     parser.add_argument(
+        "--install-dir",
+        default=None,
+        help="Custom installation directory path (defaults to install/{dcc}_{platform}_{build_type})"
+    )
+    parser.add_argument(
         "--clean",
         action="store_true",
         help="Remove build directory before building"
@@ -132,9 +161,11 @@ def main():
 
     project_root = os.path.dirname(os.path.abspath(__file__))
     build_dir = os.path.join(project_root, f"build_{args.dcc}_{args.build_type.lower()}")
-    install_dir = os.path.join(
-        project_root, "install", f"{args.dcc}_{platform.system().lower()}_{args.build_type.lower()}"
-    )
+
+    if not args.install_dir:
+        args.install_dir = os.path.join(
+            project_root, "install", f"{args.dcc}_{platform.system().lower()}_{args.build_type.lower()}"
+        )
 
     # Clean build
     if args.clean and os.path.exists(build_dir):
@@ -142,7 +173,7 @@ def main():
         shutil.rmtree(build_dir)
 
     os.makedirs(build_dir, exist_ok=True)
-    os.makedirs(install_dir, exist_ok=True)
+    os.makedirs(args.install_dir, exist_ok=True)
 
     # Detect environment
     dcc_args = detect_dcc_env(
@@ -158,27 +189,32 @@ def main():
     print(f"DCC: {args.dcc}")
     print(f"Build type: {args.build_type}")
     print(f"Build dir: {build_dir}")
-    print(f"Install dir: {install_dir}")
+    print(f"Install dir: {args.install_dir}")
     print(f"Parallel jobs: {args.jobs}")
     print("\n==================================================")
 
     cmake_args = [
-        # f"-DAYON_CPPTOOLS_BUILD_LOGGER=OFF"
         f"-DCMAKE_BUILD_TYPE={args.build_type}",
-        f"-DCMAKE_INSTALL_PREFIX={install_dir}",
+        f"-DCMAKE_INSTALL_PREFIX={args.install_dir}",
     ]
     cmake_args.extend(dcc_args)
 
-    generator = "Ninja" if shutil.which("ninja") else "Unix Makefiles"
+    if platform.system() == "Windows":
+        if shutil.which("ninja"):
+            generator = "Ninja"
+        else:
+            generator = "Visual Studio 17 2022"
+    else:
+        generator = "Ninja" if shutil.which("ninja") else "Unix Makefiles"
 
     # Configure step
     run(f'cmake -S . -B "{build_dir}" -G "{generator}" {" ".join(cmake_args)}')
 
     # Build + Install
-    run(f'cmake --build "{build_dir}" --target install -j {args.jobs}')
+    run(f'cmake --build "{build_dir}" --target install --config {args.build_type} -j {args.jobs}')
 
     print("\n============================")
-    print(f"\nBuild finished successfully!\nArtifacts installed to: {install_dir}\n")
+    print(f"\nBuild finished successfully!\nArtifacts installed to: {args.install_dir}\n")
 
 
 if __name__ == "__main__":

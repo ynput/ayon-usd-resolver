@@ -44,6 +44,9 @@ AYON compatible entity URIs through the
 - Rocky 9 Linux
   - Hou 21.0.512
   - Maya 2026 (UsdAddon_0.25.5)
+- Windows 11
+  - Hou 21.0.512
+  - Maya 2026 (UsdAddon_0.25.5)
 
 
 #### Run build using python script
