@@ -17,11 +17,16 @@ getAyonApiFromEnv() {
     const char* envVarFileLoggingPath = std::getenv("AYONLOGGERFILEPOS");
     const char* envVarFileLogging = std::getenv("AYONLOGGERFILELOGGING");
 
-    if (envVarFileLoggingPath == nullptr || envVarFileLogging == nullptr) {
-        std::cout << "AYONLOGGERFILEPOS or AYONLOGGERFILELOGGING env variables are not set, file logging will be disabled" << std::endl;
+    if (envVarFileLoggingPath == nullptr) {
+        std::cout << "envVarFileLoggingPath is nullptr" << std::endl;
         envVarFileLoggingPath = "";
+    }
+    if (envVarFileLogging == nullptr) {
+        std::cout << "envVarFileLogging is nullptr, setting to OFF" << std::endl;
         envVarFileLogging = "OFF";
     }
+
+    std::cout << AYON_SERVER_URL << ", " << AYON_PROJECT_NAME << ", " << envVarFileLoggingPath << ", " << envVarFileLogging << std::endl;
 
     if (AYON_API_KEY == nullptr || AYON_SERVER_URL == nullptr || AYON_PROJECT_NAME == nullptr) {
         throw std::runtime_error(
