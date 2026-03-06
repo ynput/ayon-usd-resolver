@@ -245,16 +245,9 @@ endif()
 # =========================================================
 # PYTHON
 # =========================================================
-# Maya+Windows: CMake FindPython (3.29+) can fail even with correct hints.
-# We already pass Python_EXECUTABLE/INCLUDE/LIB from the build script, so bypass.
 if(WIN32 AND BUILD_TARGET STREQUAL "maya")
 
     message(STATUS "[AYON] Bypassing FindPython for Maya on Windows (using provided cache vars).")
-
-    # Prefer cache vars passed from command line
-    if(NOT Python_EXECUTABLE AND DEFINED Python_EXECUTABLE)
-        # no-op (Python_EXECUTABLE is the correct var already)
-    endif()
 
     if(NOT Python_EXECUTABLE)
         # If caller passed PYTHON_EXECUTABLE instead, accept it.
@@ -265,6 +258,7 @@ if(WIN32 AND BUILD_TARGET STREQUAL "maya")
         endif()
     endif()
 
+    # Prefer Python_INCLUDE_DIRS if already set (we set it above to MAYA_ROOT)
     if(NOT Python_INCLUDE_DIRS)
         if(DEFINED Python_INCLUDE_DIR)
             set(Python_INCLUDE_DIRS "${Python_INCLUDE_DIR}")
@@ -355,9 +349,6 @@ endif()
 target_include_directories(${CORE_LIB_TARGET} PUBLIC ${RESOLVER_INCLUDE_DIRS})
 set_target_properties(${CORE_LIB_TARGET} PROPERTIES PREFIX "" OUTPUT_NAME "ayonUsdResolver")
 
-# =========================================================
-# [FIX] MSVC: prevent USD registry/constructor stripping in plugin DLL
-# =========================================================
 if (MSVC)
     target_compile_options(${CORE_LIB_TARGET} PRIVATE /Zc:inline-)
     target_link_options(${CORE_LIB_TARGET} PRIVATE /OPT:NOREF)
