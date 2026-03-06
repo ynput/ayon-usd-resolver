@@ -18,7 +18,7 @@
     #include <pxr/external/boost/python/class.hpp>
     #include <pxr/external/boost/python/operators.hpp>
     #include <pxr/external/boost/python/return_value_policy.hpp>
-    namespace boost_python_ns = pxr_boost::python;
+    namespace boost_python_ns = PXR_NS::pxr_boost::python;
 #endif
 
 #include "pxr/usd/ar/pyResolverContext.h"

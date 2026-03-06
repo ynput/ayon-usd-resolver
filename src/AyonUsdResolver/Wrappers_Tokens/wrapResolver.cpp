@@ -23,8 +23,8 @@
     #include <pxr/external/boost/python/copy_const_reference.hpp>
     #include <pxr/external/boost/python/operators.hpp>
     #include <pxr/external/boost/python/return_value_policy.hpp>
-    namespace boost_python_ns = pxr_boost::python;
-    using boost_noncopyable = pxr_boost::python::noncopyable;
+    namespace boost_python_ns = PXR_NS::pxr_boost::python;
+    using boost_noncopyable = PXR_NS::pxr_boost::python::noncopyable;
 #endif
 
 #include <pxr/usd/ar/resolver.h>

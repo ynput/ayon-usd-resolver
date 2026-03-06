@@ -35,10 +35,10 @@
     #include <pxr/external/boost/python/noncopyable.hpp>
     #include <pxr/external/boost/python/init.hpp>
     #include <pxr/external/boost/python/type_list.hpp>
-    namespace boost_python_ns = pxr_boost::python;
-    using boost_noncopyable = pxr_boost::python::noncopyable;
+    namespace boost_python_ns = PXR_NS::pxr_boost::python;
+    using boost_noncopyable = PXR_NS::pxr_boost::python::noncopyable;
     template<typename... Args>
-    using boost_type_list = pxr_boost::python::type_list<Args...>;
+    using boost_type_list = PXR_NS::pxr_boost::python::type_list<Args...>;
 #endif
 
 #include <string>
