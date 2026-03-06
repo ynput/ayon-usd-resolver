@@ -72,6 +72,13 @@ void _AddToken(T &cls, const char* name, const TfToken &token) {
 
 } // namespace
 
+static std::string GetMappingPairs() {
+    return AyonUsdResolverTokens->mappingPairs.GetString();
+}
+
 void wrapResolverTokens() {
-    class_<AyonUsdResolverTokensType, boost_noncopyable>("Tokens", no_init);
+    using This = AyonUsdResolverTokensType;
+
+    class_<This, boost_noncopyable>("Tokens", no_init)
+    .add_static_property("mappingPairs", make_function(&GetMappingPairs, return_value_policy<return_by_value>()));
 }
