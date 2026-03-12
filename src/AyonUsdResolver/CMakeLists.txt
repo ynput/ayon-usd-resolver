@@ -211,12 +211,19 @@ if(_usd_is_houdini)
     set(HOUDINI_SPDLOG_INCLUDE "${USD_ROOT}/toolkit/include")
 
     if(EXISTS "${USD_INCLUDE_DIR}/pxr/external/boost")
+        # Houdini 21.0+ (uses pxr_boost)
         set(AR_BOOST_NAMESPACE pxr_boost)
         set(AR_BOOST_INCLUDE_DIR ${USD_INCLUDE_DIR}/pxr/external)
+    elseif(EXISTS "${USD_INCLUDE_DIR}/pxr/external/hboost")
+        # Houdini 20.0 and 20.5 (hboost hidden inside pxr/external)
+        set(AR_BOOST_NAMESPACE hboost)
+        set(AR_BOOST_INCLUDE_DIR ${USD_INCLUDE_DIR}/pxr/external)
+        add_compile_definitions(AYON_USE_HBOOST)
+        set(Boost_INCLUDE_DIRS ${USD_INCLUDE_DIR}/pxr/external)
     else()
+        # Houdini 19.5 and older (hboost in standard toolkit/include)
         set(AR_BOOST_NAMESPACE hboost)
         set(AR_BOOST_INCLUDE_DIR ${USD_INCLUDE_DIR})
-        # Signal to source files that we use hboost instead of pxr_boost
         add_compile_definitions(AYON_USE_HBOOST)
     endif()
 
@@ -294,15 +301,54 @@ if(WIN32 AND BUILD_TARGET STREQUAL "maya")
 else()
 
     if(NOT Python_FOUND)
-        if(DEFINED PYTHON_EXECUTABLE)
-            set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
-            if (NOT BUILD_TARGET STREQUAL "maya")
-                get_filename_component(_python_root "${PYTHON_EXECUTABLE}" DIRECTORY)
-                get_filename_component(_python_root "${_python_root}" DIRECTORY)
-                set(Python_ROOT_DIR "${_python_root}")
-            endif()
+        # Catch both Python_EXECUTABLE and PYTHON_EXECUTABLE
+        if(DEFINED Python_EXECUTABLE)
+            set(_active_py_exec ${Python_EXECUTABLE})
+        elseif(DEFINED PYTHON_EXECUTABLE)
+            set(_active_py_exec ${PYTHON_EXECUTABLE})
+            set(Python_EXECUTABLE ${_active_py_exec})
         endif()
-        find_package(Python COMPONENTS Interpreter Development REQUIRED)
+
+        # [FIX] Bypass FindPython for Houdini Linux
+        if(_usd_is_houdini AND NOT WIN32)
+            execute_process(
+                COMMAND "${_active_py_exec}" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+                OUTPUT_VARIABLE _hou_pyver OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET
+            )
+            if(NOT _hou_pyver)
+                set(_hou_pyver "3.11") # Fallback
+            endif()
+
+            set(Python_INCLUDE_DIRS "${USD_ROOT}/toolkit/include/python${_hou_pyver}")
+            
+            find_library(HOUDINI_PYTHON_LIB
+                NAMES python${_hou_pyver} python${_hou_pyver}m
+                PATHS "${USD_ROOT}/python/lib" "${USD_ROOT}/dsolib"
+                NO_DEFAULT_PATH
+            )
+            set(Python_LIBRARIES "${HOUDINI_PYTHON_LIB}")
+            
+            # Force CMake to accept our manual paths
+            set(Python_FOUND TRUE)
+            set(Python_Interpreter_FOUND TRUE)
+            set(Python_Development_FOUND TRUE)
+            
+            message(STATUS "[AYON] Bypassed FindPython for Houdini Linux.")
+            message(STATUS "  -> Includes: ${Python_INCLUDE_DIRS}")
+            message(STATUS "  -> Libs: ${Python_LIBRARIES}")
+        else()
+            # Standard FindPython fallback for other setups
+            if(DEFINED _active_py_exec)
+                if (NOT BUILD_TARGET STREQUAL "maya")
+                    get_filename_component(_python_root "${_active_py_exec}" DIRECTORY)
+                    get_filename_component(_python_root "${_python_root}" DIRECTORY)
+                    set(Python_ROOT_DIR "${_python_root}")
+                endif()
+            endif()
+            
+            find_package(Python COMPONENTS Interpreter Development REQUIRED)
+        endif()
     endif()
 
 endif()
@@ -313,7 +359,8 @@ endif()
 set(RESOLVER_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${USD_INCLUDE_DIR}
-    ${USD_BOOST_INCLUDE_DIR}
+    ${AR_BOOST_INCLUDE_DIR}        
+    ${Boost_INCLUDE_DIRS}          
     ${Python_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/ext/ayon-cpp-api/src/AyonCppApi
     ${CMAKE_SOURCE_DIR}/ext/ayon-cpp-api/ext/ayon-cpp-dev-tools/src
@@ -321,7 +368,6 @@ set(RESOLVER_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/ext/ayon-cpp-api/ext/cpp-httplib
     ${CMAKE_SOURCE_DIR}/ext/ayon-cpp-api/ext/json/include
     ${CMAKE_SOURCE_DIR}/ext/ayon-cpp-api/ext/spdlog/include
-    ${Boost_INCLUDE_DIRS}
     ${OPENSSL_INCLUDE_DIR}
 )
 if(_usd_is_houdini AND HOUDINI_SPDLOG_INCLUDE)
@@ -334,6 +380,7 @@ endif()
 set(RESOLVER_SRCS
     resolver.cpp
     resolverContext.cpp
+    Wrappers_Tokens/resolverTokens.cpp
     helpers/resolutionFunctions.cpp
     cache/assetIdentifierDef.cpp
     cache/resolverContextCache.cpp
