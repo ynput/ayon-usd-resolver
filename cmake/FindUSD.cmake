@@ -42,17 +42,21 @@ if (DEFINED USD_INCLUDE_DIR AND EXISTS "${USD_INCLUDE_DIR}/pxr/pxr.h")
 # 2. Check Houdini
 elseif (_usd_is_houdini)
     set(USD_INCLUDE_DIR "${USD_ROOT}/toolkit/include")
-
-# 3. [CRITICAL FIX] Check MayaUSD Linux Deep Split Layout
-#    Go up 3 levels from USD_ROOT to find the 'devkit' folder
 elseif (EXISTS "${USD_ROOT}/../../../devkit/include/pxr/pxr.h")
     get_filename_component(_usd_common_ancestor "${USD_ROOT}/../../.." ABSOLUTE)
     set(USD_INCLUDE_DIR "${_usd_common_ancestor}/devkit/include")
     message(STATUS "[AYON] Detected MayaUSD Split Layout (Linux).")
     message(STATUS "       - Found headers at: ${USD_INCLUDE_DIR}")
+elseif (DEFINED MAYA_USD_DEVKIT_PATH AND EXISTS "${MAYA_USD_DEVKIT_PATH}/include/pxr/pxr.h")
+    set(USD_INCLUDE_DIR "${MAYA_USD_DEVKIT_PATH}/include")
+    message(STATUS "[AYON] Detected MayaUSD 0.34.0+ layout — headers in Maya devkit.")
+    message(STATUS "       - Found headers at: ${USD_INCLUDE_DIR}")
 
 # 4. Standard Layouts
 elseif (EXISTS "${USD_ROOT}/include/maya-usd/pxr/pxr.h")
+    set(USD_INCLUDE_DIR "${USD_ROOT}/include/maya-usd")
+    message(STATUS "[AYON] Found Include Dir (Maya USD): ${USD_INCLUDE_DIR}")
+elseif (EXISTS "${USD_ROOT}/include/pxr/pxr.h")
     set(USD_INCLUDE_DIR "${USD_ROOT}/include/maya-usd")
     message(STATUS "[AYON] Found Include Dir (Maya USD): ${USD_INCLUDE_DIR}")
 elseif (EXISTS "${USD_ROOT}/include/pxr/pxr.h")
