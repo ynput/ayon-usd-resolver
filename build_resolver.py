@@ -26,7 +26,18 @@ def detect_houdini_env(root):
     houdini_cmake_path = os.path.join(root, "toolkit", "cmake")
 
     if platform.system() == "Windows":
-        python_exec = os.path.join(root, "python311", "python.exe")
+        # Auto-detect Python version from Houdini by checking which python3X directory exists
+        python_exec = None
+        for pyver in ["311", "310", "39", "37"]:  # Check in order of preference
+            candidate = os.path.join(root, f"python{pyver}", "python.exe")
+            if os.path.exists(candidate):
+                python_exec = candidate
+                break
+        
+        # Fallback if none found (shouldn't happen with valid Houdini)
+        if not python_exec:
+            python_exec = os.path.join(root, "python311", "python.exe")
+            print(f"[WARNING] Could not detect Python version, using fallback: {python_exec}")
     else:
         python_exec = os.path.join(root, "python", "bin", "python")
 
