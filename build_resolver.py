@@ -33,9 +33,9 @@ def detect_houdini_env(root):
     return [
         "-DBUILD_TARGET=houdini",
         "-DUSE_OPENSSL3=ON",
-        f"-DUSD_ROOT={root}",
-        f"-DCMAKE_PREFIX_PATH={houdini_cmake_path}",
-        f"-DPython_EXECUTABLE={python_exec}",
+        f"-DUSD_ROOT=\"{root}\"",
+        f"-DCMAKE_PREFIX_PATH=\"{houdini_cmake_path}\"",
+        f"-DPython_EXECUTABLE=\"{python_exec}\"",
     ]
 
 
