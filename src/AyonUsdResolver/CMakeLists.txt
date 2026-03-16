@@ -44,7 +44,7 @@ find_package(Threads REQUIRED)
 # Re-detect Houdini layout
 # (_usd_is_houdini is local to FindUSD.cmake scope, re-detect here)
 # =========================================================
-if(USD_ROOT AND EXISTS "${USD_ROOT}/toolkit/include" AND EXISTS "${USD_ROOT}/dsolib")
+if(USD_ROOT AND EXISTS "${USD_ROOT}/toolkit/include" AND (EXISTS "${USD_ROOT}/dsolib" OR EXISTS "${USD_ROOT}/custom/houdini/dsolib"))
     set(_usd_is_houdini TRUE)
 else()
     set(_usd_is_houdini FALSE)
@@ -177,7 +177,7 @@ if(_usd_is_houdini)
 
     # ----------------------------------------------------------
     # Step 1: detect Houdini Python version + ABI flag
-    # Houdini 19.5 = Python 3.7m, 20.0 = 3.9, 20.5 = 3.11, 21+ = 3.11
+    # Houdini 19.5 = Python 3.7m, 20.0 = 3.9, 20.5 = 3.10, 21+ = 3.11
     # ----------------------------------------------------------
     if(NOT WIN32)
         # Extract the Houdini version from the dcc-root path (e.g., /opt/hfs19.5.716)
@@ -266,6 +266,27 @@ if(_usd_is_houdini)
         set(Python_Development_FOUND TRUE)
 
         message(STATUS "[AYON] Bypassed FindPython for Houdini Linux.")
+        message(STATUS "  -> Includes: ${Python_INCLUDE_DIRS}")
+        message(STATUS "  -> Libs: ${Python_LIBRARIES}")
+    endif()
+
+    # ----------------------------------------------------------
+    # Step 2b: Windows Houdini Python setup
+    # ----------------------------------------------------------
+    if(WIN32)
+        # Set Windows Python paths based on detected version
+        set(Python_INCLUDE_DIRS "${USD_ROOT}/python${_hou_pyver_short}/include")
+        find_library(HOUDINI_PYTHON_LIB
+            NAMES python${_hou_pyver_short}
+            PATHS "${USD_ROOT}/python${_hou_pyver_short}/libs"
+            NO_DEFAULT_PATH
+        )
+        set(Python_LIBRARIES "${HOUDINI_PYTHON_LIB}")
+        set(Python_FOUND TRUE)
+        set(Python_Interpreter_FOUND TRUE)
+        set(Python_Development_FOUND TRUE)
+
+        message(STATUS "[AYON] Bypassed FindPython for Houdini Windows.")
         message(STATUS "  -> Includes: ${Python_INCLUDE_DIRS}")
         message(STATUS "  -> Libs: ${Python_LIBRARIES}")
     endif()
@@ -433,7 +454,7 @@ message(STATUS "[AYON] Final AR_BOOST_INCLUDE_DIR: ${AR_BOOST_INCLUDE_DIR}")
 message(STATUS "[AYON] Final Python_INCLUDE_DIRS:  ${Python_INCLUDE_DIRS}")
 
 set(RESOLVER_INCLUDE_DIRS
-    ${CMAKE_CURRENT_SOURCE_DIR}   # first: picks up hboost/python/detail/wrap_python.hpp stub
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${USD_INCLUDE_DIR}
     ${AR_BOOST_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
@@ -484,6 +505,7 @@ add_library(${PYTHON_MOD_TARGET} MODULE
     Wrappers_Tokens/wrapResolverContext.cpp
     Wrappers_Tokens/wrapResolver.cpp
     Wrappers_Tokens/wrapResolverTokens.cpp
+    Wrappers_Tokens/resolverTokens.cpp
     pluginData/module.cpp
 )
 
@@ -493,6 +515,26 @@ target_compile_definitions(${PYTHON_MOD_TARGET} PRIVATE AR_AYONUSDRESOLVER_EXPOR
 if(MSVC)
     target_compile_options(${PYTHON_MOD_TARGET} PRIVATE /Zc:inline-)
     target_link_options(${PYTHON_MOD_TARGET} PRIVATE /OPT:NOREF)
+endif()
+
+# =========================================================
+# Locate additional core USD libraries (sdf, vt, pcp)
+# =========================================================
+set(USD_EXTRA_LIBS "")
+if(_usd_is_houdini OR BUILD_TARGET STREQUAL "maya")
+    set(_usd_lib_names sdf vt pcp)
+    foreach(_libname IN LISTS _usd_lib_names)
+        find_library(_usd_lib_found
+            NAMES ${_usd_prefix}_${_libname} lib${_usd_prefix}_${_libname}
+            PATHS "${USD_LIB_DIR}"
+            NO_DEFAULT_PATH
+        )
+        if(_usd_lib_found)
+            list(APPEND USD_EXTRA_LIBS ${_usd_lib_found})
+            message(STATUS "[AYON] Found USD library: ${_libname} = ${_usd_lib_found}")
+            unset(_usd_lib_found CACHE)
+        endif()
+    endforeach()
 endif()
 
 # =========================================================
@@ -510,6 +552,7 @@ target_link_libraries(${CORE_LIB_TARGET}
         USD::tf
         USD::plug
         USD::arch
+        ${USD_EXTRA_LIBS}
         ${USD_PYTHON_LIBRARIES}
 )
 
@@ -521,6 +564,7 @@ target_link_libraries(${PYTHON_MOD_TARGET}
         USD::tf
         USD::plug
         USD::arch
+        ${USD_EXTRA_LIBS}
         ${USD_PYTHON_LIBRARIES}
 )
 
