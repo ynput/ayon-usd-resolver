@@ -23,7 +23,6 @@ def run(cmd, cwd=None, env=None):
 
 def detect_houdini_env(root):
     """Detect paths for Houdini installations."""
-    usd_root = root
     houdini_cmake_path = os.path.join(root, "toolkit", "cmake")
 
     if platform.system() == "Windows":
@@ -34,9 +33,19 @@ def detect_houdini_env(root):
     return [
         "-DBUILD_TARGET=houdini",
         "-DUSE_OPENSSL3=ON",
-        f"-DUSD_ROOT=\"{usd_root}\"",
-        f"-DCMAKE_PREFIX_PATH=\"{houdini_cmake_path}\"",
-        f"-DPython_EXECUTABLE=\"{python_exec}\"",
+        f"-DUSD_ROOT={root}",
+        f"-DCMAKE_PREFIX_PATH={houdini_cmake_path}",
+        f"-DPython_EXECUTABLE={python_exec}",
+    ]
+
+
+def detect_usd_env(root):
+    """Detect paths for standalone USD SDK installs."""
+    python_exec = shutil.which("python3") or sys.executable
+    return [
+        "-DBUILD_TARGET=usd",
+        f"-DUSD_ROOT={root}",
+        f"-DPython_EXECUTABLE={python_exec}",
     ]
 
 
@@ -87,18 +96,6 @@ def detect_maya_env(root, devkit_path=None, usd_root=None):
         f"-DPython_INCLUDE_DIR=\"{python_include}\"",
         f"-DPython_LIBRARIES=\"{python_lib}\"",
     ]
-
-
-def detect_usd_env(root):
-    """Detect paths for standalone USD SDK installs."""
-    python_exec = shutil.which("python3") or sys.executable
-    pyver = f"{sys.version_info.major}.{sys.version_info.minor}"
-    return {
-        "DCC": "usd",
-        "USD_ROOT": root,
-        "PYTHON_EXECUTABLE": python_exec,
-        "PYTHON_VERSION": pyver,
-    }
 
 
 def detect_dcc_env(dcc, root, **kwargs):
