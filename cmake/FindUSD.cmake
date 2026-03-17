@@ -77,15 +77,14 @@ endif()
 # -----------------------------------------------------------------------------
 if (EXISTS "${USD_ROOT}/dsolib")
     set(USD_LIB_DIR "${USD_ROOT}/dsolib")
-# --- FIX: Check for Windows Houdini SDK lib path ---
 elseif (EXISTS "${USD_ROOT}/custom/houdini/dsolib")
     set(USD_LIB_DIR "${USD_ROOT}/custom/houdini/dsolib")
     message(STATUS "[AYON] Found Windows Houdini Libs: ${USD_LIB_DIR}")
-# ---------------------------------------------------
-# --- Check for Maya-USD specific lib layout ---
+elseif (EXISTS "${USD_ROOT}/lib/usd")
+    set(USD_LIB_DIR "${USD_ROOT}/lib/usd")
+    message(STATUS "[AYON] Found MayaUSD lib/usd layout: ${USD_LIB_DIR}")
 elseif (EXISTS "${USD_ROOT}/lib/maya-usd")
     set(USD_LIB_DIR "${USD_ROOT}/lib/maya-usd")
-# ----------------------------------------------
 elseif (EXISTS "${USD_ROOT}/lib")
     set(USD_LIB_DIR "${USD_ROOT}/lib")
 elseif (EXISTS "${USD_ROOT}/../dsolib")
@@ -94,7 +93,7 @@ elseif (EXISTS "${USD_ROOT}/../dsolib")
 else()
     message(FATAL_ERROR
         "Could not find USD library directory under ${USD_ROOT}. "
-        "Checked dsolib, custom/houdini/dsolib, lib/maya-usd and lib.")
+        "Checked dsolib, custom/houdini/dsolib, lib/usd, lib/maya-usd and lib.")
 endif()
 
 # -----------------------------------------------------------------------------
