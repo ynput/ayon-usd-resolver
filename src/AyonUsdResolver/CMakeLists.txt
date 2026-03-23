@@ -150,18 +150,31 @@ if(BUILD_TARGET STREQUAL "maya")
             set(USD_PYTHON_LIBRARIES "${MAYA_USD_PYTHON_LIB}")
             message(STATUS "[AYON] Found Maya USD python lib: ${MAYA_USD_PYTHON_LIB}")
         else()
+            message(STATUS "[AYON] usd_python.lib not found, trying boost_python fallback...")
+            message(STATUS "[AYON] Searching boost_python in: ${USD_LIB_DIR}")
+            message(STATUS "[AYON] Searching boost_python in: ${MAYA_USD_DEVKIT_PATH}/lib")
+            message(STATUS "[AYON] Searching boost_python in: ${MAYA_ROOT}/devkit/lib")
+
             find_library(_boost_python_lib
-                NAMES boost_python${_maya_pyver}-vc142-mt-x64-1_76
-                      boost_python${_maya_pyver}
-                PATHS "${USD_LIB_DIR}" "${MAYA_USD_DEVKIT_PATH}/lib"
+                NAMES
+                    boost_python${_maya_pyver}-vc143-mt-x64-1_81
+                    boost_python${_maya_pyver}-vc143-mt-x64
+                    boost_python${_maya_pyver}-vc142-mt-x64-1_76
+                    boost_python${_maya_pyver}-vc142-mt-x64
+                    boost_python${_maya_pyver}
+                PATHS
+                    "${USD_LIB_DIR}"
+                    "${MAYA_USD_DEVKIT_PATH}/lib"
+                    "${MAYA_ROOT}/devkit/lib"
                 NO_DEFAULT_PATH
             )
+
             if(_boost_python_lib)
                 set(USD_PYTHON_LIBRARIES "${_boost_python_lib}")
                 message(STATUS "[AYON] Using boost_python fallback: ${_boost_python_lib}")
             else()
                 message(FATAL_ERROR
-                    "[AYON] Could not find usd_python.lib or boost_python${_maya_pyver} lib")
+                    "[AYON] Could not find usd_python.lib or a compatible boost_python${_maya_pyver} library")
             endif()
         endif()
     endif()
@@ -370,15 +383,39 @@ elseif(BUILD_TARGET STREQUAL "maya")
     if(EXISTS "${USD_INCLUDE_DIR}/pxr/external/boost")
         find_package(Boost REQUIRED)
     else()
-        set(_maya_boost_inc "${MAYA_USD_DEVKIT_PATH}/include/boost-1_76")
-        if(NOT EXISTS "${_maya_boost_inc}")
-            set(_maya_boost_inc "${MAYA_USD_DEVKIT_PATH}/include")
+        set(_maya_boost_candidates
+            "${MAYA_USD_DEVKIT_PATH}/include/boost-1_85"
+            "${MAYA_USD_DEVKIT_PATH}/include/boost-1_82"
+            "${MAYA_USD_DEVKIT_PATH}/include/boost-1_81"
+            "${MAYA_USD_DEVKIT_PATH}/include/boost-1_76"
+            "${MAYA_USD_DEVKIT_PATH}/include"
+            "${USD_ROOT}/include/boost-1_85"
+            "${USD_ROOT}/include/boost-1_82"
+            "${USD_ROOT}/include/boost-1_81"
+            "${USD_ROOT}/include/boost-1_76"
+            "${USD_ROOT}/include"
+        )
+
+        unset(_maya_boost_inc)
+        foreach(_boost_inc IN LISTS _maya_boost_candidates)
+            if(EXISTS "${_boost_inc}/boost/python/detail/wrap_python.hpp")
+                set(_maya_boost_inc "${_boost_inc}")
+                break()
+            endif()
+        endforeach()
+
+        if(NOT _maya_boost_inc)
+            message(FATAL_ERROR
+                "[AYON] Could not find Maya Boost headers. "
+                "Expected boost/python/detail/wrap_python.hpp under Maya devkit or USD root."
+            )
         endif()
+
         set(Boost_FOUND TRUE)
         set(Boost_INCLUDE_DIRS "${_maya_boost_inc}")
         set(AR_BOOST_INCLUDE_DIR "${_maya_boost_inc}")
         add_compile_definitions(AYON_USE_BOOST)
-        message(STATUS "[AYON] Using plain boost for Maya (USD 22.x): ${_maya_boost_inc}")
+        message(STATUS "[AYON] Using plain boost for Maya: ${_maya_boost_inc}")
     endif()
 else()
     find_package(Boost REQUIRED)
