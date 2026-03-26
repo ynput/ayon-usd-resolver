@@ -211,6 +211,8 @@ set_target_properties(USD::arch PROPERTIES
 set(USD_FOUND TRUE)
 set(USD_INCLUDE_DIR ${USD_INCLUDE_DIR} CACHE PATH "USD include directory")
 set(USD_LIB_DIR ${USD_LIB_DIR} CACHE PATH "USD library directory")
+set(USD_IS_HOUDINI ${_usd_is_houdini} CACHE BOOL "Whether the detected USD layout is Houdini-style" FORCE)
+set(USD_LIB_PREFIX ${_usd_prefix} CACHE STRING "Detected USD library name prefix" FORCE)
 
 # =========================================================
 # Diagnostics
