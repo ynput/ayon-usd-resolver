@@ -85,7 +85,6 @@ AyonUsdResolver::_CreateIdentifierForNewAsset(const std::string &assetPath,
 
 ArResolvedPath
 AyonUsdResolver::_Resolve(const std::string &assetPath) const {
-    std::cout << "Resolver::_Resolve( " << assetPath << " )" << std::endl;
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER).Msg("Resolver::_Resolve( '%s' ) \n", assetPath.c_str());
 
     if (assetPath.empty()) {

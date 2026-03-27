@@ -23,20 +23,40 @@ def run(cmd, cwd=None, env=None):
 
 def detect_houdini_env(root):
     """Detect paths for Houdini installations."""
-    usd_root = root
     houdini_cmake_path = os.path.join(root, "toolkit", "cmake")
 
     if platform.system() == "Windows":
-        python_exec = os.path.join(root, "python311", "python.exe")
+        # Auto-detect Python version from Houdini by checking which python3X directory exists
+        python_exec = None
+        for pyver in ["311", "310", "39", "37"]:  # Check in order of preference
+            candidate = os.path.join(root, f"python{pyver}", "python.exe")
+            if os.path.exists(candidate):
+                python_exec = candidate
+                break
+        
+        # Fallback if none found (shouldn't happen with valid Houdini)
+        if not python_exec:
+            python_exec = os.path.join(root, "python311", "python.exe")
+            print(f"[WARNING] Could not detect Python version, using fallback: {python_exec}")
     else:
         python_exec = os.path.join(root, "python", "bin", "python")
 
     return [
         "-DBUILD_TARGET=houdini",
         "-DUSE_OPENSSL3=ON",
-        f"-DUSD_ROOT=\"{usd_root}\"",
+        f"-DUSD_ROOT=\"{root}\"",
         f"-DCMAKE_PREFIX_PATH=\"{houdini_cmake_path}\"",
         f"-DPython_EXECUTABLE=\"{python_exec}\"",
+    ]
+
+
+def detect_usd_env(root):
+    """Detect paths for standalone USD SDK installs."""
+    python_exec = shutil.which("python3") or sys.executable
+    return [
+        "-DBUILD_TARGET=usd",
+        f"-DUSD_ROOT={root}",
+        f"-DPython_EXECUTABLE={python_exec}",
     ]
 
 
@@ -58,14 +78,22 @@ def detect_maya_env(root, devkit_path=None, usd_root=None):
     else:
         python_exec = os.path.join(maya_bin, "python")
 
-    # 2. Library & Include Paths for Maya 2026 (Python 3.11)
+    # 2. Library & Include Paths — auto-detect Python version from mayapy
+    try:
+        pyver_out = subprocess.check_output(
+            [python_exec, "-c", "import sys; print(f'{sys.version_info.major}{sys.version_info.minor}')"],
+            text=True
+        ).strip()
+    except Exception:
+        pyver_out = "310"  # fallback for Maya 2024
+    pyver_dotted = f"{pyver_out[0]}.{pyver_out[1:]}"
+
     if platform.system() == "Windows":
-        python_lib = os.path.join(root, "lib", "python311.lib")
-        python_include = os.path.join(root, "include", "Python311", "Python")
+        python_lib = os.path.join(root, "lib", f"python{pyver_out}.lib")
+        python_include = os.path.join(root, "include", f"Python{pyver_out}", "Python")
     else:
-        # Linux paths
-        python_lib = os.path.join(root, "lib", "libpython3.11.so")
-        python_include = os.path.join(root, "include", "python3.11")
+        python_lib = os.path.join(root, "lib", f"libpython{pyver_dotted}.so")
+        python_include = os.path.join(root, "include", f"python{pyver_dotted}")
 
     return [
         "-DBUILD_TARGET=maya",
@@ -79,18 +107,6 @@ def detect_maya_env(root, devkit_path=None, usd_root=None):
         f"-DPython_INCLUDE_DIR=\"{python_include}\"",
         f"-DPython_LIBRARIES=\"{python_lib}\"",
     ]
-
-
-def detect_usd_env(root):
-    """Detect paths for standalone USD SDK installs."""
-    python_exec = shutil.which("python3") or sys.executable
-    pyver = f"{sys.version_info.major}.{sys.version_info.minor}"
-    return {
-        "DCC": "usd",
-        "USD_ROOT": root,
-        "PYTHON_EXECUTABLE": python_exec,
-        "PYTHON_VERSION": pyver,
-    }
 
 
 def detect_dcc_env(dcc, root, **kwargs):
