@@ -4,7 +4,7 @@
 
 [submodule "ext/ayon-cpp-dev-tools"]
   path = ext/ayon-cpp-dev-tools
-  url = https://github.com/ynput/ayon-cpp-dev-tools.git
+  url = https://github.com/cpt-cabbage/ayon-cpp-dev-tools.git
 [submodule "automator"]
 	path = automator
 	url = https://github.com/ynput/ayon-automator.git

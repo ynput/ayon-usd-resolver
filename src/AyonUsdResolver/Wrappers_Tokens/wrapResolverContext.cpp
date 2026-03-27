@@ -2,16 +2,32 @@
 
 #include "pxr/pxr.h"
 #include "pxr/base/tf/pyUtils.h"
-#include <pxr/external/boost/python/class.hpp>
-#include <pxr/external/boost/python/operators.hpp>
-#include <pxr/external/boost/python/return_value_policy.hpp>
+
+#ifdef AYON_USE_HBOOST
+    #include <hboost/python/class.hpp>
+    #include <hboost/python/operators.hpp>
+    #include <hboost/python/return_value_policy.hpp>
+    #include <hboost/python/self.hpp>
+    namespace boost_python_ns = hboost::python;
+#elif defined(AYON_USE_BOOST)
+    #include <boost/python/class.hpp>
+    #include <boost/python/operators.hpp>
+    #include <boost/python/return_value_policy.hpp>
+    namespace boost_python_ns = boost::python;
+#else
+    #include <pxr/external/boost/python/class.hpp>
+    #include <pxr/external/boost/python/operators.hpp>
+    #include <pxr/external/boost/python/return_value_policy.hpp>
+    namespace boost_python_ns = PXR_NS::pxr_boost::python;
+#endif
+
 #include "pxr/usd/ar/pyResolverContext.h"
 
 #include <string>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-using namespace pxr_boost::python;
+using namespace boost_python_ns;
 
 static size_t
 _Hash(const AyonUsdResolverContext &ctx) {
