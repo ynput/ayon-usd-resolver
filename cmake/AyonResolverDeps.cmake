@@ -50,6 +50,18 @@ if(USD_IS_HOUDINI OR BUILD_TARGET STREQUAL "maya")
     endforeach()
 endif()
 
+set(AYON_RESOLVER_OPENSSL_LIBS
+    OpenSSL::SSL
+    OpenSSL::Crypto
+)
+
+if(WIN32)
+    # AyonCppApi already pulls in OpenSSL's static archives on Windows.
+    # Exporting the import libs here as well causes duplicate symbols when
+    # the final Python module is linked.
+    set(AYON_RESOLVER_OPENSSL_LIBS)
+endif()
+
 target_compile_definitions(${AYON_RESOLVER_DCC_DEPS_TARGET}
     INTERFACE
         PXR_SET_INTERNAL_NAMESPACE
@@ -84,8 +96,7 @@ target_link_libraries(${AYON_RESOLVER_DCC_DEPS_TARGET}
         Threads::Threads
         AyonCppApi
         AyonCppDevToolsLib
-        OpenSSL::SSL
-        OpenSSL::Crypto
+        ${AYON_RESOLVER_OPENSSL_LIBS}
         USD::ar
         USD::tf
         USD::plug
