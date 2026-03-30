@@ -42,11 +42,29 @@ AYON compatible entity URIs through the
 ### Tested Platforms:
 
 - Rocky 9 Linux
+  - Hou 21.0.631
   - Hou 21.0.512
+  - Hou 20.5.892
+  - Hou 20.5.654
+  - Hou 20.0.1358
+  - Hou 20.0.896
+  - Hou 19.5.805
+  - Hou 19.5.773
   - Maya 2026 (UsdAddon_0.25.5)
+  - Maya 2025
+  - Maya 2024
+
 - Windows 11
   - Hou 21.0.512
+  - Hou 20.5.370
+  - Hou 20.5.332
+  - Hou 20.0.705
+  - Hou 20.0.688
+  - Hou 19.5.805
+  - Hou 19.5.976
   - Maya 2026 (UsdAddon_0.25.5)
+  - Maya 2025
+  - Maya 2024
 
 
 #### Run build using python script
@@ -97,9 +115,9 @@ Can be found on the connected GH Page
 
 ## Pre-build / Self Compiled
 
-- AYON will provide some pre-built versions of the resolver in the future.
+- AYON provides some pre-built versions of the Resolver at https://lake.ayon.cloud. Access credentials can be provided upon request.
 
-- Those versions will be the pre-built binaries that our tests created, so you
+- Those versions are the pre-built binaries that our tests created, so you
   might not find your software/platform combination.
 - It's also to be expected that resolver builds are behind new software
   releases.
