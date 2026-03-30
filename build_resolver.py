@@ -24,15 +24,6 @@ def run(cmd, cwd=None, env=None):
 def detect_houdini_env(root):
     """Detect paths for Houdini installations."""
     houdini_cmake_path = os.path.join(root, "toolkit", "cmake")
-    houdini_ver = None
-    root_name = os.path.basename(os.path.normpath(root))
-    if root_name.startswith("hfs"):
-        version_str = root_name[3:].split(".", 2)
-        if len(version_str) >= 2:
-            try:
-                houdini_ver = float(".".join(version_str[:2]))
-            except ValueError:
-                houdini_ver = None
 
     if platform.system() == "Windows":
         # Auto-detect Python version from Houdini by checking which python3X directory exists
@@ -50,12 +41,9 @@ def detect_houdini_env(root):
     else:
         python_exec = os.path.join(root, "python", "bin", "python")
 
-    # Houdini 21 uses OpenSSL 3. Houdini 20.x/19.x still need the legacy bundle.
-    use_openssl3 = houdini_ver is not None and houdini_ver >= 21.0
-
     return [
         "-DBUILD_TARGET=houdini",
-        f"-DUSE_OPENSSL3={'ON' if use_openssl3 else 'OFF'}",
+        "-DUSE_OPENSSL3=ON",
         f"-DUSD_ROOT=\"{root}\"",
         f"-DCMAKE_PREFIX_PATH=\"{houdini_cmake_path}\"",
         f"-DPython_EXECUTABLE=\"{python_exec}\"",
