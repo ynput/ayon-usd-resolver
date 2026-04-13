@@ -62,7 +62,7 @@ class ResolverContextCache {
          * @param isAyonPath Whether this is an AYON URI
          * @return AssetIdentifier with resolved path
          */
-        AssetIdentifier* getAsset(const std::string &assetIdentifier, const cacheName &selectedCache, const bool &isAyonPath);
+        AssetIdentifier* getAsset(const std::string &assetIdentifier, const CacheName selectedCache, const bool isAyonPath);
 
         /**
          * @brief Set up the cache from a pinning file

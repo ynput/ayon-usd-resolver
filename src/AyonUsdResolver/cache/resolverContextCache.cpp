@@ -167,8 +167,8 @@ ResolverContextCache::migratePreCacheIntoAyonCache() {
 
 AssetIdentifier*
 ResolverContextCache::getAsset(const std::string &assetIdentifier,
-                               const cacheName &selectedCache,
-                               const bool &isAyonPath) {
+                               const CacheName selectedCache,
+                               const bool isAyonPath) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: (%s) \n", assetIdentifier.c_str());
 
     if (assetIdentifier.empty()) {
