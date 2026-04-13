@@ -172,7 +172,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: (%s) \n", assetIdentifier.c_str());
 
     if (assetIdentifier.empty()) {
-        return new assetIdent();
+        return new AssetIdentifier();
     }
     if (m_staticCache) {
         return m_pinningFileHandler->getAssetData(assetIdentifier);
