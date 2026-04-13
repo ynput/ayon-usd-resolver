@@ -76,7 +76,7 @@ PinningFileHandler::getAssetData(const std::string &resolveKey) {
         return assetEntry;
     }
 
-    assetEntry = new assetIdent();
+    assetEntry = new AssetIdentifier();
 
     if (!pinnedAssetPath.empty()) {
         assetEntry->setAssetIdentifier(resolveKey);
@@ -179,7 +179,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
     }
 
     std::unordered_set<AssetIdentifier, AssetIdentifierHash>::iterator hit;
-    assetIdent* asset = nullptr;
+    assetIdentifier* asset = nullptr;
     
     std::shared_lock<std::shared_mutex> preCacheSharedLock(m_PreCacheSharedMutex);
     hit = m_PreCache.find(assetIdentifier);
@@ -213,7 +213,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
                 std::shared_lock<std::shared_mutex> CommonCacheSharedLock(m_CommonCacheSharedMutex);
                 hit = m_CommonCache.find(assetIdentifier);
                 if (hit != m_CommonCache.end()) {
-                    asset = const_cast<assetIdent*>(&(*hit)); // get the pointer without making a copy of the object
+                    asset = const_cast<assetIdentifier*>(&(*hit)); // get the pointer without making a copy of the object
                     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
                         .Msg("ResolverContextCache::getAsset: CommonCache Hit \n");
                 }
