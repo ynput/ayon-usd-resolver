@@ -5,7 +5,8 @@
         "Types": {
           "@AR_AYONUSDRESOLVER_USD_CXX_CLASS_NAME@": {
             "bases": ["ArResolver"],
-            "implementsContexts": true
+            "implementsContexts": true,
+            "uriSchemes": ["ayon", "ayon+entity"]
           }
         }
       },

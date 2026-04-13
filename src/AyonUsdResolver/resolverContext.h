@@ -18,6 +18,8 @@ class AyonUsdResolverContext {
         AR_AYONUSDRESOLVER_API
         AyonUsdResolverContext(const AyonUsdResolverContext &ctx);
         AR_AYONUSDRESOLVER_API
+        AyonUsdResolverContext(const std::string &filePath);
+        AR_AYONUSDRESOLVER_API
         ~AyonUsdResolverContext();
 
         // Standard Ops
@@ -37,19 +39,42 @@ class AyonUsdResolverContext {
         void ClearAndReinitialize();
 
         AR_AYONUSDRESOLVER_API
-        void dropCache();
+        void DropCache();
 
         AR_AYONUSDRESOLVER_API
-        void deleteFromCache(const std::string &key);
+        void DeleteFromCache(const std::string &key);
 
         AR_AYONUSDRESOLVER_API
-        void clearCache();
+        void ClearCache();
 
-        std::shared_ptr<resolverContextCache> getCachePtr() const;
+        AR_AYONUSDRESOLVER_API
+        const std::string& GetMappingFilePath() const;
+        AR_AYONUSDRESOLVER_API
+        void SetMappingFilePath(std::string filePath);
+        AR_AYONUSDRESOLVER_API
+        void RefreshFromMappingFilePath();
+        AR_AYONUSDRESOLVER_API
+        void AddMappingPair(const std::string& sourceStr, const std::string& targetStr);
+        AR_AYONUSDRESOLVER_API
+        void RemoveMappingByKey(const std::string& sourceStr);
+        AR_AYONUSDRESOLVER_API
+        void RemoveMappingByValue(const std::string& targetStr);
+        AR_AYONUSDRESOLVER_API
+        void ClearMappingPairs();
+        AR_AYONUSDRESOLVER_API
+        const std::map<std::string, std::string> GetMappingPairs() const;
+
+        std::shared_ptr<ResolverContextCache> GetCachePtr() const;
 
     private:
-        std::shared_ptr<resolverContextCache> cache;
+        std::shared_ptr<ResolverContextCache> cache;
         ArResolvedPath rootPath;
+        std::string mappingFilePath;
+        std::unordered_map<std::string, std::string> mappingPairs;
+
+        bool _getMappingPairsFromFile(const std::string& filePath);
+        bool _getMappingPairsFromUsdFile(const std::string& filePath);
+        bool _getMappingPairsFromJsonFile(const std::string& filePath);
 };
 
 PXR_NAMESPACE_OPEN_SCOPE
