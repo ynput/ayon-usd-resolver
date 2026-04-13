@@ -179,7 +179,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
     }
 
     std::unordered_set<AssetIdentifier, AssetIdentifierHash>::iterator hit;
-    assetIdentifier* asset = nullptr;
+    AssetIdentifier* asset = nullptr;
     
     std::shared_lock<std::shared_mutex> preCacheSharedLock(m_PreCacheSharedMutex);
     hit = m_PreCache.find(assetIdentifier);
@@ -213,7 +213,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
                 std::shared_lock<std::shared_mutex> CommonCacheSharedLock(m_CommonCacheSharedMutex);
                 hit = m_CommonCache.find(assetIdentifier);
                 if (hit != m_CommonCache.end()) {
-                    asset = const_cast<assetIdentifier*>(&(*hit)); // get the pointer without making a copy of the object
+                    asset = const_cast<AssetIdentifier*>(&(*hit)); // get the pointer without making a copy of the object
                     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
                         .Msg("ResolverContextCache::getAsset: CommonCache Hit \n");
                 }
