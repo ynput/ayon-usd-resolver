@@ -185,7 +185,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
     hit = m_PreCache.find(assetIdentifier);
     if (hit != m_PreCache.end()) {
         asset = const_cast<AssetIdentifier*>(&(*hit)); // get the pointer without making a copy of the object
-        preCachesharedLock.unlock();
+        preCacheSharedLock.unlock();
 
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("ResolverContextCache::getAsset: PreCache Hit on (%s) with (%s) \n",
@@ -233,7 +233,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
 
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: No Cache Hit \n");
     if (isAyonPath) {
-        std::pair<std::string, std::string> resolvedAsset = m_ayon->resolvePath(assetIdentifier);
+        std::pair<std::string, std::string> resolvedAsset = m_ayon->resolvePath(*assetIdentifier);
         asset->setAssetIdentifier(std::move(resolvedAsset.first));
         asset->setResolvedAssetPath(std::move(resolvedAsset.second));
 
