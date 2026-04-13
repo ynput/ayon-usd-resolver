@@ -1,0 +1,44 @@
+# -----------------------------------------------------------------------------
+# AYON USD Resolver Build Image for Rocky Linux 9
+# -----------------------------------------------------------------------------
+FROM rockylinux:9
+
+# Fail fast and keep layers tidy
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
+
+# ------------------------------------------------------------
+# System dependencies
+# ------------------------------------------------------------
+RUN dnf -y update && dnf -y install \
+    git \
+    gcc gcc-c++ \
+    cmake \
+    make \
+    python3 python3-devel python3-pip \
+    boost-devel \
+    zip unzip \
+    which \
+    && dnf clean all
+
+# ------------------------------------------------------------
+# Python tooling (Ninja via pip is portable on Rocky 9)
+# ------------------------------------------------------------
+ENV PIP_NO_CACHE_DIR=1
+RUN python3 -m pip install --upgrade pip setuptools wheel \
+    && python3 -m pip install ninja
+
+# ------------------------------------------------------------
+# (Optional) Project venv — keeps things isolated
+# ------------------------------------------------------------
+RUN python3 -m venv /usr/local/ayon-env
+ENV PATH="/usr/local/ayon-env/bin:${PATH}"
+
+# ------------------------------------------------------------
+# Working directory + sources
+# ------------------------------------------------------------
+WORKDIR /workspace
+COPY . /workspace
+
+# Default entrypoint (override in `docker run` as needed)
+ENTRYPOINT ["python3", "build_resolver.py"]
+    

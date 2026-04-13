@@ -41,24 +41,64 @@ AYON compatible entity URIs through the
 
 ### Tested Platforms:
 
-- Alma Linux 9
+- Rocky 9 Linux
+  - Hou 21.0.631
+  - Hou 21.0.512
+  - Hou 20.5.892
+  - Hou 20.5.654
+  - Hou 20.0.1358
+  - Hou 20.0.896
   - Hou 19.5.805
-  - Hou 19.5.900
-  - Hou 20.0.590
-  - Hou 20.0.630
-  - Maya 2024.2(UsdAddon_0.25.0)
-  - Unreal5.4
-  - AyonUsd23_5_py39 (System Python install)
+  - Hou 19.5.773
+  - Maya 2026 (UsdAddon_0.25.5)
+  - Maya 2025
+  - Maya 2024
 
-- Windows 10
+- Windows 11
+  - Hou 21.0.512
+  - Hou 20.5.370
+  - Hou 20.5.332
+  - Hou 20.0.705
+  - Hou 20.0.688
   - Hou 19.5.805
-  - Hou 19.5.900
-  - Hou 20.0.590
-  - Hou 20.0.630
-  - AyonUsd23_5_py39 (Pyenv-Win)
-  - Maya2024_2
-  - Maya2025_2
-  - Unreal5_4
+  - Hou 19.5.976
+  - Maya 2026 (UsdAddon_0.25.5)
+  - Maya 2025
+  - Maya 2024
+
+
+#### Run build using python script
+Run build (Houdini):
+```
+python build_resolver.py --dcc houdini --dcc-root <houdini/installation/path> --clean --zip
+```
+
+Run build (Maya):
+```
+python build_resolver.py --dcc maya --dcc-root <maya/installation/path> --maya-devkit <maya/devkit/path> --maya-usd-root <maya/usd/root/path> --jobs 4 --clean
+```
+
+or see the help:
+```
+python build_resolver.py --help
+```
+
+#### Run build using cmake only
+Run build (Houdini):
+```
+cmake -S . -B <build/dir/path> -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=<install/dir/path> -DBUILD_TARGET=houdini -DUSE_OPENSSL3=OFF -DUSD_ROOT=<houdini/root/dir> -DCMAKE_PREFIX_PATH=<houdini/cmake/path> -DPYTHON_EXECUTABLE=<houdini/python/path>
+```
+```
+cmake --build <build/dir/path> --target install -j 4
+```
+
+Run build (Maya):
+```
+cmake -S . -B "/build/dir/path" -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=<install/dir/path> -DBUILD_TARGET=maya -DUSE_OPENSSL3=ON -DMAYA_ROOT=<maya/root/path> -DMAYA_USD_DEVKIT_PATH=<maya/devkit/path> -DUSD_ROOT=<maya/usd/path> -DPYTHON_EXECUTABLE=<maya/python/path>
+```
+```
+cmake --build <build/dir/path> --target install -j 4
+```
 
 ## Download the repo and its submodules:
 
@@ -75,9 +115,9 @@ Can be found on the connected GH Page
 
 ## Pre-build / Self Compiled
 
-- AYON will provide some pre-built versions of the resolver in the future.
+- AYON provides some pre-built versions of the Resolver at https://lake.ayon.cloud. Access credentials can be provided upon request.
 
-- Those versions will be the pre-built binaries that our tests created, so you
+- Those versions are the pre-built binaries that our tests created, so you
   might not find your software/platform combination.
 - It's also to be expected that resolver builds are behind new software
   releases.

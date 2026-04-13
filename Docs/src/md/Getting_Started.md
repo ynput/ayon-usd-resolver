@@ -264,7 +264,7 @@ export AYONLOGGERFILEPOS=""
 
 export ENABLE_STATIC_GLOBAL_CACHE="true"
 export PINNING_FILE_PATH="/path/to/pinning.json"
-export PROJECT_ROOTS="key:/val,key:/val"
+export PROJECT_ROOTS="key=/val,key=/val"
 
 export TF_DEBUG=""
 ```

@@ -16,3 +16,19 @@ function(set_boost_namespace target)
     )
   endif()
 endfunction(set_boost_namespace)
+
+# As certain USD distributions ship with pxr_boost (where the folder is still called 'boost'),
+# we have to treat the folder for header imports separately.
+function(set_boost_folder_namespace target)
+  target_compile_definitions(${target}
+    PRIVATE
+      AR_BOOST_FOLDER_NAMESPACE=${AR_BOOST_FOLDER_NAMESPACE}
+  )
+endfunction(set_boost_folder_namespace)
+# We also need to change code logic, as pxr_boost transferred over certain boost (non-python) files.
+function(set_boost_pxr_external_exists target)
+  target_compile_definitions(${target}
+    PRIVATE
+      AR_BOOST_PXR_EXTERNAL_EXISTS=${AR_BOOST_PXR_EXTERNAL_EXISTS}
+  )
+endfunction(set_boost_pxr_external_exists)
