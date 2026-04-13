@@ -185,7 +185,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
     hit = m_PreCache.find(assetIdentifier);
     if (hit != m_PreCache.end()) {
         asset = const_cast<AssetIdentifier*>(&(*hit)); // get the pointer without making a copy of the object
-        PreCachesharedLock.unlock();
+        preCachesharedLock.unlock();
 
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("ResolverContextCache::getAsset: PreCache Hit on (%s) with (%s) \n",
