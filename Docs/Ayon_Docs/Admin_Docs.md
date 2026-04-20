@@ -46,17 +46,17 @@ PYTHONPATH:
 
 - Exposes the Python wrapper functions from the resolver.
 
-AYONLOGGERLOGLVL:
+AYON_USD_RESOLVER_LOG_LVL:
 
 - This Environment variable allows you to set the log level for the CppApi.
   - INFO,ERROR,WARN,CRITICAL,OFF
 
-AYONLOGGERFILELOGGING:
+AYON_USD_RESOLVER_LOG_FILE_ENABLED:
 
 - Allows you to enable or disable file logging in CppApi.
   - OFF,ON
 
-AYONLOGGERFILEPOS:
+AYON_USD_RESOLVER_LOG_FILE:
 
 - Allows you to set a file path for the CppApi logging.
   - /path/to or relPath
@@ -81,8 +81,8 @@ This should be setup per Software Package
     "{PYTHONPATH}",
     "{AYONUSDRESOLVER_ROOT}/ayonUsdResolver/lib/python"
   ],
-  "AYONLOGGERLOGLVL": "WARN",
-  "AYONLOGGERFILELOGGING": "ON",
-  "AYONLOGGERFILEPOS": "LoggingFiles"
+  "AYON_USD_RESOLVER_LOG_LVL": "WARN",
+  "AYON_USD_RESOLVER_LOG_FILE_ENABLED": "ON",
+  "AYON_USD_RESOLVER_LOG_FILE": "LoggingFiles"
 }
 ```

@@ -58,7 +58,7 @@ PinningFileHandler::PinningFileHandler(const std::string &pinningFilePath,
 
 /**
  * @brief return AssetIdentifier populated with root rootReplaceData from the pinning file using the pinning file data loaded
- * at construction and the PROJECT_ROOTS env variable.
+ * at construction and the AYON_USD_RESOLVER_PINNING_ROOTS env variable.
  * this is not a cached function it will reconstruct the AssetIdentifier. it will not reload the file or the env var however.
  *
  * @param resolveKey UsdAssetIdent

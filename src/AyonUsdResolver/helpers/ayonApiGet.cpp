@@ -14,12 +14,24 @@ getAyonApiFromEnv() {
     const char* AYON_SERVER_URL = std::getenv("AYON_SERVER_URL");
     const char* AYON_PROJECT_NAME = std::getenv("AYON_PROJECT_NAME");
 
+    const char* envVarFileLoggingPath = std::getenv("AYON_USD_RESOLVER_PINNING_FILE");
+    const char* envVarFileLogging = std::getenv("AYON_USD_RESOLVER_LOG_FILE_ENABLED");
+
+    if (envVarFileLoggingPath == nullptr) {
+        std::cout << "envVarFileLoggingPath is nullptr" << std::endl;
+        envVarFileLoggingPath = "";
+    }
+    if (envVarFileLogging == nullptr) {
+        std::cout << "envVarFileLogging is nullptr, setting to OFF" << std::endl;
+        envVarFileLogging = "OFF";
+    }
+
+    std::cout << AYON_SERVER_URL << ", " << AYON_PROJECT_NAME << ", " << envVarFileLoggingPath << ", " << envVarFileLogging << std::endl;
+
     if (AYON_API_KEY == nullptr || AYON_SERVER_URL == nullptr || AYON_PROJECT_NAME == nullptr) {
         throw std::runtime_error(
             "Cant find 1 or more env variavbles needed to start the AyonCppApi check if the environment is correct");
     }
-
-    std::cout << AYON_SERVER_URL << ", " << AYON_PROJECT_NAME << ", " << envVarFileLoggingPath << ", " << envVarFileLogging << std::endl;
 
     // find the side ID for this system as it might be in the ENV var or in a file
     const char* AYON_SITE_ID_ENV = std::getenv("AYON_SITE_ID");
@@ -35,13 +47,10 @@ getAyonApiFromEnv() {
         AYON_SITE_ID = AYON_SITE_ID_ENV;
     }
 
-    const char* envVarLogLvl = std::getenv("AYON_USD_RESOLVER_LOG_LVL");
-    const char* envVarFileLoggingPath = std::getenv("AYON_USD_RESOLVER_LOG_FILE");
-    const char* envVarFileLogging_enabled = std::getenv("AYON_USD_RESOLVER_LOG_FILE_ENABLED");
-
+    std::cout << "before fileLoggerFilePath - " << envVarFileLoggingPath << std::endl;
     std::string fileLoggerFilePath;
-    if (envVarFileLoggingPath != nullptr && envVarFileLogging_enabled != nullptr) {
-        switch (envVarFileLogging_enabled[1]) {
+    if (envVarFileLoggingPath != nullptr && envVarFileLogging != nullptr) {
+        switch (envVarFileLogging[1]) {
             case 'F':
                 std::cout << "file logging is OFF" << std::endl;
                 break;
