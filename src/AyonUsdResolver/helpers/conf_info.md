@@ -38,4 +38,4 @@ Additionally, there's a USD variable used to inform TF debug:
 - `AYON_SERVER_URL`
 - `AYON_SITE_ID`
 - `AYON_PROJECT_NAME`
-- `TF_DEBUG`D
+- `TF_DEBUG`
