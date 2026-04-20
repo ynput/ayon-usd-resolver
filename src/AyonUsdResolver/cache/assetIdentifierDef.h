@@ -1,9 +1,10 @@
-#ifndef ASSET_IDENT_DEF
-#define ASSET_IDENT_DEF
+#ifndef ASSET_IDENTIFIER_DEF
+#define ASSET_IDENTIFIER_DEF
 
-#include <string>
 #include "pxr/pxr.h"
 #include "pxr/usd/ar/resolvedPath.h"
+
+#include <string>
 
 /**
  * @brief cache element class used to represent an Usd asset in cache for the resolver
@@ -13,22 +14,22 @@
  */
 PXR_NAMESPACE_USING_DIRECTIVE
 
-class assetIdent {
+class AssetIdentifier {
     public:
-        assetIdent(): m_static(false) {
+        AssetIdentifier(): m_static(false) {
         }
-        assetIdent(bool is_static): m_static(is_static) {
+        AssetIdentifier(bool is_static): m_static(is_static) {
         }
-        assetIdent(const std::string &assetIdentifier): m_assetIdentifier(assetIdentifier), m_static(false) {
+        AssetIdentifier(const std::string &assetIdentifier): m_assetIdentifier(assetIdentifier), m_static(false) {
         }
-        assetIdent(const ArResolvedPath &path, const std::string &identifier, bool is_static):
+        AssetIdentifier(const ArResolvedPath &path, const std::string &identifier, bool is_static):
             m_resolvedAssetPath(path),
             m_assetIdentifier(identifier),
             m_static(is_static) {
         }
 
         /**
-         * @brief returns the ResolvedAssetPath for this assetIdent
+         * @brief returns the ResolvedAssetPath for this AssetIdentifier
          *
          * @return Pxr ArResolvedPath
          */
@@ -37,7 +38,7 @@ class assetIdent {
          * @brief allows setting the ResolvedAssetPath
          *
          * @param inResolvedAssetPath
-         * @return false if assetIdent can't be modified (eg. is_valid)
+         * @return false if AssetIdentifier can't be modified (eg. isValid)
          */
         bool setResolvedAssetPath(const ArResolvedPath &inResolvedAssetPath);
         bool setResolvedAssetPath(const std::string &inResolvedAssetPath);
@@ -50,56 +51,56 @@ class assetIdent {
         /**
          * @brief allows you to set the internal m_assetIdentifier
          *
-         * @param assetIdentifier
+         * @param inAssetIdentifier
          * @return
          */
-        bool setAssetIdentifier(const std::string inAssetIdentifier);
+        bool setAssetIdentifier(const std::string &inAssetIdentifier);
 
         /**
-         * @brief can be used to know if given assetIdent has data in it
+         * @brief can be used to know if given AssetIdentifier has data in it
          *
          * @return bool: true if neither m_resolvedAssetPath or m_assetIdentifier have any data in them
          */
-        bool is_empty() const;
+        bool isEmpty() const;
         /**
-         * @brief this function allows you to know if an given assetIdent's cache is still valid. This can be use full
+         * @brief this function allows you to know if an given AssetIdentifier's cache is still valid. This can be use full
          * for TTL or cache invalidation as we use lazy reaching for cached objects
          *
          * @return true if the current data can safely be used. false if the data is out of data or should in  be
          * re-cached
          */
-        bool is_valid() const;
+        bool isValid() const;
 
         /**
-         * @brief allows you to invalidate this assetIdent. It is not possible to invalidate an assetIdent that is not
+         * @brief allows you to invalidate this AssetIdentifier. It is not possible to invalidate an AssetIdentifier that is not
          * modifiable in this case the function will simply return
          */
         void invalidate();
 
         /**
-         * @brief allows you to validate this assetIdent. This function will return while doing nothing if is_modifiable
+         * @brief allows you to validate this AssetIdentifier. This function will return while doing nothing if isModifiable
          * returns false
          */
         void validate();
 
         /**
-         * @brief allows you to know if you can modify the data in this assetIdent it is also used in getAssetIdentifier
+         * @brief allows you to know if you can modify the data in this AssetIdentifier it is also used in getAssetIdentifier
          * and getResolvedAssetPath to keep you from modifying data you should not touch. This will be the case if this
-         * assetIdent is marked as static
+         * AssetIdentifier is marked as static
          *
-         * @return true if you are allowed to modify the assetIdent, false if the modification is not allowed for what
+         * @return true if you are allowed to modify the AssetIdentifier, false if the modification is not allowed for what
          * ever reason
          */
-        bool is_modifiable() const;
+        bool isModifiable() const;
 
         /**
-         * @brief this function will print out all debug info about this assetIdent instance
+         * @brief this function will print out all debug info about this AssetIdentifier instance
          */
         void printInfo() const;
 
-        bool operator==(const assetIdent &other) const;
+        bool operator==(const AssetIdentifier &other) const;
 
-        assetIdent &operator=(const assetIdent &other);
+        AssetIdentifier &operator=(const AssetIdentifier &other);
 
     private:
         const bool m_static;
@@ -108,9 +109,9 @@ class assetIdent {
         std::string m_assetIdentifier;
 };
 
-struct assetIdentHash {
+struct AssetIdentifierHash {
         size_t
-        operator()(const assetIdent &instance) const {
+        operator()(const AssetIdentifier &instance) const {
             return std::hash<std::string>()(instance.getAssetIdentifier());
         }
 
@@ -120,4 +121,4 @@ struct assetIdentHash {
         }
 };
 
-#endif   // !ASSET_IDENT_DEF
+#endif   // !ASSET_IDENTIFIER_DEF

@@ -2,7 +2,12 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-AyonUsdResolverTokensType::AyonUsdResolverTokensType(): allTokens({}) {
+AyonUsdResolverTokensType::AyonUsdResolverTokensType() :
+mappingPairs("mappingPairs", TfToken::Immortal),
+allTokens({
+    mappingPairs
+})
+{
 }
 
 TfStaticData<AyonUsdResolverTokensType> AyonUsdResolverTokens;

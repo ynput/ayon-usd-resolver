@@ -1,21 +1,19 @@
-#include <cstdint>
-#include <regex>
-
-#include <string_view>
-#include <string_view>
-
 #include "resolutionFunctions.h"
+
 #include "../codes/debugCodes.h"
 #include "../config.h"
 
 #include "pxr/base/tf/debug.h"
-#include "pxr/usd/ar/resolvedPath.h"
 #include "pxr/base/tf/fileUtils.h"
 #include "pxr/base/tf/pathUtils.h"
 #include "pxr/base/tf/stringUtils.h"
 #include "pxr/usd/ar/filesystemAsset.h"
+#include "pxr/usd/ar/resolvedPath.h"
 
+#include <cstdint>
+#include <regex>
 #include <string>
+#include <string_view>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -77,9 +75,13 @@ _AnchorRelativePath(const std::string &anchorPath, const std::string &path) {
 
 ArResolvedPath
 _ResolveAnchored(const std::string &anchorPath, const std::string &path) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                .Msg("_ResolveAnchored( '%s', '%s' )\n", anchorPath.c_str(), path.c_str());
+
     std::string resolvedPath = path;
     if (!anchorPath.empty()) {
         resolvedPath = TfStringCatPaths(anchorPath, path);
     }
+
     return TfPathExists(resolvedPath) ? ArResolvedPath(TfAbsPath(resolvedPath)) : ArResolvedPath();
 }

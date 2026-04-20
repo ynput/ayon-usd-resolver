@@ -52,7 +52,6 @@ class AyonUsdResolver final: public ArResolver {
     private:
         const AyonUsdResolverContext* _GetCurrentContextPtr() const;
         AyonUsdResolverContext _fallbackContext;
-        const std::string emptyString{""};
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE
