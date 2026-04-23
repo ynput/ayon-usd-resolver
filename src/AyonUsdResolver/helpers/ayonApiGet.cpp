@@ -14,7 +14,7 @@ getAyonApiFromEnv() {
     const char* AYON_SERVER_URL = std::getenv("AYON_SERVER_URL");
     const char* AYON_PROJECT_NAME = std::getenv("AYON_PROJECT_NAME");
 
-    const char* envVarFileLoggingPath = std::getenv("AYON_USD_RESOLVER_PINNING_FILE");
+    const char* envVarFileLoggingPath = std::getenv("AYON_USD_RESOLVER_LOG_FILE");
     const char* envVarFileLogging = std::getenv("AYON_USD_RESOLVER_LOG_FILE_ENABLED");
 
     if (envVarFileLoggingPath == nullptr) {
