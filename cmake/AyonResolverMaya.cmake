@@ -78,6 +78,45 @@ if(NOT WIN32)
             set(Python_FOUND TRUE)
         endif()
     endif()
+
+    set(_maya_usd_python_search_paths
+        "${USD_LIB_DIR}"
+        "${USD_ROOT}/lib"
+        "${MAYA_USD_DEVKIT_PATH}/lib"
+        "${MAYA_ROOT}/lib"
+    )
+
+    find_library(MAYA_USD_PYTHON_LIB
+        NAMES usd_python libusd_python
+        PATHS ${_maya_usd_python_search_paths}
+        NO_DEFAULT_PATH
+    )
+    if(MAYA_USD_PYTHON_LIB)
+        set(USD_PYTHON_LIBRARIES "${MAYA_USD_PYTHON_LIB}")
+        message(STATUS "[AYON] Found Maya USD python lib: ${MAYA_USD_PYTHON_LIB}")
+    else()
+        message(STATUS "[AYON] usd_python not found, trying boost_python fallback...")
+        find_library(_boost_python_lib
+            NAMES
+                boost_python${_maya_pyver}
+                boost_python${_maya_pyver_major}${_maya_pyver_minor}
+                boost_python${_maya_pyver_major}
+                boost_python3
+                boost_python
+            PATHS ${_maya_usd_python_search_paths}
+            NO_DEFAULT_PATH
+        )
+
+        if(_boost_python_lib)
+            set(USD_PYTHON_LIBRARIES "${_boost_python_lib}")
+            message(STATUS "[AYON] Using boost_python fallback: ${_boost_python_lib}")
+        else()
+            message(FATAL_ERROR
+                "[AYON] Could not find usd_python or a compatible boost_python library. "
+                "Checked: ${_maya_usd_python_search_paths}"
+            )
+        endif()
+    endif()
 else()
     if(DEFINED Python_INCLUDE_DIR AND Python_INCLUDE_DIR)
         set(Python_INCLUDE_DIRS "${Python_INCLUDE_DIR}")
