@@ -41,7 +41,6 @@ add_library(${PYTHON_MOD_TARGET} MODULE
     Wrappers_Tokens/wrapResolverContext.cpp
     Wrappers_Tokens/wrapResolver.cpp
     Wrappers_Tokens/wrapResolverTokens.cpp
-    Wrappers_Tokens/resolverTokens.cpp
     pluginData/module.cpp
 )
 

@@ -27,8 +27,6 @@ AR_DEFINE_RESOLVER(AyonUsdResolver, ArResolver);
 AyonUsdResolver::AyonUsdResolver() = default;
 
 AyonUsdResolver::~AyonUsdResolver() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
-        .Msg("Resolver::~AyonUsdResolver() (size: %zu bytes)\n", sizeof(*this));
 }
 
 std::string
