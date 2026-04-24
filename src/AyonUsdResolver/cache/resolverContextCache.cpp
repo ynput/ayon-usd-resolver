@@ -58,7 +58,7 @@ PinningFileHandler::PinningFileHandler(const std::string &pinningFilePath,
 
 /**
  * @brief return AssetIdentifier populated with root rootReplaceData from the pinning file using the pinning file data loaded
- * at construction and the PROJECT_ROOTS env variable.
+ * at construction and the AYON_USD_RESOLVER_PINNING_ROOTS env variable.
  * this is not a cached function it will reconstruct the AssetIdentifier. it will not reload the file or the env var however.
  *
  * @param resolveKey UsdAssetIdent
@@ -96,7 +96,7 @@ ResolverContextCache::ResolverContextCache(): m_AyonCache(), m_CommonCache(), m_
         m_staticCache = false;
     }
     else {
-        std::map<std::string, std::string> projectRootsEnvMap = ynput::core::iostd::getEnvMap(PROJECT_ROOTS_ENV_KEY);
+        std::map<std::string, std::string> projectRootsEnvMap = ynput::core::iostd::getEnvMap(PINNING_ROOTS_ENV_KEY);
         std::unordered_map<std::string, std::string> projectRootsEnvUMap(
             std::make_move_iterator(projectRootsEnvMap.begin()), std::make_move_iterator(projectRootsEnvMap.end()));
         m_pinningFileHandler.emplace(ynput::core::iostd::getEnvKey(PINNING_FILE_PATH_ENV_KEY),

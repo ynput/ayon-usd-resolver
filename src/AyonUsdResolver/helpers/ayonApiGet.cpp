@@ -14,8 +14,8 @@ getAyonApiFromEnv() {
     const char* AYON_SERVER_URL = std::getenv("AYON_SERVER_URL");
     const char* AYON_PROJECT_NAME = std::getenv("AYON_PROJECT_NAME");
 
-    const char* envVarFileLoggingPath = std::getenv("AYONLOGGERFILEPOS");
-    const char* envVarFileLogging = std::getenv("AYONLOGGERFILELOGGING");
+    const char* envVarFileLoggingPath = std::getenv("AYON_USD_RESOLVER_LOG_FILE");
+    const char* envVarFileLogging = std::getenv("AYON_USD_RESOLVER_LOG_FILE_ENABLED");
 
     if (envVarFileLoggingPath == nullptr) {
         std::cout << "envVarFileLoggingPath is nullptr" << std::endl;
@@ -32,8 +32,6 @@ getAyonApiFromEnv() {
         throw std::runtime_error(
             "Cant find 1 or more env variavbles needed to start the AyonCppApi check if the environment is correct");
     }
-
-    std::cout << AYON_SERVER_URL << ", " << AYON_PROJECT_NAME << ", " << envVarFileLoggingPath << ", " << envVarFileLogging << std::endl;
 
     // find the side ID for this system as it might be in the ENV var or in a file
     const char* AYON_SITE_ID_ENV = std::getenv("AYON_SITE_ID");
