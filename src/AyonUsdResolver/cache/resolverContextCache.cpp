@@ -64,9 +64,9 @@ PinningFileHandler::PinningFileHandler(const std::string &pinningFilePath,
  * @param resolveKey UsdAssetIdent
  * @return populated AssetIdentifier if key was found in pinning file. Empty AssetIdentifier if key was not found
  */
-AssetIdentifier
+AssetIdentifier*
 PinningFileHandler::getAssetData(const std::string &resolveKey) {
-    AssetIdentifier assetEntry;
+    AssetIdentifier* assetEntry = nullptr;
 
     std::string pinnedAssetPath;
     try {
@@ -76,9 +76,11 @@ PinningFileHandler::getAssetData(const std::string &resolveKey) {
         return assetEntry;
     }
 
+    assetEntry = new AssetIdentifier();
+
     if (!pinnedAssetPath.empty()) {
-        assetEntry.setAssetIdentifier(resolveKey);
-        assetEntry.setResolvedAssetPath(pinnedAssetPath);
+        assetEntry->setAssetIdentifier(resolveKey);
+        assetEntry->setResolvedAssetPath(pinnedAssetPath);
     }
 
     return assetEntry;
@@ -163,32 +165,31 @@ ResolverContextCache::migratePreCacheIntoAyonCache() {
     m_PreCache.clear();
 };
 
-AssetIdentifier
+AssetIdentifier*
 ResolverContextCache::getAsset(const std::string &assetIdentifier,
                                const CacheName selectedCache,
                                const bool isAyonPath) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: (%s) \n", assetIdentifier.c_str());
 
-    AssetIdentifier asset;
-
     if (assetIdentifier.empty()) {
-        return asset;
+        return new AssetIdentifier();
     }
     if (m_staticCache) {
         return m_pinningFileHandler->getAssetData(assetIdentifier);
     }
 
     std::unordered_set<AssetIdentifier, AssetIdentifierHash>::iterator hit;
-
+    AssetIdentifier* asset = nullptr;
+    
     std::shared_lock<std::shared_mutex> preCacheSharedLock(m_PreCacheSharedMutex);
     hit = m_PreCache.find(assetIdentifier);
     if (hit != m_PreCache.end()) {
-        asset = *hit;
+        asset = const_cast<AssetIdentifier*>(&(*hit)); // get the pointer without making a copy of the object
         preCacheSharedLock.unlock();
 
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("ResolverContextCache::getAsset: PreCache Hit on (%s) with (%s) \n",
-                 asset.getAssetIdentifier().c_str(), asset.getResolvedAssetPath().GetPathString().c_str());
+                 asset->getAssetIdentifier().c_str(), asset->getResolvedAssetPath().GetPathString().c_str());
         return asset;
     }
     preCacheSharedLock.unlock();
@@ -199,7 +200,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
                 std::shared_lock<std::shared_mutex> ayonCacheSharedLock(m_AyonCacheSharedMutex);
                 hit = m_AyonCache.find(assetIdentifier);
                 if (hit != m_AyonCache.end()) {
-                    asset = *hit;
+                    asset = const_cast<AssetIdentifier*>(&(*hit)); // get the pointer without making a copy of the object
                     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: AyonCache Hit \n");
                 }
 
@@ -212,7 +213,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
                 std::shared_lock<std::shared_mutex> CommonCacheSharedLock(m_CommonCacheSharedMutex);
                 hit = m_CommonCache.find(assetIdentifier);
                 if (hit != m_CommonCache.end()) {
-                    asset = *hit;
+                    asset = const_cast<AssetIdentifier*>(&(*hit)); // get the pointer without making a copy of the object
                     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
                         .Msg("ResolverContextCache::getAsset: CommonCache Hit \n");
                 }
@@ -221,38 +222,39 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
                 break;
             }
     }
-    if (!asset.isEmpty()) {
+    if (asset != nullptr) {
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
-            .Msg("ResolverContextCache::getAsset: Cache Hit with (%s) with (%s) \n", asset.getAssetIdentifier().c_str(),
-                 asset.getResolvedAssetPath().GetPathString().c_str());
+            .Msg("ResolverContextCache::getAsset: Cache Hit with (%s) with (%s) \n", asset->getAssetIdentifier().c_str(),
+                 asset->getResolvedAssetPath().GetPathString().c_str());
         return asset;
     }
+
+    asset = new AssetIdentifier();
 
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: No Cache Hit \n");
     if (isAyonPath) {
         std::pair<std::string, std::string> resolvedAsset = m_ayon->get()->resolvePath(assetIdentifier);
-
-        asset.setAssetIdentifier(std::move(resolvedAsset.first));
-        asset.setResolvedAssetPath(std::move(resolvedAsset.second));
+        asset->setAssetIdentifier(std::move(resolvedAsset.first));
+        asset->setResolvedAssetPath(std::move(resolvedAsset.second));
 
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: called ayon.resolvePath() \n");
-        this->insert(asset);
+        this->insert(*asset);
     }
     else {
         if (_IsRelativePath(assetIdentifier)) {
-            asset.setResolvedAssetPath(_ResolveAnchored(ArchGetCwd(), assetIdentifier));
+            asset->setResolvedAssetPath(_ResolveAnchored(ArchGetCwd(), assetIdentifier));
         }
         else {
-            asset.setResolvedAssetPath(ArResolvedPath(TfNormPath(TfAbsPath(assetIdentifier))));
+            asset->setResolvedAssetPath(ArResolvedPath(TfNormPath(TfAbsPath(assetIdentifier))));
         }
-        if (!asset.getResolvedAssetPath().empty()) {
-            asset.setAssetIdentifier(assetIdentifier);
+        if (!asset->getResolvedAssetPath().empty()) {
+            asset->setAssetIdentifier(assetIdentifier);
 
             std::shared_lock<std::shared_mutex> CommonCacheSharedLock(m_CommonCacheSharedMutex);
 
             TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
                 .Msg("ResolverContextCache::getAsset: insert into CommonCache \n");
-            m_CommonCache.insert(asset);
+            m_CommonCache.insert(*asset);
         }
     }
 

@@ -151,7 +151,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
                 continue;
             }
 
-            AssetIdentifier asset;
+            AssetIdentifier* asset = nullptr;
             std::string cleanAssetPath = *pathToResolve;
             RES_FUNCS_REMOVE_SDF_ARGS(cleanAssetPath);
             asset = resolverCache->getAsset(cleanAssetPath, CacheName::AYONCACHE, true);
@@ -161,7 +161,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
             if (pos != std::string::npos) {
                 sdfArgs = pathToResolve->substr(pos + cleanAssetPath.length());
             }
-            std::string resolvedPathStr = asset.getResolvedAssetPath().GetPathString() + sdfArgs;
+            std::string resolvedPathStr = asset->getResolvedAssetPath().GetPathString() + sdfArgs;
             ArResolvedPath resolvedPath(resolvedPathStr);
             
             if (resolvedPath) {

@@ -23,7 +23,7 @@ class PinningFileHandler {
                            const std::unordered_map<std::string, std::string> &rootReplaceData);
         ~PinningFileHandler() = default;
 
-        AssetIdentifier getAssetData(const std::string &resolveKey);
+        AssetIdentifier* getAssetData(const std::string &resolveKey);
 
     private:
         std::filesystem::path m_pinningFilePath;
@@ -62,7 +62,7 @@ class ResolverContextCache {
          * @param isAyonPath Whether this is an AYON URI
          * @return AssetIdentifier with resolved path
          */
-        AssetIdentifier getAsset(const std::string &assetIdentifier, const CacheName selectedCache, const bool isAyonPath);
+        AssetIdentifier* getAsset(const std::string &assetIdentifier, const CacheName selectedCache, const bool isAyonPath);
 
         /**
          * @brief Set up the cache from a pinning file
