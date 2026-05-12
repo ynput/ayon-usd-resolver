@@ -13,6 +13,7 @@ set(RESOLVER_SRCS
     resolver.cpp
     resolverContext.cpp
     Wrappers_Tokens/resolverTokens.cpp
+    pluginData/moduleDeps.cpp
     helpers/resolutionFunctions.cpp
     cache/assetIdentifierDef.cpp
     cache/resolverContextCache.cpp
@@ -64,7 +65,18 @@ endif()
 set(PLUGIN_BASE_DIR "ayonUsdResolver")
 set(AR_AYONUSDRESOLVER_USD_CXX_CLASS_NAME "AyonUsdResolver")
 set(AR_AYONUSDRESOLVER_USD_PLUGIN_NAME "ayonUsdResolver")
+set(AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME "usdAssetResolver.AyonUsdResolver")
 set(AR_AYONUSDRESOLVER_TARGET_LIB "ayonUsdResolver")
+
+set(AYON_USD_MODULE_DEFINITIONS
+    MFB_ALT_PACKAGE_NAME=AyonUsdResolver
+    MFB_PACKAGE_NAME=ayonUsdResolver
+    MFB_PACKAGE_MODULE=usdAssetResolver.AyonUsdResolver
+    AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME=usdAssetResolver.AyonUsdResolver
+)
+
+target_compile_definitions(${CORE_LIB_TARGET} PRIVATE ${AYON_USD_MODULE_DEFINITIONS})
+target_compile_definitions(${PYTHON_MOD_TARGET} PRIVATE ${AYON_USD_MODULE_DEFINITIONS})
 
 if(WIN32)
     set_target_properties(${PYTHON_MOD_TARGET} PROPERTIES
