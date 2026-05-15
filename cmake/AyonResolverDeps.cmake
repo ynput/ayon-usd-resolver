@@ -113,7 +113,7 @@ target_link_libraries(${AYON_RESOLVER_DCC_DEPS_TARGET}
 )
 
 if(TARGET Python::Python)
-    list(APPEND AYON_RESOLVER_PYTHON_LINK_LIBS Python::Python)
+    target_link_libraries(${AYON_RESOLVER_DCC_DEPS_TARGET} INTERFACE Python::Python)
 endif()
 
 if(AYON_RESOLVER_PYTHON_LINK_LIBS)
