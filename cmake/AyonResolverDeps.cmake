@@ -9,9 +9,16 @@ if(NOT TARGET ${AYON_RESOLVER_DCC_DEPS_TARGET})
     add_library(AyonResolver::DccDeps ALIAS ${AYON_RESOLVER_DCC_DEPS_TARGET})
 endif()
 
+set(AYON_RESOLVER_PYTHON_DEPS_TARGET AyonResolverPythonDeps)
+if(NOT TARGET ${AYON_RESOLVER_PYTHON_DEPS_TARGET})
+    add_library(${AYON_RESOLVER_PYTHON_DEPS_TARGET} INTERFACE)
+    add_library(AyonResolver::PythonDeps ALIAS ${AYON_RESOLVER_PYTHON_DEPS_TARGET})
+endif()
+
 set(AYON_RESOLVER_DCC_INCLUDE_DIRS "")
 set(AYON_RESOLVER_DCC_LINK_LIBS "")
 set(AYON_RESOLVER_DCC_COMPILE_DEFINITIONS "")
+set(AYON_RESOLVER_PYTHON_LINK_LIBS "")
 
 if(BUILD_TARGET STREQUAL "maya")
     include(AyonResolverMaya)
@@ -106,7 +113,14 @@ target_link_libraries(${AYON_RESOLVER_DCC_DEPS_TARGET}
 )
 
 if(TARGET Python::Python)
-    target_link_libraries(${AYON_RESOLVER_DCC_DEPS_TARGET} INTERFACE Python::Python)
+    list(APPEND AYON_RESOLVER_PYTHON_LINK_LIBS Python::Python)
+endif()
+
+if(AYON_RESOLVER_PYTHON_LINK_LIBS)
+    target_link_libraries(${AYON_RESOLVER_PYTHON_DEPS_TARGET}
+        INTERFACE
+            ${AYON_RESOLVER_PYTHON_LINK_LIBS}
+    )
 endif()
 
 message(STATUS "[AYON] Final AR_BOOST_INCLUDE_DIR: ${AR_BOOST_INCLUDE_DIR}")

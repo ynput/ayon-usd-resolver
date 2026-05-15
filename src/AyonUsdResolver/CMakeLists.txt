@@ -49,6 +49,7 @@ target_link_libraries(${PYTHON_MOD_TARGET}
     PUBLIC
         ${CORE_LIB_TARGET}
         AyonResolver::DccDeps
+        AyonResolver::PythonDeps
 )
 target_include_directories(${PYTHON_MOD_TARGET} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_compile_definitions(${PYTHON_MOD_TARGET} PRIVATE AR_AYONUSDRESOLVER_EXPORTS)
