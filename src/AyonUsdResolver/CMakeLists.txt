@@ -23,21 +23,9 @@ add_library(${CORE_LIB_TARGET} SHARED ${RESOLVER_SRCS})
 target_link_libraries(${CORE_LIB_TARGET} PRIVATE AyonResolver::DccDeps)
 target_include_directories(${CORE_LIB_TARGET} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 set_target_properties(${CORE_LIB_TARGET} PROPERTIES PREFIX "" OUTPUT_NAME "ayonUsdResolver")
-# Keep the resolver DLL loadable without USD's Python bridge; only the .pyd needs it.
-target_compile_definitions(${CORE_LIB_TARGET} PRIVATE
-    AR_AYONUSDRESOLVER_CORE_BUILD_NO_PYTHON
-    PXR_FORCE_PYTHON_SUPPORT_DISABLED
-)
 
 if(UNIX)
     target_link_options(${CORE_LIB_TARGET} PRIVATE "LINKER:--no-undefined")
-endif()
-
-if(WIN32 AND AYON_RESOLVER_PYTHON_DEFAULTLIB_NAME)
-    # Some Python-aware headers still inject MSVC default-lib directives even when
-    # the core resolver target should stay Python-free. Suppress the implicit
-    # pythonXY.lib dependency on the resolver DLL; the .pyd target links Python.
-    target_link_options(${CORE_LIB_TARGET} PRIVATE "/NODEFAULTLIB:${AYON_RESOLVER_PYTHON_DEFAULTLIB_NAME}")
 endif()
 
 if(WIN32)
@@ -88,7 +76,6 @@ set(AYON_USD_MODULE_DEFINITIONS
     AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME=usdAssetResolver.AyonUsdResolver
 )
 
-target_compile_definitions(${CORE_LIB_TARGET} PRIVATE ${AYON_USD_MODULE_DEFINITIONS})
 target_compile_definitions(${PYTHON_MOD_TARGET} PRIVATE ${AYON_USD_MODULE_DEFINITIONS})
 
 if(WIN32)

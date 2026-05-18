@@ -19,7 +19,6 @@ set(AYON_RESOLVER_DCC_INCLUDE_DIRS "")
 set(AYON_RESOLVER_DCC_LINK_LIBS "")
 set(AYON_RESOLVER_DCC_COMPILE_DEFINITIONS "")
 set(AYON_RESOLVER_PYTHON_LINK_LIBS "")
-set(AYON_RESOLVER_PYTHON_DEFAULTLIB_NAME "")
 
 if(BUILD_TARGET STREQUAL "maya")
     include(AyonResolverMaya)
@@ -114,13 +113,7 @@ target_link_libraries(${AYON_RESOLVER_DCC_DEPS_TARGET}
 )
 
 if(TARGET Python::Python)
-    # Keep the host Python runtime off the core resolver library so the
-    # plugin can load even when only the bindings need Python support.
     list(APPEND AYON_RESOLVER_PYTHON_LINK_LIBS Python::Python)
-endif()
-
-if(WIN32 AND Python_LIBRARIES)
-    get_filename_component(AYON_RESOLVER_PYTHON_DEFAULTLIB_NAME "${Python_LIBRARIES}" NAME)
 endif()
 
 if(AYON_RESOLVER_PYTHON_LINK_LIBS)
