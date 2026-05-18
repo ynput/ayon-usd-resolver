@@ -24,6 +24,8 @@ add_library(${CORE_LIB_TARGET} SHARED ${RESOLVER_SRCS})
 target_link_libraries(${CORE_LIB_TARGET} PRIVATE AyonResolver::DccDeps)
 target_include_directories(${CORE_LIB_TARGET} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 set_target_properties(${CORE_LIB_TARGET} PROPERTIES PREFIX "" OUTPUT_NAME "ayonUsdResolver")
+# Keep the resolver DLL loadable without USD's Python bridge; only the .pyd needs it.
+target_compile_definitions(${CORE_LIB_TARGET} PRIVATE PXR_FORCE_PYTHON_SUPPORT_DISABLED)
 
 if(UNIX)
     target_link_options(${CORE_LIB_TARGET} PRIVATE "LINKER:--no-undefined")

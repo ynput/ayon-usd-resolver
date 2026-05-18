@@ -219,8 +219,5 @@ list(APPEND AYON_RESOLVER_DCC_INCLUDE_DIRS
 )
 list(APPEND AYON_RESOLVER_DCC_LINK_LIBS Maya::Core Maya::USDDevkit)
 if(USD_PYTHON_LIBRARIES)
-    # ArResolverContext stores custom context objects through TfPyObjWrapper when
-    # Python support is enabled in USD, so the core resolver DLL itself needs
-    # the USD python bridge on the link line.
-    list(APPEND AYON_RESOLVER_DCC_LINK_LIBS "${USD_PYTHON_LIBRARIES}")
+    list(APPEND AYON_RESOLVER_PYTHON_LINK_LIBS "${USD_PYTHON_LIBRARIES}")
 endif()
