@@ -1,6 +1,8 @@
 #ifndef AR_AYONUSDRESOLVER_DEBUGCODES_H
 #define AR_AYONUSDRESOLVER_DEBUGCODES_H
 
+#include "../pluginData/api.h"
+
 #include <pxr/pxr.h>
 #include "pxr/base/tf/debug.h"
 

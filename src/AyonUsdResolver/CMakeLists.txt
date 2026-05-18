@@ -13,7 +13,6 @@ set(RESOLVER_SRCS
     resolver.cpp
     resolverContext.cpp
     Wrappers_Tokens/resolverTokens.cpp
-    pluginData/moduleDeps.cpp
     helpers/resolutionFunctions.cpp
     cache/assetIdentifierDef.cpp
     cache/resolverContextCache.cpp
@@ -31,6 +30,13 @@ if(UNIX)
     target_link_options(${CORE_LIB_TARGET} PRIVATE "LINKER:--no-undefined")
 endif()
 
+if(WIN32 AND AYON_RESOLVER_PYTHON_DEFAULTLIB_NAME)
+    # Some Python-aware headers still inject MSVC default-lib directives even when
+    # the core resolver target should stay Python-free. Suppress the implicit
+    # pythonXY.lib dependency on the resolver DLL; the .pyd target links Python.
+    target_link_options(${CORE_LIB_TARGET} PRIVATE "/NODEFAULTLIB:${AYON_RESOLVER_PYTHON_DEFAULTLIB_NAME}")
+endif()
+
 if(WIN32)
     target_compile_definitions(${CORE_LIB_TARGET} PRIVATE AR_AYONUSDRESOLVER_EXPORTS)
 endif()
@@ -44,6 +50,7 @@ add_library(${PYTHON_MOD_TARGET} MODULE
     Wrappers_Tokens/wrapResolverContext.cpp
     Wrappers_Tokens/wrapResolver.cpp
     Wrappers_Tokens/wrapResolverTokens.cpp
+    pluginData/moduleDeps.cpp
     pluginData/module.cpp
 )
 
