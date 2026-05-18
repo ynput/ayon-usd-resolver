@@ -113,7 +113,9 @@ target_link_libraries(${AYON_RESOLVER_DCC_DEPS_TARGET}
 )
 
 if(TARGET Python::Python)
-    target_link_libraries(${AYON_RESOLVER_DCC_DEPS_TARGET} INTERFACE Python::Python)
+    # Keep the host Python runtime off the core resolver library so the
+    # plugin can load even when only the bindings need Python support.
+    list(APPEND AYON_RESOLVER_PYTHON_LINK_LIBS Python::Python)
 endif()
 
 if(AYON_RESOLVER_PYTHON_LINK_LIBS)

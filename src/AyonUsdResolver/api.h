@@ -1,6 +1,10 @@
 #ifndef AR_AYONUSDRESOLVER_API_H
 #define AR_AYONUSDRESOLVER_API_H
 
+#if defined(AR_AYONUSDRESOLVER_CORE_BUILD_NO_PYTHON) && !defined(PXR_FORCE_PYTHON_SUPPORT_DISABLED)
+    #define PXR_FORCE_PYTHON_SUPPORT_DISABLED
+#endif
+
 #include "pxr/base/arch/export.h"
 
 #if defined(PXR_STATIC)
