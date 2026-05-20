@@ -18,7 +18,18 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-std::shared_ptr<ResolverContextCache> GlobalCache = std::make_shared<ResolverContextCache>();
+namespace {
+
+const std::shared_ptr<ResolverContextCache>&
+GetGlobalCache() {
+    // Houdini may unload USD/plugin globals after dependent runtime state is gone.
+    // Keep this process-wide cache alive and let the OS reclaim it on exit.
+    static const auto* cache = new std::shared_ptr<ResolverContextCache>(
+        std::make_shared<ResolverContextCache>());
+    return *cache;
+}
+
+}  // namespace
 
 // ResolverContextCache& GetGlobalResolverContextCache() {
 //     static ResolverContextCache instance;   // lazy init on first use
@@ -46,7 +57,7 @@ getStringEndswithStrings(const std::string &value, const std::vector<std::string
     return false;
 }
 
-AyonUsdResolverContext::AyonUsdResolverContext(): cache(std::shared_ptr(GlobalCache)) {
+AyonUsdResolverContext::AyonUsdResolverContext(): cache(GetGlobalCache()) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Build timestamp: {} {}\n", __DATE__, __TIME__);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
     Initialize();
@@ -63,7 +74,7 @@ AyonUsdResolverContext::AyonUsdResolverContext(): cache(std::shared_ptr(GlobalCa
 
 AyonUsdResolverContext::AyonUsdResolverContext(const AyonUsdResolverContext &ctx) = default;
 
-AyonUsdResolverContext::AyonUsdResolverContext(const std::string &filePath) : cache(std::shared_ptr(GlobalCache)) {
+AyonUsdResolverContext::AyonUsdResolverContext(const std::string &filePath) : cache(GetGlobalCache()) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Build timestamp: {} {}\n", __DATE__, __TIME__);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context with defined mapping filePath: '%s'\n", filePath.c_str());
     mappingFilePath = filePath;
@@ -71,7 +82,6 @@ AyonUsdResolverContext::AyonUsdResolverContext(const std::string &filePath) : ca
 }
 
 AyonUsdResolverContext::~AyonUsdResolverContext() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::~ResolverContext() - Destructed Context\n");
 }
 
 bool
@@ -205,7 +215,7 @@ AyonUsdResolverContext::_getMappingPairsFromUsdFile(const std::string& filePath)
     }
     
     auto layerMetaData = layer->GetCustomLayerData();
-    auto mappingDataPtr = layerMetaData.GetValueAtPath(AyonUsdResolverTokens->mappingPairs);
+    auto mappingDataPtr = layerMetaData.GetValueAtPath(GetAyonUsdResolverTokens().mappingPairs);
     if (!mappingDataPtr) {
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("ResolverContext::_getMappingPairsFromUsdFile - No mappingPairs found in metadata\n");
@@ -258,7 +268,7 @@ AyonUsdResolverContext::_getMappingPairsFromJsonFile(const std::string& filePath
     }
 
     // Get the mappingPairs key
-    std::string key = AyonUsdResolverTokens->mappingPairs.GetString();
+    std::string key = GetAyonUsdResolverTokens().mappingPairs.GetString();
     if (!j.contains(key) || !j[key].is_object()) {
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("ResolverContext::_getMappingPairsFromJsonFile - Invalid or missing '%s'\n", key.c_str());

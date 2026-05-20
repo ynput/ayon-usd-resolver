@@ -105,7 +105,6 @@ ResolverContextCache::ResolverContextCache(): m_AyonCache(), m_CommonCache(), m_
 };
 
 ResolverContextCache::~ResolverContextCache() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::~ResolverContextCache() \n");
 };
 
 // TODO when ayonLogger.h has the header guards then we can import it and use logging from there
