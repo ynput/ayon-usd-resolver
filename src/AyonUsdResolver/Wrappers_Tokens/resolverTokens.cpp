@@ -3,15 +3,13 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 AyonUsdResolverTokensType::AyonUsdResolverTokensType() :
-mappingPairs("mappingPairs", TfToken::Immortal)
+mappingPairs("mappingPairs", TfToken::Immortal),
+allTokens({
+    mappingPairs
+})
 {
 }
 
-const AyonUsdResolverTokensType&
-GetAyonUsdResolverTokens() {
-    // Keep the token table alive for the lifetime of the process.
-    static const auto* tokens = new AyonUsdResolverTokensType();
-    return *tokens;
-}
+TfStaticData<AyonUsdResolverTokensType> AyonUsdResolverTokens;
 
 PXR_NAMESPACE_CLOSE_SCOPE

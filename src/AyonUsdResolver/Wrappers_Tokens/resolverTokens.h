@@ -4,7 +4,9 @@
 #include "../pluginData/api.h"
 
 #include <pxr/pxr.h>
-#include <pxr/base/tf/token.h>
+#include <pxr/base/tf/staticTokens.h>
+
+#include <vector>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -12,10 +14,10 @@ struct AyonUsdResolverTokensType {
         AR_AYONUSDRESOLVER_API AyonUsdResolverTokensType();
 
         const TfToken mappingPairs;
+        const std::vector<TfToken> allTokens;
 };
 
-AR_AYONUSDRESOLVER_API
-const AyonUsdResolverTokensType& GetAyonUsdResolverTokens();
+extern AR_AYONUSDRESOLVER_API TfStaticData<AyonUsdResolverTokensType> AyonUsdResolverTokens;
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

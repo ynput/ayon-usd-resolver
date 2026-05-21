@@ -73,7 +73,7 @@ void _AddToken(T &cls, const char* name, const TfToken &token) {
 } // namespace
 
 static std::string GetMappingPairs() {
-    return GetAyonUsdResolverTokens().mappingPairs.GetString();
+    return AyonUsdResolverTokens->mappingPairs.GetString();
 }
 
 void wrapResolverTokens() {
