@@ -181,7 +181,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
                 .Msg("Resolver::_Resolve( '%s' ) is relative path\n", pathToResolve->c_str());
         ArResolvedPath resolvedPath = _ResolveAnchored(ArchGetCwd(), *pathToResolve);
-        if (resolvedPath) {
+        if (TfPathExists(resolvedPath.GetPathString())) {
             return resolvedPath;
         }
 
