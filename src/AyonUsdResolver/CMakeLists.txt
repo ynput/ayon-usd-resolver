@@ -17,6 +17,7 @@ set(RESOLVER_SRCS
     cache/assetIdentifierDef.cpp
     cache/resolverContextCache.cpp
     helpers/ayonApiGet.cpp
+    prefetch/prewarm.cpp
 )
 
 add_library(${CORE_LIB_TARGET} SHARED ${RESOLVER_SRCS})

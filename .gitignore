@@ -24,3 +24,8 @@ logFile*
 __pycache__/
 .python-version
 tests/testVenv/
+
+# local build / install artifacts
+build_usd/
+install/
+*.log

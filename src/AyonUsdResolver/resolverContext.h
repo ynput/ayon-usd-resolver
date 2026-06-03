@@ -77,6 +77,11 @@ class AyonUsdResolverContext {
         bool _getMappingPairsFromJsonFile(const std::string& filePath);
 };
 
+// Accessor for the single process-wide resolver cache shared by every
+// AyonUsdResolverContext. Exposed so the prewarm pass (a separate translation
+// unit) and the host-side C entry point can seed the same cache instance.
+std::shared_ptr<ResolverContextCache> GetResolverGlobalCache();
+
 PXR_NAMESPACE_OPEN_SCOPE
 AR_DECLARE_RESOLVER_CONTEXT(AyonUsdResolverContext);
 PXR_NAMESPACE_CLOSE_SCOPE

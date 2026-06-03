@@ -23,8 +23,10 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 PXR_NAMESPACE_USING_DIRECTIVE
+
 // TODO pinning file hanlder should construct its cache directly at construction getAssetData should not call
 // rootReplace
 PinningFileHandler::PinningFileHandler(const std::string &pinningFilePath,
@@ -160,6 +162,32 @@ ResolverContextCache::migratePreCacheIntoAyonCache() {
     m_AyonCache.reserve(m_AyonCache.size() + m_PreCache.size());
     m_AyonCache.insert(std::make_move_iterator(m_PreCache.begin()), std::make_move_iterator(m_PreCache.end()));
     m_PreCache.clear();
+};
+
+std::unordered_map<std::string, std::string>
+ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("ResolverContextCache::batchWarm: %zu uris \n", uriPaths.size());
+
+    std::unordered_map<std::string, std::string> resolved;
+    if (m_staticCache || uriPaths.empty()) {
+        return resolved;
+    }
+
+    // One batched request over the persistent keep-alive client: few round-trips,
+    // deterministic, connection reused.
+    resolved = m_ayon->get()->batchResolvePathSerial(uriPaths);
+
+    for (const auto &entry: resolved) {
+        if (entry.first.empty() || entry.second.empty()) {
+            continue;
+        }
+        AssetIdentifier asset;
+        asset.setAssetIdentifier(entry.first);
+        asset.setResolvedAssetPath(entry.second);
+        this->insert(asset);
+    }
+    return resolved;
 };
 
 AssetIdentifier

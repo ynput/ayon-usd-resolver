@@ -3,6 +3,11 @@
 #include "codes/debugCodes.h"
 #include "cache/resolverContextCache.h"
 #include "helpers/resolutionFunctions.h"
+#include "prefetch/prewarm.h"
+
+#include <cstdlib>
+#include <mutex>
+#include <unordered_set>
 
 #include <pxr/pxr.h>
 #include <pxr/base/arch/systemInfo.h>
@@ -239,6 +244,37 @@ ArResolverContext
 AyonUsdResolver::_CreateDefaultContextForAsset(const std::string &assetPath) const {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
         .Msg("Resolver::_CreateDefaultContextForAsset('%s')\n", assetPath.c_str());
+
+    // Batch warm-pass: resolve the stage's AYON URIs in batched requests up front,
+    // seeding the shared cache so composition's per-asset _Resolve() calls hit cache
+    // instead of doing dozens of serial server round-trips. Runs once per distinct
+    // root asset path. On by default; set AYON_RESOLVER_NO_PREWARM=1 (or
+    // AYON_RESOLVER_PREWARM=0) to disable.
+    static const bool prewarmEnabled = []() {
+        const char* off = std::getenv("AYON_RESOLVER_NO_PREWARM");
+        if (off != nullptr && std::strcmp(off, "0") != 0 && std::strcmp(off, "false") != 0) {
+            return false;
+        }
+        const char* legacy = std::getenv("AYON_RESOLVER_PREWARM");
+        if (legacy != nullptr && (std::strcmp(legacy, "0") == 0 || std::strcmp(legacy, "false") == 0)) {
+            return false;
+        }
+        return true;
+    }();
+    if (prewarmEnabled && !assetPath.empty()) {
+        static std::mutex prewarmMutex;
+        static std::unordered_set<std::string> prewarmedRoots;
+        bool shouldPrewarm = false;
+        {
+            std::lock_guard<std::mutex> lock(prewarmMutex);
+            shouldPrewarm = prewarmedRoots.insert(assetPath).second;
+        }
+        if (shouldPrewarm) {
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                .Msg("Resolver::_CreateDefaultContextForAsset - prewarming '%s'\n", assetPath.c_str());
+            AyonUsdResolverPrewarmStage(assetPath);
+        }
+    }
 
     // Check if there's a currently bound context first
     const AyonUsdResolverContext* currentCtx = _GetCurrentContextPtr();
