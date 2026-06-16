@@ -174,7 +174,6 @@ endif()
 list(APPEND CMAKE_PREFIX_PATH "${MAYA_USD_DEVKIT_PATH}")
 
 if(EXISTS "${USD_INCLUDE_DIR}/pxr/external/boost")
-    find_package(Boost REQUIRED)
     set(AR_BOOST_INCLUDE_DIR "${Boost_INCLUDE_DIRS}")
 else()
     set(_maya_boost_candidates
@@ -189,7 +188,7 @@ else()
         "${USD_ROOT}/include/boost-1_76"
         "${USD_ROOT}/include"
     )
-
+    find_package(Boost REQUIRED)
     unset(_maya_boost_inc)
     foreach(_boost_inc IN LISTS _maya_boost_candidates)
         if(EXISTS "${_boost_inc}/boost/python/detail/wrap_python.hpp")

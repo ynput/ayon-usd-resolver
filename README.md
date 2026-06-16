@@ -28,6 +28,18 @@ AYON compatible entity URIs through the
 > **NOTE**\
 > **Admin** and **Dev** docs can be found under `/Docs/Ayon_Docs/`
 
+## Memcached support
+For faster access the resolver can use [memcached](https://docs.memcached.org/).
+
+This can be configured using environment variables:
+
+```
+ENABLE_MEMCACHED_CACHE=true              # Enable/disable memcached
+MEMCACHED_SERVERS=localhost:11211        # Single or comma-separated servers
+MEMCACHED_TIMEOUT_MS=1000                # Request timeout in ms (optional)
+```
+
+
 # Repository Docs
 
 

@@ -9,6 +9,47 @@ endif()
 
 include(AyonResolverDeps)
 
+# Optional memcached support via libmemcached
+# Users can install libmemcached via: apt-get install libmemcached-dev (Linux) or brew install libmemcached (macOS)
+option(AYON_MEMCACHED_STATIC_LINK "Link libmemcached statically (requires static build of libmemcached)" OFF)
+
+# When static linking is requested, prefer static library suffixes so find_package
+# and find_library resolve to .a / .lib instead of .so / .dll.
+if(AYON_MEMCACHED_STATIC_LINK)
+    set(_AYON_ORIG_FIND_LIBRARY_SUFFIXES "${CMAKE_FIND_LIBRARY_SUFFIXES}")
+    if(WIN32)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES .lib)
+    else()
+        set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+    endif()
+endif()
+
+find_package(libmemcached QUIET)
+
+if(AYON_MEMCACHED_STATIC_LINK)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES "${_AYON_ORIG_FIND_LIBRARY_SUFFIXES}")
+endif()
+
+if(libmemcached_FOUND)
+    set(AYON_LIBMEMCACHED_AVAILABLE TRUE)
+    message(STATUS "[AYON] libmemcached found - memcached support ENABLED")
+    if(TARGET libmemcached)
+        set(AYON_LIBMEMCACHED_TARGET libmemcached)
+    elseif(TARGET memcached)
+        set(AYON_LIBMEMCACHED_TARGET memcached)
+    elseif(TARGET libmemcached::libmemcached)
+        set(AYON_LIBMEMCACHED_TARGET libmemcached::libmemcached)
+    else()
+        # Fallback: assume linking by name works
+        set(AYON_LIBMEMCACHED_TARGET memcached)
+    endif()
+else()
+    set(AYON_LIBMEMCACHED_AVAILABLE FALSE)
+    message(STATUS "[AYON] libmemcached NOT found - memcached support DISABLED")
+    message(STATUS "       To enable memcached: install libmemcached-dev (Linux) or libmemcached (macOS/Homebrew)")
+endif()
+
+
 set(RESOLVER_SRCS
     resolver.cpp
     resolverContext.cpp
@@ -16,11 +57,25 @@ set(RESOLVER_SRCS
     helpers/resolutionFunctions.cpp
     cache/assetIdentifierDef.cpp
     cache/resolverContextCache.cpp
+    cache/memcachedHandler.cpp
     helpers/ayonApiGet.cpp
 )
 
 add_library(${CORE_LIB_TARGET} SHARED ${RESOLVER_SRCS})
 target_link_libraries(${CORE_LIB_TARGET} PRIVATE AyonResolver::DccDeps)
+
+# Link memcached only if available
+if(AYON_LIBMEMCACHED_AVAILABLE)
+    target_link_libraries(${CORE_LIB_TARGET} PRIVATE ${AYON_LIBMEMCACHED_TARGET})
+    target_compile_definitions(${CORE_LIB_TARGET} PRIVATE AYON_LIBMEMCACHED_AVAILABLE=1 WIN32_LEAN_AND_MEAN)
+    if(AYON_MEMCACHED_STATIC_LINK AND WIN32)
+        # Tell libmemcached headers not to use __declspec(dllimport)
+        target_compile_definitions(${CORE_LIB_TARGET} PRIVATE LIBMEMCACHED_STATIC)
+    endif()
+else()
+    target_compile_definitions(${CORE_LIB_TARGET} PRIVATE AYON_LIBMEMCACHED_AVAILABLE=0)
+endif()
+
 target_include_directories(${CORE_LIB_TARGET} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 set_target_properties(${CORE_LIB_TARGET} PROPERTIES PREFIX "" OUTPUT_NAME "ayonUsdResolver")
 

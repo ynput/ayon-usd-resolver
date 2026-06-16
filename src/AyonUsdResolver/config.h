@@ -12,6 +12,10 @@
 #define PINNING_ROOTS_ENV_KEY              "AYON_USD_RESOLVER_PINNING_ROOTS"
 #define PINNING_FILE_PATH_ENV_KEY          "AYON_USD_RESOLVER_PINNING_FILE"
 
+#define MEMCACHED_SERVERS_ENV_KEY          "MEMCACHED_SERVERS"
+#define ENABLE_MEMCACHED_ENV_KEY           "ENABLE_MEMCACHED_CACHE"
+#define MEMCACHED_TIMEOUT_ENV_KEY          "MEMCACHED_TIMEOUT_MS"
+
 namespace Config {
 
 // TODO implement Config as lock less read only Singleton as there is no need to write to the config nor is there a need

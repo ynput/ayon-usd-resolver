@@ -88,6 +88,11 @@ ResolverContextCache::ResolverContextCache(): m_AyonCache(), m_CommonCache(), m_
     m_PreCache.reserve(PRECACHE_SIZE);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::ResolverContextCache() \n");
 
+    // Load root replace data unconditionally - used by both pinning file and memcached path processing
+    std::map<std::string, std::string> projectRootsEnvMap = ynput::core::iostd::getEnvMap(PINNING_ROOTS_ENV_KEY);
+    m_rootReplaceData = std::unordered_map<std::string, std::string>(
+        std::make_move_iterator(projectRootsEnvMap.begin()), std::make_move_iterator(projectRootsEnvMap.end()));
+
     const char* enable_static_env_var = std::getenv(ENABLE_STATIC_GLOBAL_CACHE_ENV_KEY);
     if (enable_static_env_var == nullptr || std::strcmp(enable_static_env_var, "false") == 0) {
         std::unique_ptr<AyonApi> api = getAyonApiFromEnv();
@@ -96,11 +101,44 @@ ResolverContextCache::ResolverContextCache(): m_AyonCache(), m_CommonCache(), m_
         m_staticCache = false;
     }
     else {
-        std::map<std::string, std::string> projectRootsEnvMap = ynput::core::iostd::getEnvMap(PINNING_ROOTS_ENV_KEY);
-        std::unordered_map<std::string, std::string> projectRootsEnvUMap(
-            std::make_move_iterator(projectRootsEnvMap.begin()), std::make_move_iterator(projectRootsEnvMap.end()));
         m_pinningFileHandler.emplace(ynput::core::iostd::getEnvKey(PINNING_FILE_PATH_ENV_KEY),
-                                           projectRootsEnvUMap);
+                                           m_rootReplaceData);
+    }
+
+    // Initialize memcached handler if enabled
+    const char* enable_memcached_env_var = std::getenv(ENABLE_MEMCACHED_ENV_KEY);
+    const char* memcached_servers_env_var = std::getenv(MEMCACHED_SERVERS_ENV_KEY);
+    
+    if (enable_memcached_env_var != nullptr && std::strcmp(enable_memcached_env_var, "true") == 0 && 
+        memcached_servers_env_var != nullptr) {
+        uint32_t timeout_ms = 1000;  // Default 1 second timeout
+        const char* timeout_env_var = std::getenv(MEMCACHED_TIMEOUT_ENV_KEY);
+        if (timeout_env_var != nullptr) {
+            try {
+                timeout_ms = std::stoul(timeout_env_var);
+            }
+            catch (const std::exception &e) {
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                    .Msg("ResolverContextCache: Invalid timeout value, using default: %s\n", e.what());
+            }
+        }
+        
+        try {
+            auto memcached = std::make_unique<MemcachedHandler>(memcached_servers_env_var, timeout_ms);
+            if (memcached->isConnected()) {
+                m_memcached.emplace(std::move(memcached));
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                    .Msg("ResolverContextCache: Memcached handler initialized successfully\n");
+            }
+            else {
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                    .Msg("ResolverContextCache: Failed to connect to memcached servers\n");
+            }
+        }
+        catch (const std::exception &e) {
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                .Msg("ResolverContextCache: Exception initializing memcached: %s\n", e.what());
+        }
     }
 };
 
@@ -227,6 +265,25 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
         return asset;
     }
 
+    // Try memcached as second-level cache before calling REST API
+    if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: Checking memcached\n");
+        asset = m_memcached->get()->getAssetData(assetIdentifier);
+        if (!asset.isEmpty()) {
+            // Apply root replacement to convert rootless path to absolute path
+            std::string resolvedPath = ynput::tool::ayon::rootReplace(
+                asset.getResolvedAssetPath().GetPathString(), m_rootReplaceData);
+            asset.setResolvedAssetPath(ArResolvedPath(resolvedPath));
+
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                .Msg("ResolverContextCache::getAsset: Memcached Hit with (%s) with (%s) \n",
+                     asset.getAssetIdentifier().c_str(), asset.getResolvedAssetPath().GetPathString().c_str());
+            // Cache result locally for faster future lookups
+            this->insert(asset);
+            return asset;
+        }
+    }
+
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: No Cache Hit \n");
     if (isAyonPath) {
         std::pair<std::string, std::string> resolvedAsset = m_ayon->get()->resolvePath(assetIdentifier);
@@ -236,6 +293,14 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
 
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: called ayon.resolvePath() \n");
         this->insert(asset);
+
+        // Also store in memcached for distributed caching
+        if (m_memcached.has_value() && m_memcached->get()->isConnected() && !asset.isEmpty()) {
+            m_memcached->get()->setAssetData(asset.getAssetIdentifier(),
+                                             asset.getResolvedAssetPath().GetPathString());
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                .Msg("ResolverContextCache::getAsset: Stored result in memcached\n");
+        }
     }
     else {
         if (_IsRelativePath(assetIdentifier)) {
