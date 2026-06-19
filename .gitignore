@@ -24,3 +24,6 @@ logFile*
 __pycache__/
 .python-version
 tests/testVenv/
+
+build_*
+install
