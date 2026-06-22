@@ -26,9 +26,9 @@ export AYON_API_KEY="1d666ff2101dd7564b4bdbbd157d4c7ff813f1c64269bb1329e21672cc7
 export AYON_PROJECT_NAME="Usd_Testing"
 export AYON_SITE_ID="hospitable-dynamic-wasp"
 
-export AYONLOGGERLOGLVL="INFO"
-export AYONLOGGERFILELOGGING="OFF"
-export AYONLOGGERFILEPOS="LoggingFiles"
+export AYON_USD_RESOLVER_LOG_LVL="INFO"
+export AYON_USD_RESOLVER_LOG_FILE_ENABLED="OFF"
+export AYON_USD_RESOLVER_LOG_FILE="LoggingFiles"
 
 source tests/testVenv/bin/activate
 

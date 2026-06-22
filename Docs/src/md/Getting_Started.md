@@ -229,16 +229,16 @@ resolver Logic.\n
 **How to use it ?**\n
 There are 3 Env variables that control the Pinning file support
 
-`ENABLE_STATIC_GLOBAL_CACHE`\n
+`AYON_USD_RESOLVER_ENABLE_PINNING`\n
 Enables or Disables static Cache creation. This effectively allows you to enable
 or disable Pinning file support.\n
 as you might want to have a pinning file in your env vars but for e.g debugging
 you don't want to activate the feature.
 
-`PINNING_FILE_PATH`\n
+`AYON_USD_RESOLVER_PINNING_FILE`\n
 This is a path to the pinning file.
 
-`PROJECT_ROOTS`\n
+`AYON_USD_RESOLVER_PINNING_ROOTS`\n
 When running the resolver against the AYON server the CppApi will query the
 `Get Project Site Roots` endpoint and get a `Dict[str,str]` of
 {root[RootOverwriteKey]}=Val overwrites.\n
@@ -258,13 +258,13 @@ export AYON_SITE_ID=""
 export AYON_SERVER_URL=""
 export AYON_PROJECT_NAME=""
 
-export AYONLOGGERLOGLVL=""
-export AYONLOGGERFILELOGGING=""
-export AYONLOGGERFILEPOS=""
+export AYON_USD_RESOLVER_LOG_LVL=""
+export AYON_USD_RESOLVER_LOG_FILE_ENABLED=""
+export AYON_USD_RESOLVER_LOG_FILE=""
 
-export ENABLE_STATIC_GLOBAL_CACHE="true"
-export PINNING_FILE_PATH="/path/to/pinning.json"
-export PROJECT_ROOTS="key=/val,key=/val"
+export AYON_USD_RESOLVER_ENABLE_PINNING="true"
+export AYON_USD_RESOLVER_PINNING_FILE="/path/to/pinning.json"
+export AYON_USD_RESOLVER_PINNING_ROOTS="key=/val,key=/val"
 
 export TF_DEBUG=""
 ```

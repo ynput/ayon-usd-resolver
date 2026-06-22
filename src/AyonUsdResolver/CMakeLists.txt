@@ -41,7 +41,7 @@ add_library(${PYTHON_MOD_TARGET} MODULE
     Wrappers_Tokens/wrapResolverContext.cpp
     Wrappers_Tokens/wrapResolver.cpp
     Wrappers_Tokens/wrapResolverTokens.cpp
-    Wrappers_Tokens/resolverTokens.cpp
+    pluginData/moduleDeps.cpp
     pluginData/module.cpp
 )
 
@@ -49,6 +49,7 @@ target_link_libraries(${PYTHON_MOD_TARGET}
     PUBLIC
         ${CORE_LIB_TARGET}
         AyonResolver::DccDeps
+        AyonResolver::PythonDeps
 )
 target_include_directories(${PYTHON_MOD_TARGET} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_compile_definitions(${PYTHON_MOD_TARGET} PRIVATE AR_AYONUSDRESOLVER_EXPORTS)
@@ -65,7 +66,17 @@ endif()
 set(PLUGIN_BASE_DIR "ayonUsdResolver")
 set(AR_AYONUSDRESOLVER_USD_CXX_CLASS_NAME "AyonUsdResolver")
 set(AR_AYONUSDRESOLVER_USD_PLUGIN_NAME "ayonUsdResolver")
+set(AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME "usdAssetResolver.AyonUsdResolver")
 set(AR_AYONUSDRESOLVER_TARGET_LIB "ayonUsdResolver")
+
+set(AYON_USD_MODULE_DEFINITIONS
+    MFB_ALT_PACKAGE_NAME=AyonUsdResolver
+    MFB_PACKAGE_NAME=ayonUsdResolver
+    MFB_PACKAGE_MODULE=usdAssetResolver.AyonUsdResolver
+    AR_AYONUSDRESOLVER_USD_PYTHON_MODULE_FULLNAME=usdAssetResolver.AyonUsdResolver
+)
+
+target_compile_definitions(${PYTHON_MOD_TARGET} PRIVATE ${AYON_USD_MODULE_DEFINITIONS})
 
 if(WIN32)
     set_target_properties(${PYTHON_MOD_TARGET} PROPERTIES
