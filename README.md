@@ -50,6 +50,24 @@ MEMCACHED_TIMEOUT_MS=1000                # Request timeout in ms (optional)
 - Target DCC / SDK installed
 - python3 development files (Optional when building Against AYON Usd)
 
+### Python Environment (uv)
+
+This repository uses [uv](https://docs.astral.sh/uv/) for Python dependency
+management.
+
+Install dependencies:
+
+```
+uv sync --group dev
+```
+
+Run project tooling with uv:
+
+```
+uv run pre-commit run --all-files
+uv run pytest
+```
+
 
 ### Tested Platforms:
 
