@@ -89,11 +89,11 @@ elseif (EXISTS "${USD_ROOT}/lib/usd")
     # Check if .lib files exist in lib/usd/
     if (EXISTS "${USD_ROOT}/lib/usd/usd_tf.lib" OR EXISTS "${USD_ROOT}/lib/usd/libusd_tf.lib")
         set(USD_LIB_DIR "${USD_ROOT}/lib/usd")
-        message(STATUS "[AYON] Found MayaUSD lib/usd layout (with .lib files): ${USD_LIB_DIR}")
+        message(STATUS "[AYON] Found USD lib/usd layout (with .lib files): ${USD_LIB_DIR}")
     else()
         # .lib files are in lib/, .dll files in lib/usd/
         set(USD_LIB_DIR "${USD_ROOT}/lib")
-        message(STATUS "[AYON] Found MayaUSD lib layout (split .lib/.dll): ${USD_LIB_DIR}")
+        message(STATUS "[AYON] Found USD lib layout (split .lib/.dll): ${USD_LIB_DIR}")
     endif()
 
 elseif (EXISTS "${USD_ROOT}/lib/maya-usd")
@@ -132,7 +132,7 @@ message(STATUS "[AYON] Looking for libraries in: ${USD_LIB_DIR}")
 message(STATUS "[AYON] Searching for USD libraries...")
 
 # Special case: Maya USD on Windows with only .dll files (no .lib import libs)
-if (WIN32 AND EXISTS "${USD_ROOT}/lib/usd_tf.dll")
+if (WIN32 AND EXISTS "${USD_ROOT}/lib/usd_tf.dll" AND NOT EXISTS "${USD_ROOT}/lib/usd_tf.lib")
     message(STATUS "[AYON] Maya USD .dll files detected (no .lib import libs)")
     
     # On Windows, we can link directly against .dll files
@@ -142,6 +142,15 @@ if (WIN32 AND EXISTS "${USD_ROOT}/lib/usd_tf.dll")
     set(USD_LIB_PLUG "${USD_ROOT}/lib/usd_plug.dll")
     set(USD_LIB_ARCH "${USD_ROOT}/lib/usd_arch.dll")
     message(STATUS "[AYON] Using .dll files directly")
+elseif (WIN32 AND EXISTS "${USD_ROOT}/lib/usd_tf.dll" AND EXISTS "${USD_ROOT}/lib/usd_tf.lib")
+    message(STATUS "[AYON] USD .dll and .lib files detected")
+    
+    # Use the .lib import libraries for linking
+    set(USD_LIB_TF "${USD_ROOT}/lib/usd_tf.lib")
+    set(USD_LIB_AR "${USD_ROOT}/lib/usd_ar.lib")
+    set(USD_LIB_PLUG "${USD_ROOT}/lib/usd_plug.lib")
+    set(USD_LIB_ARCH "${USD_ROOT}/lib/usd_arch.lib")
+    message(STATUS "[AYON] Using .lib import libraries for linking")
 
 elseif (WIN32 AND EXISTS "${USD_ROOT}/lib/usd/usd_tf.dll")
     message(STATUS "[AYON] Maya USD subdirectory layout: .dll in lib/usd/")
@@ -213,6 +222,66 @@ set(USD_INCLUDE_DIR ${USD_INCLUDE_DIR} CACHE PATH "USD include directory")
 set(USD_LIB_DIR ${USD_LIB_DIR} CACHE PATH "USD library directory")
 set(USD_IS_HOUDINI ${_usd_is_houdini} CACHE BOOL "Whether the detected USD layout is Houdini-style" FORCE)
 set(USD_LIB_PREFIX ${_usd_prefix} CACHE STRING "Detected USD library name prefix" FORCE)
+
+# =========================================================
+# Extract Python dependency metadata from the standalone USD
+# build's pxr CMake config (pxrConfig.cmake) if present.
+# Populates USD_PYTHON_EXECUTABLE, USD_PYTHON_LIBRARY, and
+# USD_PYTHON_INCLUDE_DIR for use by AyonResolverUsd.cmake.
+# Skipped for Houdini layouts which use their own Python.
+# =========================================================
+if(NOT USD_IS_HOUDINI)
+    set(_ayon_pxr_config "${USD_ROOT}/pxrConfig.cmake")
+    if(EXISTS "${_ayon_pxr_config}")
+        message(STATUS "[AYON] Found pxr CMake config; extracting Python metadata...")
+
+        # Python3_EXECUTABLE
+        file(STRINGS "${_ayon_pxr_config}" _pxr_lines REGEX "set\\(Python3_EXECUTABLE")
+        if(_pxr_lines)
+            list(GET _pxr_lines 0 _pxr_line)
+            string(REGEX MATCH "\\[\\[([^]]+)\\]\\]" _m "${_pxr_line}")
+            if(CMAKE_MATCH_1)
+                set(USD_PYTHON_EXECUTABLE "${CMAKE_MATCH_1}" CACHE FILEPATH
+                    "Python executable recorded in USD pxrConfig.cmake" FORCE)
+                message(STATUS "[AYON] pxr config: Python executable = ${USD_PYTHON_EXECUTABLE}")
+            endif()
+            unset(_pxr_line)
+            unset(_m)
+        endif()
+        unset(_pxr_lines)
+
+        # Python3_LIBRARY
+        file(STRINGS "${_ayon_pxr_config}" _pxr_lines REGEX "set\\(Python3_LIBRARY ")
+        if(_pxr_lines)
+            list(GET _pxr_lines 0 _pxr_line)
+            string(REGEX MATCH "\\[\\[([^]]+)\\]\\]" _m "${_pxr_line}")
+            if(CMAKE_MATCH_1)
+                set(USD_PYTHON_LIBRARY "${CMAKE_MATCH_1}" CACHE FILEPATH
+                    "Python library recorded in USD pxrConfig.cmake" FORCE)
+                message(STATUS "[AYON] pxr config: Python library    = ${USD_PYTHON_LIBRARY}")
+            endif()
+            unset(_pxr_line)
+            unset(_m)
+        endif()
+        unset(_pxr_lines)
+
+        # Python3_INCLUDE_DIR
+        file(STRINGS "${_ayon_pxr_config}" _pxr_lines REGEX "set\\(Python3_INCLUDE_DIR")
+        if(_pxr_lines)
+            list(GET _pxr_lines 0 _pxr_line)
+            string(REGEX MATCH "\\[\\[([^]]+)\\]\\]" _m "${_pxr_line}")
+            if(CMAKE_MATCH_1)
+                set(USD_PYTHON_INCLUDE_DIR "${CMAKE_MATCH_1}" CACHE PATH
+                    "Python include dir recorded in USD pxrConfig.cmake" FORCE)
+                message(STATUS "[AYON] pxr config: Python includes   = ${USD_PYTHON_INCLUDE_DIR}")
+            endif()
+            unset(_pxr_line)
+            unset(_m)
+        endif()
+        unset(_pxr_lines)
+    endif()
+    unset(_ayon_pxr_config)
+endif()
 
 # =========================================================
 # Diagnostics
