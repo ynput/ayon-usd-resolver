@@ -2,6 +2,10 @@
 name = "ayon-usd-resolver"
 version = "0.1.0"
 description = "USD Asset Resolver for AYON"
+authors = [
+    { name="YNPUT Team", email = "team@ynput.io" }
+]
+license = "Apache 2"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "YNPUT Team", email = "team@ynput.io" }]
@@ -9,19 +13,14 @@ license = { text = "Apache-2.0" }
 
 [dependency-groups]
 dev = [
-	"cmakelang[yaml]>=0.6.13,<0.7.0",
-	"codespell>=2.2.6,<3.0.0",
-	"cpplint>=1.6.1,<2.0.0",
-	"exceptiongroup==1.2.2",
-	"iniconfig==2.0.0",
-	"packaging==24.2",
-	"pluggy==1.5.0",
-	"pre-commit>=3.6.2,<4.0.0",
-	"pytest==8.3.3",
-	"tomli==2.2.1",
+	"codespell>=2.4.1",
+	"cpplint>=2.0.2",
+	"pre-commit>=4.6.0",
+	"pytest>=9.1.1",
 	"types-usd==24.5.2",
     "pytest",
     "pytest-ayon @ git+https://github.com/ynput/pytest-ayon.git",
+	"ruff>=0.15.20"
 ]
 
 [tool.uv]
