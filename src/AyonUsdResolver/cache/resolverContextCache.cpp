@@ -204,7 +204,7 @@ AssetIdentifier
 ResolverContextCache::getAsset(const std::string &assetIdentifier,
                                const CacheName selectedCache,
                                const bool isAyonPath) {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: (%s) \n", assetIdentifier.c_str());
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: (%s) - Using cache %s \n", assetIdentifier.c_str(), (selectedCache == CacheName::AYONCACHE ? "AyonCache" : "CommonCache"));
 
     AssetIdentifier asset;
 
