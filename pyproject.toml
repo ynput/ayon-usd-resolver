@@ -8,8 +8,6 @@ authors = [
 license = "Apache 2"
 readme = "README.md"
 requires-python = ">=3.11"
-authors = [{ name = "YNPUT Team", email = "team@ynput.io" }]
-license = { text = "Apache-2.0" }
 
 [dependency-groups]
 dev = [
@@ -18,7 +16,6 @@ dev = [
 	"pre-commit>=4.6.0",
 	"pytest>=9.1.1",
 	"types-usd==24.5.2",
-    "pytest",
     "pytest-ayon @ git+https://github.com/ynput/pytest-ayon.git",
 	"ruff>=0.15.20"
 ]
