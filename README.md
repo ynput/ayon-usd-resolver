@@ -63,8 +63,6 @@ The build should find `libmemcached` and proceed with the build. Without vcpkg t
 ## Linux and  macOS
 On Linux and macOS the build system uses [pkg-config](https://en.wikipedia.org/wiki/Pkg-config) along with the standard installation paths. With Linux, use your packager to install `libmemcached-devel` or similar. On macOS, Homebrew is your friend - `brew install libmemcached`.
 
-```
-
 
 # Repository Docs
 
