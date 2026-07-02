@@ -155,10 +155,14 @@ def find_libmemcached() -> str | None:
                 return memcached_path
     # Check standard paths
     for base_path in search_paths:
-        include_path = os.path.join(base_path, "include", "libmemcached.h")
+        include_candidates = [
+            os.path.join(base_path, "include", "libmemcached-1.0", "memcached.h"),
+            os.path.join(base_path, "include", "libmemcached", "memcached.h"),
+            os.path.join(base_path, "include", "libmemcached.h"),
+        ]
         lib_path = os.path.join(base_path, "lib")
 
-        if os.path.exists(include_path) and os.path.exists(lib_path):
+        if any(os.path.exists(p) for p in include_candidates) and os.path.exists(lib_path):
             print(f"[INFO] Found libmemcached at: {base_path}")
             return base_path
 
@@ -434,7 +438,7 @@ def main() -> None:
     parser.add_argument(
         "--with-memcached",
         action="store_true",
-        help="Attempt to install libmemcached if not found"
+        help="Warn if libmemcached is not found (memcached support stays optional)"
     )
 
     args = parser.parse_args()
@@ -512,8 +516,9 @@ def main() -> None:
             if not arg.startswith("-DCMAKE_PREFIX_PATH=")
         ]
 
-        # Request static linking for memcached
-        cmake_args.append("-DAYON_MEMCACHED_STATIC_LINK=ON")
+        # Request static linking for memcached only on Windows/vcpkg builds
+        if platform.system().lower() == "windows":
+            cmake_args.append("-DAYON_MEMCACHED_STATIC_LINK=ON")
 
     cmake_args.extend(dcc_args)
 

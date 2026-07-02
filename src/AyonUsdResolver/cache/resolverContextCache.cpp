@@ -266,7 +266,9 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
     }
 
     // Try memcached as second-level cache before calling REST API
+    static std::mutex memcachedMutex;
     if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
+        std::lock_guard<std::mutex> lock(memcachedMutex);
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: Checking memcached\n");
         asset = m_memcached->get()->getAssetData(assetIdentifier);
         if (!asset.isEmpty()) {
@@ -296,6 +298,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
 
         // Also store in memcached for distributed caching
         if (m_memcached.has_value() && m_memcached->get()->isConnected() && !asset.isEmpty()) {
+            std::lock_guard<std::mutex> lock(memcachedMutex);
             m_memcached->get()->setAssetData(asset.getAssetIdentifier(),
                                              asset.getResolvedAssetPath().GetPathString());
             TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
