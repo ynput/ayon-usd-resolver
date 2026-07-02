@@ -19,8 +19,8 @@ def run(
         env: dict[str, str] | None = None) -> None:
     """Run a shell command with logging."""
     print(f">>> {cmd}, cwd={cwd}")
-    result = subprocess.run(
-        cmd, cwd=cwd, env=env, check=False, text=True)
+    shell = isinstance(cmd, str)
+    result = subprocess.run(cmd, cwd=cwd, env=env, shell=shell, check=False, text=True)
     if result.returncode != 0:
         sys.exit(result.returncode)
 
