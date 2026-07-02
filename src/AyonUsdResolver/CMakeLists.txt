@@ -13,40 +13,95 @@ include(AyonResolverDeps)
 # Users can install libmemcached via: apt-get install libmemcached-dev (Linux) or brew install libmemcached (macOS)
 option(AYON_MEMCACHED_STATIC_LINK "Link libmemcached statically (requires static build of libmemcached)" OFF)
 
-# When static linking is requested, prefer static library suffixes so find_package
-# and find_library resolve to .a / .lib instead of .so / .dll.
-if(AYON_MEMCACHED_STATIC_LINK)
-    set(_AYON_ORIG_FIND_LIBRARY_SUFFIXES "${CMAKE_FIND_LIBRARY_SUFFIXES}")
-    if(WIN32)
-        set(CMAKE_FIND_LIBRARY_SUFFIXES .lib)
-    else()
-        set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+find_package(libmemcached CONFIG QUIET)
+find_package(PkgConfig QUIET)
+
+if(TARGET libmemcached::libmemcached)
+    set(LIBMEMCACHED_FOUND TRUE)
+    set(AYON_LIBMEMCACHED_TARGET libmemcached::libmemcached)
+endif()
+
+if(NOT LIBMEMCACHED_FOUND AND PkgConfig_FOUND)
+    if(AYON_MEMCACHED_STATIC_LINK)
+        set(_AYON_ORIG_PKG_CONFIG_ARGN "${PKG_CONFIG_ARGN}")
+        set(PKG_CONFIG_ARGN ${PKG_CONFIG_ARGN} --static)
+    endif()
+
+    pkg_check_modules(LIBMEMCACHED QUIET IMPORTED_TARGET libmemcached)
+
+    if(AYON_MEMCACHED_STATIC_LINK)
+        set(PKG_CONFIG_ARGN "${_AYON_ORIG_PKG_CONFIG_ARGN}")
     endif()
 endif()
 
-find_package(libmemcached QUIET)
+if(NOT LIBMEMCACHED_FOUND)
+    find_path(AYON_LIBMEMCACHED_INCLUDE_DIR
+        NAMES
+            libmemcached-1.0/memcached.h
+            libmemcached/memcached.h
+            libmemcached.h
+        PATH_SUFFIXES include
+    )
 
-if(AYON_MEMCACHED_STATIC_LINK)
-    set(CMAKE_FIND_LIBRARY_SUFFIXES "${_AYON_ORIG_FIND_LIBRARY_SUFFIXES}")
+    find_library(AYON_LIBMEMCACHED_LIBRARY
+        NAMES
+            memcached
+            libmemcached
+            libmemcachedawesome
+        PATH_SUFFIXES lib lib64
+    )
+
+    find_library(AYON_LIBHASHKIT_LIBRARY
+        NAMES
+            hashkit
+            libhashkit
+        PATH_SUFFIXES lib lib64
+    )
+
+    if(AYON_LIBMEMCACHED_INCLUDE_DIR AND AYON_LIBMEMCACHED_LIBRARY)
+        if(NOT TARGET AyonLibmemcached)
+            add_library(AyonLibmemcached UNKNOWN IMPORTED)
+            set_target_properties(AyonLibmemcached PROPERTIES
+                IMPORTED_LOCATION "${AYON_LIBMEMCACHED_LIBRARY}"
+                INTERFACE_INCLUDE_DIRECTORIES "${AYON_LIBMEMCACHED_INCLUDE_DIR}"
+            )
+            if(AYON_LIBHASHKIT_LIBRARY)
+                set_property(TARGET AyonLibmemcached APPEND PROPERTY
+                    INTERFACE_LINK_LIBRARIES "${AYON_LIBHASHKIT_LIBRARY}"
+                )
+            endif()
+            if(WIN32)
+                set_property(TARGET AyonLibmemcached APPEND PROPERTY
+                    INTERFACE_LINK_LIBRARIES ws2_32
+                )
+            endif()
+        endif()
+
+        set(LIBMEMCACHED_FOUND TRUE)
+        set(AYON_LIBMEMCACHED_TARGET AyonLibmemcached)
+    endif()
 endif()
 
-if(libmemcached_FOUND)
+if(LIBMEMCACHED_FOUND)
     set(AYON_LIBMEMCACHED_AVAILABLE TRUE)
-    message(STATUS "[AYON] libmemcached found - memcached support ENABLED")
-    if(TARGET libmemcached)
-        set(AYON_LIBMEMCACHED_TARGET libmemcached)
-    elseif(TARGET memcached)
-        set(AYON_LIBMEMCACHED_TARGET memcached)
-    elseif(TARGET libmemcached::libmemcached)
-        set(AYON_LIBMEMCACHED_TARGET libmemcached::libmemcached)
+    if(NOT AYON_LIBMEMCACHED_TARGET)
+        set(AYON_LIBMEMCACHED_TARGET PkgConfig::LIBMEMCACHED)
+    endif()
+    if(AYON_LIBMEMCACHED_TARGET STREQUAL "libmemcached::libmemcached")
+        message(STATUS "[AYON] libmemcached found via CMake package config - memcached support ENABLED")
+    elseif(AYON_LIBMEMCACHED_TARGET STREQUAL "PkgConfig::LIBMEMCACHED")
+        message(STATUS "[AYON] libmemcached found via pkg-config - memcached support ENABLED")
     else()
-        # Fallback: assume linking by name works
-        set(AYON_LIBMEMCACHED_TARGET memcached)
+        message(STATUS "[AYON] libmemcached found via CMake library search - memcached support ENABLED")
     endif()
 else()
     set(AYON_LIBMEMCACHED_AVAILABLE FALSE)
     message(STATUS "[AYON] libmemcached NOT found - memcached support DISABLED")
-    message(STATUS "       To enable memcached: install libmemcached-dev (Linux) or libmemcached (macOS/Homebrew)")
+    if(PkgConfig_FOUND)
+        message(STATUS "       To enable memcached: install libmemcached-dev (Linux) or libmemcached (macOS/Homebrew)")
+    else()
+        message(STATUS "       pkg-config was not found; CMake also searched standard prefixes and CMAKE_PREFIX_PATH")
+    endif()
 endif()
 
 
