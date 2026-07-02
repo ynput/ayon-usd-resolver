@@ -174,7 +174,7 @@ endif()
 list(APPEND CMAKE_PREFIX_PATH "${MAYA_USD_DEVKIT_PATH}")
 
 if(EXISTS "${USD_INCLUDE_DIR}/pxr/external/boost")
-    set(AR_BOOST_INCLUDE_DIR "${Boost_INCLUDE_DIRS}")
+    set(AR_BOOST_INCLUDE_DIR "${USD_INCLUDE_DIR}")
 else()
     set(_maya_boost_candidates
         "${MAYA_USD_DEVKIT_PATH}/include/boost-1_85"
