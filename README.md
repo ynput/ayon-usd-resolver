@@ -71,8 +71,10 @@ vcpkg install libmemcached-awesome:x64-windows-static-md
 The build should find `libmemcached` and proceed with the build. Without vcpkg the build system will check common installation paths.
 
 ## Linux and  macOS
-On Linux and macOS the build system uses [pkg-config](https://en.wikipedia.org/wiki/Pkg-config) along with the standard installation paths. With Linux, use your packager to install `libmemcached-devel` or similar. On macOS, Homebrew is your friend - `brew install libmemcached`.
+On Linux and macOS the build system uses [pkg-config](https://en.wikipedia.org/wiki/Pkg-config) along with the standard installation paths. With Linux, use your packager to install `libmemcached-devel`, `libmemcached-awesome-devel` or similar. On macOS, Homebrew is your friend - `brew install libmemcached`.
 
+To get newer version, it is very easy to [build it and
+install it](https://github.com/awesomized/libmemcached#from-source) as usual and build system will find it.
 
 # Repository Docs
 
