@@ -40,9 +40,19 @@ Memcached is a free, open-source distributed memory caching system. It speeds up
 Memcached can run as a service on a local machine or in a Docker container. You can even setup multiple servers and utilize client hashing feature that distributes keys across a cluster of servers using hashing algorithms. This ensures that adding or removing servers causes only a minimal shift in key mapping, preventing massive cache misses. Note that this depends on the used memcached client features.
 
 ### How it works
-If memcached is enabled and the asset resolver cannot find the path in the context cache, it will try memcache configured by environment variable `AYON_MEMCACHED_SERVERS` (comma separated `host:port` list). Only if this misses, it will get the path from AYON server (and then store it in memcache for further use).
+If memcached is enabled and the asset resolver cannot find the path in the context cache, it will try memcached configured by environment variable `AYON_MEMCACHED_SERVERS` (comma separated `host:port` list). Only if this query misses, it will get the path from AYON server (and then store it in memcaches for further use as a rootless path).
 
-Resolver doesn't deal with pre-seeding memcache with entries. AYON USD addon can do that, but since memcached is open, any mechanism can be used.
+Resolver doesn't deal with pre-seeding memcached with entries. It will store all path there so just by using
+the cache gets populated over time.
+
+To use memcached support, set following environment variables
+
+`AYON_MEMCACHED_SERVERS` - comma separated list of `host:port` defined servers. When more servers are defined, they are used as a fallback option when the
+connection cannot be established.
+
+`AYON_MEMCACHED_ENABLED` - set to `true` to enable memcached support.
+
+`AYON_MEMCACHED_TIMEOUT_MS` - control connection timeout - default value is 1000ms.
 
 ### How to build with memcached support
 You only need to add `--with-memcached` argument to build command. You need to have `libmemcached` available.

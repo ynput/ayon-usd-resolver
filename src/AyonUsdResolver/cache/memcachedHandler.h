@@ -41,6 +41,19 @@ class MemcachedHandler {
         bool setAssetData(const std::string &assetIdentifier, const std::string &assetPath, uint32_t expireSeconds = 3600);
 
         /**
+         * @brief Delete asset data from memcached
+         * @param assetIdentifier The asset identifier (key) to delete
+         * @return true if successful or key not found, false on error
+         */
+        bool deleteAssetData(const std::string &assetIdentifier);
+
+        /**
+         * @brief Flush all entries from the memcached server
+         * @return true if successful, false otherwise
+         */
+        bool flushAll();
+
+        /**
          * @brief Check if memcached handler is properly initialized
          * @return true if connected and ready, false otherwise
          */

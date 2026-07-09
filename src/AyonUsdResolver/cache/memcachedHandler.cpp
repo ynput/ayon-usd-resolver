@@ -173,6 +173,38 @@ class MemcachedHandler::Impl {
             return true;
         }
 
+        bool deleteMemcached(const std::string &key) {
+            if (!m_connected || m_memc == nullptr) {
+                return false;
+            }
+
+            memcached_return_t rc = memcached_delete(m_memc, key.c_str(), key.length(), 0);
+            if (memcached_failed(rc) && rc != MEMCACHED_NOTFOUND) {
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                    .Msg("MemcachedHandler: delete failed for key %s (%s)\n",
+                         key.c_str(),
+                         memcached_strerror(m_memc, rc));
+                return false;
+            }
+
+            return true;
+        }
+
+        bool flushAll() {
+            if (!m_connected || m_memc == nullptr) {
+                return false;
+            }
+
+            memcached_return_t rc = memcached_flush(m_memc, 0);
+            if (memcached_failed(rc)) {
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                    .Msg("MemcachedHandler: flush failed (%s)\n", memcached_strerror(m_memc, rc));
+                return false;
+            }
+
+            return true;
+        }
+
         bool isConnected() const {
             return m_connected;
         }
@@ -196,6 +228,8 @@ class MemcachedHandler::Impl {
         bool tryConnect() { return false; }
         std::string queryMemcached(const std::string &) { return ""; }
         bool setMemcached(const std::string &, const std::string &, uint32_t) { return false; }
+        bool deleteMemcached(const std::string &) { return false; }
+        bool flushAll() { return false; }
         bool isConnected() const { return m_connected; }
     
     private:
@@ -256,6 +290,27 @@ bool MemcachedHandler::setAssetData(const std::string &assetIdentifier, const st
     }
 
     return pImpl->setMemcached(assetIdentifier, assetPath, expireSeconds);
+}
+
+bool MemcachedHandler::deleteAssetData(const std::string &assetIdentifier) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("MemcachedHandler::deleteAssetData(%s)\n", assetIdentifier.c_str());
+
+    if (!m_connected || !pImpl) {
+        return false;
+    }
+
+    return pImpl->deleteMemcached(assetIdentifier);
+}
+
+bool MemcachedHandler::flushAll() {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("MemcachedHandler::flushAll()\n");
+
+    if (!m_connected || !pImpl) {
+        return false;
+    }
+
+    return pImpl->flushAll();
 }
 
 bool MemcachedHandler::isConnected() const {
