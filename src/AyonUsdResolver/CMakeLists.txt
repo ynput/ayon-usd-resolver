@@ -12,13 +12,16 @@ include(AyonResolverDeps)
 # Optional memcached support via libmemcached
 # Users can install libmemcached via: apt-get install libmemcached-dev (Linux) or brew install libmemcached (macOS)
 option(AYON_MEMCACHED_STATIC_LINK "Link libmemcached statically (requires static build of libmemcached)" OFF)
-
-find_package(libmemcached CONFIG QUIET)
 find_package(PkgConfig QUIET)
 
-if(TARGET libmemcached::libmemcached)
-    set(LIBMEMCACHED_FOUND TRUE)
-    set(AYON_LIBMEMCACHED_TARGET libmemcached::libmemcached)
+# this works only on windows with vcpkg installed libmemcached, or if the user has set CMAKE_PREFIX_PATH to a directory containing libmemcachedConfig.cmake
+if(WIN32)
+    find_package(libmemcached CONFIG QUIET)
+
+    if(TARGET libmemcached::libmemcached)
+        set(LIBMEMCACHED_FOUND TRUE)
+        set(AYON_LIBMEMCACHED_TARGET libmemcached::libmemcached)
+    endif()
 endif()
 
 if(NOT LIBMEMCACHED_FOUND AND PkgConfig_FOUND)
