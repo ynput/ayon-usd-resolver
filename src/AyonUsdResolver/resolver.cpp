@@ -6,6 +6,7 @@
 
 #include <pxr/pxr.h>
 #include <pxr/base/arch/systemInfo.h>
+#include <pxr/base/tf/fileUtils.h>
 #include <pxr/base/tf/pathUtils.h>
 #include <pxr/base/tf/debug.h>
 #include <pxr/usd/ar/defaultResolver.h>
