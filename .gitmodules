@@ -7,4 +7,4 @@
 	url = git@github.com:ynput/ayon-cpp-dev-tools.git
 [submodule "automator"]
 	path = automator
-	url = https://github.com/ynput/ayon-automator.git
+	url = git@github.com:ynput/ayon-automator.git
