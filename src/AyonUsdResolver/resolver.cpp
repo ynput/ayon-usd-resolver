@@ -150,7 +150,7 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
                 continue;
             }
 
-            AssetIdentifier* asset = nullptr;
+            AssetIdentifierPtr asset;
             std::string cleanAssetPath = *pathToResolve;
             RES_FUNCS_REMOVE_SDF_ARGS(cleanAssetPath);
             asset = resolverCache->getAsset(cleanAssetPath, CacheName::AYONCACHE, true);
