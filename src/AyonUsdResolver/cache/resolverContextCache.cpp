@@ -62,7 +62,8 @@ PinningFileHandler::PinningFileHandler(const std::string &pinningFilePath,
  * this is not a cached function it will reconstruct the AssetIdentifier. it will not reload the file or the env var however.
  *
  * @param resolveKey UsdAssetIdent
- * @return populated AssetIdentifier if key was found in pinning file. Empty AssetIdentifier if key was not found
+ * @return Shared pointer to a populated AssetIdentifier when found;
+ * otherwise, a non-null shared pointer to an empty AssetIdentifier.
  */
 AssetIdentifierPtr
 PinningFileHandler::getAssetData(const std::string &resolveKey) {
