@@ -28,6 +28,54 @@ AYON compatible entity URIs through the
 > **NOTE**\
 > **Admin** and **Dev** docs can be found under `/Docs/Ayon_Docs/`
 
+## Memcached support
+For faster access the resolver can use [memcached](https://docs.memcached.org/).
+
+### What is memcached
+Memcached is a free, open-source distributed memory caching system. It speeds up dynamic, database-driven websites and applications by storing frequently accessed data and objects directly in RAM, reducing the number of times a system must query slower external data sources like a database or API.
+
+> [!NOTE]
+> There are some protocol compatible alternatives to memcached, like [memc-rs](https://memc.rs), etc.
+
+Memcached can run as a service on a local machine or in a Docker container. You can even setup multiple servers and utilize client hashing feature that distributes keys across a cluster of servers using hashing algorithms. This ensures that adding or removing servers causes only a minimal shift in key mapping, preventing massive cache misses. Note that this depends on the used memcached client features.
+
+### How it works
+If memcached is enabled and the asset resolver cannot find the path in the context cache, it will try memcached configured by environment variable `AYON_MEMCACHED_SERVERS` (comma separated `host:port` list). Only if this query misses, it will get the path from AYON server (and then store it in memcaches for further use as a rootless path).
+
+Resolver doesn't deal with pre-seeding memcached with entries. It will store all path there so just by using
+the cache gets populated over time.
+
+To use memcached support, set following environment variables
+
+`AYON_MEMCACHED_SERVERS` - comma separated list of `host:port` defined servers. When more servers are defined, they are used as a fallback option when the
+connection cannot be established.
+
+`AYON_MEMCACHED_ENABLED` - set to `true` to enable memcached support.
+
+`AYON_MEMCACHED_TIMEOUT_MS` - control connection timeout - default value is 1000ms.
+
+### How to build with memcached support
+You only need to add `--with-memcached` argument to build command. You need to have `libmemcached` available.
+
+### Windows
+On windows, the best way is to use [vcpkg](https://github.com/microsoft/vcpkg).
+
+```powershell
+git clone https://github.com/microsoft/vcpkg C:\dev\vcpkg
+$env:VCPKG_ROOT="C:\dev\vcpkg"
+$env:PATH="$env:VCPKG_ROOT;$env:PATH"
+C:\dev\vcpkg\bootstrap-vcpkg.bat
+# install libmemcached
+vcpkg install libmemcached-awesome:x64-windows-static-md
+```
+The build should find `libmemcached` and proceed with the build. Without vcpkg the build system will check common installation paths.
+
+## Linux and  macOS
+On Linux and macOS the build system uses [pkg-config](https://en.wikipedia.org/wiki/Pkg-config) along with the standard installation paths. With Linux, use your packager to install `libmemcached-devel`, `libmemcached-awesome-devel` or similar. On macOS, Homebrew is your friend - `brew install libmemcached`.
+
+To get newer version, it is very easy to [build it and
+install it](https://github.com/awesomized/libmemcached#from-source) as usual and build system will find it.
+
 # Repository Docs
 
 
@@ -37,6 +85,24 @@ AYON compatible entity URIs through the
 - Cmake
 - Target DCC / SDK installed
 - python3 development files (Optional when building Against AYON Usd)
+
+### Python Environment (uv)
+
+This repository uses [uv](https://docs.astral.sh/uv/) for Python dependency
+management.
+
+Install dependencies:
+
+```
+uv sync --group dev
+```
+
+Run project tooling with uv:
+
+```
+uv run pre-commit run --all-files
+uv run pytest
+```
 
 
 ### Tested Platforms:

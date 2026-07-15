@@ -2,6 +2,7 @@
 #define AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
 
 #include "../cache/assetIdentifierDef.h"
+#include "memcachedHandler.h"
 #include "AyonCppApi.h"
 
 #include <nlohmann/json.hpp>
@@ -110,7 +111,9 @@ class ResolverContextCache {
         std::optional<std::unique_ptr<AyonApi>> m_ayon;
         bool m_staticCache;
 
+        std::unordered_map<std::string, std::string> m_rootReplaceData;
         std::optional<PinningFileHandler> m_pinningFileHandler;
+        std::optional<std::unique_ptr<MemcachedHandler>> m_memcached;
 };
 
 #endif   // AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H

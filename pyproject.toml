@@ -1,22 +1,27 @@
-[tool.poetry]
+[project]
 name = "ayon-usd-resolver"
 version = "0.1.0"
 description = "USD Asset Resolver for AYON"
-authors = ["YNPUT Team <team@ynput.io>"]
+authors = [
+    { name="YNPUT Team", email = "team@ynput.io" }
+]
 license = "Apache 2"
 readme = "README.md"
+requires-python = ">=3.11"
 
-[tool.poetry.dependencies]
-python = "^3.11"
-pre-commit = "^3.6.2"
-codespell = "^2.2.6"
-cpplint = "^1.6.1"
-cmakelang = {extras = ["yaml"], version = "^0.6.13"}
+[dependency-groups]
+dev = [
+	"codespell>=2.4.1",
+	"cpplint>=2.0.2",
+	"pre-commit>=4.6.0",
+	"pytest>=9.1.1",
+	"types-usd==24.5.2",
+    "pytest-ayon @ git+https://github.com/ynput/pytest-ayon.git",
+	"ruff>=0.15.20"
+]
 
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv]
+package = false
 
 [tool.codespell]
 ignore-words-list = "ayon,master,usd"
