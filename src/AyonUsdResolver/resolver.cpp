@@ -6,6 +6,7 @@
 
 #include <pxr/pxr.h>
 #include <pxr/base/arch/systemInfo.h>
+#include <pxr/base/tf/fileUtils.h>
 #include <pxr/base/tf/pathUtils.h>
 #include <pxr/base/tf/debug.h>
 #include <pxr/usd/ar/defaultResolver.h>
@@ -181,11 +182,16 @@ AyonUsdResolver::_Resolve(const std::string &assetPath) const {
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
                 .Msg("Resolver::_Resolve( '%s' ) is relative path\n", pathToResolve->c_str());
         ArResolvedPath resolvedPath = _ResolveAnchored(ArchGetCwd(), *pathToResolve);
-        if (resolvedPath) {
-            return resolvedPath;
+        
+        if (! TfPathExists(resolvedPath.GetPathString())) {
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
+                .Msg("Resolver::_Resolve('%s') resolved to a non-existent location: '%s'\n", 
+                    pathToResolve->c_str(), 
+                    resolvedPath.GetPathString().c_str()
+                );
         }
-
-        return ArResolvedPath(*pathToResolve);
+        
+        return resolvedPath;
     }
 
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER)
