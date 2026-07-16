@@ -31,10 +31,12 @@ GetGlobalCache() {
 
 }  // namespace
 
-// ResolverContextCache& GetGlobalResolverContextCache() {
-//     static ResolverContextCache instance;   // lazy init on first use
-//     return instance;
-// }
+// Public accessor bridging the encapsulated process-wide cache above so other
+// translation units (the prewarm pass) can seed the same instance.
+std::shared_ptr<ResolverContextCache>
+GetResolverGlobalCache() {
+    return GetGlobalCache();
+}
 
 bool
 getStringEndswithString(const std::string &value, const std::string &compareValue) {

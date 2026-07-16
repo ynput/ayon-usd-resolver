@@ -65,6 +65,19 @@ class ResolverContextCache {
         AssetIdentifier getAsset(const std::string &assetIdentifier, const CacheName selectedCache, const bool isAyonPath);
 
         /**
+         * @brief Resolve many AYON URIs in a single batched (parallel) request and seed the cache.
+         *
+         * Unlike getAsset(), which resolves one URI per server round-trip, this collapses a whole
+         * set of URIs into one batched call via AyonApi::batchResolvePath and inserts every result.
+         * Used by the prewarm pass to avoid the serial resolve storm during stage composition.
+         *
+         * No-op in static (pinning) mode or with an empty input.
+         * @param uriPaths The AYON URIs to resolve. May be reordered/deduplicated.
+         * @return Map of URI -> resolved path for the entries that were resolved.
+         */
+        std::unordered_map<std::string, std::string> batchWarm(std::vector<std::string> &uriPaths);
+
+        /**
          * @brief Set up the cache from a pinning file
          * @param pinningFilePath Path to the pinning file
          */
