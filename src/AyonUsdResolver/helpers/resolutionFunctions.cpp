@@ -83,5 +83,5 @@ _ResolveAnchored(const std::string &anchorPath, const std::string &path) {
         resolvedPath = TfStringCatPaths(anchorPath, path);
     }
 
-    return TfPathExists(resolvedPath) ? ArResolvedPath(TfAbsPath(resolvedPath)) : ArResolvedPath();
+    return ArResolvedPath(TfAbsPath(resolvedPath));
 }
