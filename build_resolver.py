@@ -28,7 +28,7 @@ def detect_houdini_env(root):
     if platform.system() == "Windows":
         # Auto-detect Python version from Houdini by checking which python3X directory exists
         python_exec = None
-        for pyver in ["311", "310", "39", "37"]:  # Check in order of preference
+        for pyver in ["313", "311", "310", "39", "37"]:  # Check in order of preference
             candidate = os.path.join(root, f"python{pyver}", "python.exe")
             if os.path.exists(candidate):
                 python_exec = candidate
