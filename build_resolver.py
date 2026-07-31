@@ -1,71 +1,116 @@
-"""
-Simple build helper for AYON USD Resolver.
+"""Simple build helper for AYON USD Resolver.
+
 Automatically detects USD/DCC environment and runs CMake build.
 Adds optional zipping of the install directory.
 """
+from __future__ import annotations
 
 import argparse
 import os
-import sys
-import subprocess
 import platform
 import shutil
-import tempfile
+import subprocess
+import sys
+from asyncio import log
 
 
-def run(cmd, cwd=None, env=None):
+def run(
+        cmd: str | list[str],
+        cwd: str | None = None,
+        env: dict[str, str] | None = None) -> None:
     """Run a shell command with logging."""
-    print(f"\n>>> {cmd}")
-    result = subprocess.run(cmd, shell=True, cwd=cwd, env=env)
+    print(f">>> {cmd}, cwd={cwd}")
+    result = subprocess.run(
+        cmd, cwd=cwd, env=env, check=False, text=True)
     if result.returncode != 0:
         sys.exit(result.returncode)
 
 
-def detect_houdini_env(root):
-    """Detect paths for Houdini installations."""
+def detect_houdini_env(root: str) -> list[str]:
+    """Detect paths for Houdini installations.
+
+    Args:
+        root (str): Path to Houdini installation root.
+
+    Returns:
+        list[str]: List of CMake arguments for Houdini build.
+
+    """
     houdini_cmake_path = os.path.join(root, "toolkit", "cmake")
 
-    if platform.system() == "Windows":
-        # Auto-detect Python version from Houdini by checking which python3X directory exists
+    if platform.system().lower() == "windows":
+        # Auto-detect Python version from Houdini by checking
+        # which python3X directory exists
         python_exec = None
-        for pyver in ["313", "311", "310", "39", "37"]:  # Check in order of preference
+        # Check in order of preference
+        for pyver in ["313", "311", "310", "39", "37"]:
             candidate = os.path.join(root, f"python{pyver}", "python.exe")
             if os.path.exists(candidate):
                 python_exec = candidate
                 break
-        
+
         # Fallback if none found (shouldn't happen with valid Houdini)
         if not python_exec:
             python_exec = os.path.join(root, "python311", "python.exe")
-            print(f"[WARNING] Could not detect Python version, using fallback: {python_exec}")
+            print(
+                f"Could not detect Python version, using fallback: {python_exec}"
+            )
     else:
         python_exec = os.path.join(root, "python", "bin", "python")
 
     return [
         "-DBUILD_TARGET=houdini",
         "-DUSE_OPENSSL3=ON",
-        f"-DUSD_ROOT=\"{root}\"",
-        f"-DCMAKE_PREFIX_PATH=\"{houdini_cmake_path}\"",
-        f"-DPython_EXECUTABLE=\"{python_exec}\"",
+        f'-DUSD_ROOT="{root}"',
+        f'-DCMAKE_PREFIX_PATH="{houdini_cmake_path}"',
+        f'-DPython_EXECUTABLE="{python_exec}"',
     ]
 
 
-def detect_usd_env(root):
-    """Detect paths for standalone USD SDK installs."""
-    python_exec = shutil.which("python3") or sys.executable
+def detect_usd_env(root: str) -> list[str]:
+    """Detect paths for standalone USD SDK installs.
+
+    Args:
+        root (str): Path to USD installation root.
+
+    Returns:
+        list[str]: List of CMake arguments for USD build.
+
+    """
     return [
         "-DBUILD_TARGET=usd",
         f"-DUSD_ROOT={root}",
-        f"-DPython_EXECUTABLE={python_exec}",
+        "-DUSE_OPENSSL3=ON",
     ]
 
 
-def detect_maya_env(root, devkit_path=None, usd_root=None):
-    """Detect paths for Maya installations."""
+def detect_maya_env(root: str,
+                    devkit_path: str | None = None,
+                    usd_root: str | None = None) -> list[str]:
+    """Detect paths for Maya installations.
+
+    Args:
+        root (str): Path to Maya installation root.
+        devkit_path (str | None): Path to Maya USD devkit.
+        usd_root (str | None): Path to USD installation root.
+
+    Returns:
+        list[str]: List of CMake arguments for Maya build.
+
+    Raises:
+        ValueError: If devkit_path or usd_root is not provided.
+
+    """
+    msg = None
     if devkit_path is None:
-        raise ValueError("Maya devkit path must be provided for Maya builds.")
+        msg = "Maya devkit path must be provided for Maya builds."
+
     if usd_root is None:
-        raise ValueError("Maya USD root path must be provided for Maya builds.")
+        msg = "Maya USD root path must be provided for Maya builds."
+
+    if msg:
+        print(msg)
+        raise ValueError(msg)
 
     # 1. Executable
     maya_bin = os.path.join(root, "bin")
@@ -81,47 +126,73 @@ def detect_maya_env(root, devkit_path=None, usd_root=None):
     # 2. Library & Include Paths — auto-detect Python version from mayapy
     try:
         pyver_out = subprocess.check_output(
-            [python_exec, "-c", "import sys; print(f'{sys.version_info.major}{sys.version_info.minor}')"],
+            [
+                python_exec,
+                "-c",
+                (
+                    "import sys; print(f'{sys.version_info.major}"
+                    "{sys.version_info.minor}')"
+                )
+            ],
             text=True
         ).strip()
-    except Exception:
+    except Exception:  # noqa: BLE001
         pyver_out = "310"  # fallback for Maya 2024
     pyver_dotted = f"{pyver_out[0]}.{pyver_out[1:]}"
 
-    if platform.system() == "Windows":
-        python_lib = os.path.join(root, "lib", f"python{pyver_out}.lib")
-        python_include = os.path.join(root, "include", f"Python{pyver_out}", "Python")
+    if platform.system().lower() == "windows":
+        python_lib = os.path.join(
+            root, "lib", f"python{pyver_out}.lib")
+        python_include = os.path.join(
+            root, "include", f"Python{pyver_out}", "Python")
     else:
         python_lib = os.path.join(root, "lib", f"libpython{pyver_dotted}.so")
-        python_include = os.path.join(root, "include", f"python{pyver_dotted}")
+        python_include = os.path.join(
+            root, "include", f"python{pyver_dotted}")
 
     return [
         "-DBUILD_TARGET=maya",
         "-DUSE_OPENSSL3=ON",
-        f"-DMAYA_ROOT=\"{root}\"",
-        f"-DMAYA_USD_DEVKIT_PATH=\"{devkit_path}\"",
-        f"-DUSD_ROOT=\"{usd_root}\"",
+        f'-DMAYA_ROOT="{root}"',
+        f'-DMAYA_USD_DEVKIT_PATH="{devkit_path}"',
+        f'-DUSD_ROOT="{usd_root}"',
 
         # Only specify what CMake actually uses
-        f"-DPython_EXECUTABLE=\"{python_exec}\"",
-        f"-DPython_INCLUDE_DIR=\"{python_include}\"",
-        f"-DPython_LIBRARIES=\"{python_lib}\"",
+        f'-DPython_EXECUTABLE="{python_exec}"',
+        f'-DPython_INCLUDE_DIR="{python_include}"',
+        f'-DPython_LIBRARIES="{python_lib}"',
     ]
 
 
-def detect_dcc_env(dcc, root, **kwargs):
-    """Dispatch environment detection based on DCC name."""
+def detect_dcc_env(dcc: str, root: str, **kwargs) -> list[str]:  # noqa: ANN003
+    """Dispatch environment detection based on DCC name.
+
+    Args:
+        dcc (str): DCC name ("houdini", "maya", or "usd").
+        root (str): Path to DCC or USD SDK root directory.
+        **kwargs: Additional keyword arguments for specific DCC detection.
+
+    Returns:
+        list[str]: List of CMake arguments for the specified DCC build.
+
+    Raises:
+        ValueError: If the DCC name is unsupported.
+    """
     if dcc == "houdini":
         return detect_houdini_env(root)
-    elif dcc == "maya":
+    if dcc == "maya":
         return detect_maya_env(root, **kwargs)
-    elif dcc == "usd":
+    if dcc == "usd":
         return detect_usd_env(root)
-    else:
-        raise ValueError(f"Unsupported DCC: {dcc}")
+    msg = (
+        f"Unsupported DCC: {dcc}. Supported values are:"
+        "'houdini', 'maya', 'usd'."
+    )
+    raise ValueError(msg)
 
 
-def main():
+def main() -> None:
+    """Main entry point for the build script."""
     parser = argparse.ArgumentParser(
         description="Build AYON USD Resolver",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -157,7 +228,8 @@ def main():
     parser.add_argument(
         "--install-dir",
         default=None,
-        help="Custom installation directory path (defaults to install/{dcc}_{platform}_{build_type})"
+        help=("Custom installation directory path "
+              "(defaults to install/{dcc}_{platform}_{build_type})")
     )
     parser.add_argument(
         "--clean",
@@ -176,11 +248,13 @@ def main():
     args = parser.parse_args()
 
     project_root = os.path.dirname(os.path.abspath(__file__))
-    build_dir = os.path.join(project_root, f"build_{args.dcc}_{args.build_type.lower()}")
+    build_dir = os.path.join(
+        project_root, f"build_{args.dcc}_{args.build_type.lower()}")
 
     if not args.install_dir:
         args.install_dir = os.path.join(
-            project_root, "install", f"{args.dcc}_{platform.system().lower()}_{args.build_type.lower()}"
+            project_root, "install",
+            f"{args.dcc}_{platform.system().lower()}_{args.build_type.lower()}"
         )
 
     # Clean build
@@ -200,14 +274,14 @@ def main():
     )
 
     # Print configuration summary
-    print("\n=== AYON USD Resolver Build Configuration ===")
+    print("=== AYON USD Resolver Build Configuration ===")
     print(f"Platform: {platform.system()} {platform.release()}")
     print(f"DCC: {args.dcc}")
     print(f"Build type: {args.build_type}")
     print(f"Build dir: {build_dir}")
     print(f"Install dir: {args.install_dir}")
     print(f"Parallel jobs: {args.jobs}")
-    print("\n==================================================")
+    print("==================================================")
 
     cmake_args = [
         f"-DCMAKE_BUILD_TYPE={args.build_type}",
@@ -227,10 +301,14 @@ def main():
     run(f'cmake -S . -B "{build_dir}" -G "{generator}" {" ".join(cmake_args)}')
 
     # Build + Install
-    run(f'cmake --build "{build_dir}" --target install --config {args.build_type} -j {args.jobs}')
+    run(
+        f'cmake --build "{build_dir}" --target install '
+        f"--config {args.build_type} -j {args.jobs}"
+    )
 
-    print("\n============================")
-    print(f"\nBuild finished successfully!\nArtifacts installed to: {args.install_dir}\n")
+    print("============================")
+    print("Build finished successfully")
+    print(f"  Artifacts installed to: {args.install_dir}")
 
 
 if __name__ == "__main__":

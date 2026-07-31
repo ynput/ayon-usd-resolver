@@ -29,6 +29,7 @@ else()
 endif()
 
 if(Python_FOUND AND NOT TARGET Python::Python AND Python_LIBRARIES)
+    message(STATUS "[AYON] Python: creating imported target Python::Python for ${Python_LIBRARIES}")
     add_library(Python::Python UNKNOWN IMPORTED)
     set_target_properties(Python::Python PROPERTIES
         IMPORTED_LOCATION "${Python_LIBRARIES}"
@@ -37,25 +38,28 @@ if(Python_FOUND AND NOT TARGET Python::Python AND Python_LIBRARIES)
 endif()
 
 set(AYON_RESOLVER_EXTRA_USD_LIBS "")
-if(USD_IS_HOUDINI OR BUILD_TARGET STREQUAL "maya")
-    set(_ayon_usd_prefix "${USD_LIB_PREFIX}")
-    if(NOT _ayon_usd_prefix)
-        set(_ayon_usd_prefix "usd")
-    endif()
+# sdf, vt, pcp are needed on all build targets: our custom FindUSD.cmake
+# creates imported targets without INTERFACE_LINK_LIBRARIES, so the
+# transitive USD deps that the pxr config would provide automatically are
+# absent and must be added explicitly.
 
-    foreach(_libname sdf vt pcp)
-        find_library(_ayon_usd_lib_found
-            NAMES ${_ayon_usd_prefix}_${_libname} lib${_ayon_usd_prefix}_${_libname}
-            PATHS "${USD_LIB_DIR}"
-            NO_DEFAULT_PATH
-        )
-        if(_ayon_usd_lib_found)
-            list(APPEND AYON_RESOLVER_EXTRA_USD_LIBS "${_ayon_usd_lib_found}")
-            message(STATUS "[AYON] Found USD library: ${_libname} = ${_ayon_usd_lib_found}")
-            unset(_ayon_usd_lib_found CACHE)
-        endif()
-    endforeach()
+set(_ayon_usd_prefix "${USD_LIB_PREFIX}")
+if(NOT _ayon_usd_prefix)
+    set(_ayon_usd_prefix "usd")
 endif()
+
+foreach(_libname sdf vt pcp)
+    find_library(_ayon_usd_lib_found
+        NAMES ${_ayon_usd_prefix}_${_libname} lib${_ayon_usd_prefix}_${_libname}
+        PATHS "${USD_LIB_DIR}"
+        NO_DEFAULT_PATH
+    )
+    if(_ayon_usd_lib_found)
+        list(APPEND AYON_RESOLVER_EXTRA_USD_LIBS "${_ayon_usd_lib_found}")
+        message(STATUS "[AYON] Found USD library: ${_libname} = ${_ayon_usd_lib_found}")
+        unset(_ayon_usd_lib_found CACHE)
+    endif()
+endforeach()
 
 set(AYON_RESOLVER_OPENSSL_LIBS
     OpenSSL::SSL
