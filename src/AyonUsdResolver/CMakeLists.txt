@@ -26,6 +26,14 @@ set_target_properties(${CORE_LIB_TARGET} PROPERTIES PREFIX "" OUTPUT_NAME "ayonU
 
 if(UNIX)
     target_link_options(${CORE_LIB_TARGET} PRIVATE "LINKER:--no-undefined")
+    # Prevent our statically-linked OpenSSL 3 symbols from being exported into
+    # the global dynamic symbol table. Without this, a host process (e.g.
+    # Houdini) that has already loaded its own, incompatible OpenSSL version
+    # (e.g. 1.1) will interpose on these symbol names, silently redirecting
+    # our SSL calls to the wrong OpenSSL implementation and corrupting
+    # certificate verification.
+    target_link_options(${CORE_LIB_TARGET} PRIVATE "LINKER:--exclude-libs,libssl.a")
+    target_link_options(${CORE_LIB_TARGET} PRIVATE "LINKER:--exclude-libs,libcrypto.a")
 endif()
 
 if(WIN32)
