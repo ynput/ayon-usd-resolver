@@ -17,11 +17,12 @@ getAyonApiFromEnv() {
     const char* envVarFileLoggingPath = std::getenv("AYON_USD_RESOLVER_LOG_FILE");
     const char* envVarFileLogging = std::getenv("AYON_USD_RESOLVER_LOG_FILE_ENABLED");
 
-    if (envVarFileLoggingPath == nullptr) {
-        std::cout << "envVarFileLoggingPath is nullptr" << std::endl;
+    if (envVarFileLoggingPath == nullptr || std::string(envVarFileLoggingPath).empty()) {
+        std::cout << "envVarFileLoggingPath is nullptr or empty" << std::endl;
         envVarFileLoggingPath = "";
+        envVarFileLogging = "OFF";
     }
-    if (envVarFileLogging == nullptr) {
+    else if (envVarFileLogging == nullptr || std::string(envVarFileLogging).empty()) {
         std::cout << "envVarFileLogging is nullptr, setting to OFF" << std::endl;
         envVarFileLogging = "OFF";
     }
