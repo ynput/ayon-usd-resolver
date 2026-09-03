@@ -7,7 +7,7 @@ on:
         type: boolean
         description: "Create Release Draft"
         required: false
-        default: false
+        default: true
       release_overwrite:
         type: string
         description: "Set Version Release Tag"
@@ -15,10 +15,13 @@ on:
 
 jobs:
   call-release-trigger:
-    uses: ynput/ops-repo-automation/.github/workflows/release_trigger.yml@main
+    uses: ynput/ops-repo-automation/.github/workflows/release_trigger_cpp.yml@develop
+
     with:
       draft: ${{ inputs.draft }}
       release_overwrite: ${{ inputs.release_overwrite }}
+      build_package: false
+
     secrets:
       token: ${{ secrets.YNPUT_BOT_TOKEN }}
       email: ${{ secrets.CI_EMAIL }}
