@@ -21,6 +21,16 @@ RUN dnf -y update && dnf -y install \
     && dnf clean all
 
 # ------------------------------------------------------------
+# libmemcached (required for --with-memcached builds).
+# Not in RHEL9/Rocky9 base: libmemcached-awesome ships in CRB,
+# so that repo has to be enabled before it can be installed.
+# ------------------------------------------------------------
+RUN dnf -y install epel-release dnf-plugins-core \
+    && dnf config-manager --set-enabled crb \
+    && dnf -y install libmemcached-awesome-devel pkgconf-pkg-config \
+    && dnf clean all
+
+# ------------------------------------------------------------
 # Python tooling (Ninja via pip is portable on Rocky 9)
 # ------------------------------------------------------------
 ENV PIP_NO_CACHE_DIR=1

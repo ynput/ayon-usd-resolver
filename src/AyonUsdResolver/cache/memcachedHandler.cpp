@@ -86,6 +86,8 @@ class MemcachedHandler::Impl {
             (void)memcached_behavior_set(m_memc, MEMCACHED_BEHAVIOR_CONNECT_TIMEOUT, m_timeoutMs);
             (void)memcached_behavior_set(m_memc, MEMCACHED_BEHAVIOR_POLL_TIMEOUT, m_timeoutMs);
             (void)memcached_behavior_set(m_memc, MEMCACHED_BEHAVIOR_RETRY_TIMEOUT, 1);
+            (void)memcached_behavior_set(m_memc, MEMCACHED_BEHAVIOR_SERVER_FAILURE_LIMIT, 2);
+            (void)memcached_behavior_set(m_memc, MEMCACHED_BEHAVIOR_AUTO_EJECT_HOSTS, 1);
 
             memcached_return_t rc = MEMCACHED_SUCCESS;
             memcached_server_list_st serverList = nullptr;
@@ -113,6 +115,18 @@ class MemcachedHandler::Impl {
             if (memcached_failed(rc)) {
                 TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
                     .Msg("MemcachedHandler: memcached_server_push failed (%s)\n", memcached_strerror(m_memc, rc));
+                memcached_free(m_memc);
+                m_memc = nullptr;
+                return false;
+            }
+
+            // check the memcached servers health
+            memcached_return_t probe = memcached_version(m_memc);
+            if (memcached_failed(probe)) {
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                    .Msg("MemcachedHandler: no server answered (%s): disabling memcached client "
+                         "in this process.\n",
+                         memcached_strerror(m_memc, probe));
                 memcached_free(m_memc);
                 m_memc = nullptr;
                 return false;

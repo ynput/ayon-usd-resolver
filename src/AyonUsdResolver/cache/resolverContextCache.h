@@ -1,3 +1,8 @@
+/**
+ * @file resolverContextCache.h
+ * @brief Declaration of the ResolverContextCache and PinningFileHandler classes.
+ */
+
 #ifndef AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
 #define AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
 
@@ -18,6 +23,27 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 enum class CacheName { AYONCACHE, COMMONCACHE };
 
+/**
+ * @brief Convert a resolved path to a rootless path using the provided root replacement data.
+ *
+ * @param resolvedPath The resolved path to convert.
+ * @param rootReplaceData A map of root paths to their replacements.
+ * @return The rootless path.
+ */
+
+static std::string _ToRootlessPath(
+    const std::string &resolvedPath,
+    const std::unordered_map<std::string,
+    std::string> &rootReplaceData);
+
+/**
+ * @brief Construct a new Pinning File Handler object and load the pinning file data.
+ *
+ * @param pinningFilePath Path to the pinning file.
+ * @param rootReplaceData Root replacement data to apply to the pinning file entries.
+ * @todo pinning file handlder should construct its cache directly at construction getAssetData should not call
+ *       rootReplace
+ */
 class PinningFileHandler {
     public:
         PinningFileHandler(const std::string &pinningFilePath,
@@ -32,7 +58,6 @@ class PinningFileHandler {
 
         std::unordered_map<std::string, std::string> m_rootReplaceData;
 };
-
 
 /**
  * @class ResolverContextCache
@@ -66,6 +91,28 @@ class ResolverContextCache {
         AssetIdentifier getAsset(const std::string &assetIdentifier, const CacheName selectedCache, const bool isAyonPath);
 
         /**
+         * @brief Resolve many AYON URIs in a single batched (parallel) request and seed the cache.
+         *
+         * Unlike getAsset(), which resolves one URI per server round-trip, this collapses a whole
+         * set of URIs into one batched call via AyonApi::batchResolvePath and inserts every result.
+         * Used by the prewarm pass to avoid the serial resolve storm during stage composition.
+         *
+         * No-op in static (pinning) mode or with an empty input.
+         * @param uriPaths The AYON URIs to resolve. May be reordered/deduplicated.
+         * @return Map of URI -> resolved path for the entries that were resolved.
+         */
+        std::unordered_map<std::string, std::string> batchWarm(std::vector<std::string> &uriPaths);
+
+        /**
+         * @brief Resolved path for a URI already held by an in-process cache, if any.
+         *
+         * Lets batchWarm() skip a memcached round trip for URIs PreCache/AyonCache/CommonCache
+         * can already answer. Returns the path (so the prewarm BFS can still descend through
+         * the layer) rather than a bare bool.
+         */
+        std::optional<std::string> inProcessResolved(const std::string &uriPath) const;
+
+        /**
          * @brief Set up the cache from a pinning file
          * @param pinningFilePath Path to the pinning file
          */
@@ -90,7 +137,12 @@ class ResolverContextCache {
         void ClearCache();
 
         /**
-         * @brief Print every object in the cache for debugging
+         * @brief Print the contents of the Resolver Context Cache
+         * 
+         * @note This function is primarily for debugging purposes and prints the cache contents to the standard output.
+         * @todo when ayonLogger.h (in ayon-cpp-dev-tools) has the header guards then we can import
+         * it and use logging from there.
+         * 
          */
         void printCache() const;
 

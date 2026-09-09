@@ -1,10 +1,10 @@
 [submodule "ext/ayon-cpp-api"]
   path = ext/ayon-cpp-api
-  url = https://github.com/ynput/ayon-cpp-api.git
+  url = git@github.com:ynput/ayon-cpp-api.git
 
 [submodule "ext/ayon-cpp-dev-tools"]
   path = ext/ayon-cpp-dev-tools
-  url = https://github.com/cpt-cabbage/ayon-cpp-dev-tools.git
+	url = git@github.com:ynput/ayon-cpp-dev-tools.git
 [submodule "automator"]
 	path = automator
-	url = https://github.com/ynput/ayon-automator.git
+	url = git@github.com:ynput/ayon-automator.git
