@@ -31,10 +31,12 @@ GetGlobalCache() {
 
 }  // namespace
 
-// ResolverContextCache& GetGlobalResolverContextCache() {
-//     static ResolverContextCache instance;   // lazy init on first use
-//     return instance;
-// }
+// Public accessor bridging the encapsulated process-wide cache above so other
+// translation units (the prewarm pass) can seed the same instance.
+std::shared_ptr<ResolverContextCache>
+GetResolverGlobalCache() {
+    return GetGlobalCache();
+}
 
 bool
 getStringEndswithString(const std::string &value, const std::string &compareValue) {
@@ -58,7 +60,7 @@ getStringEndswithStrings(const std::string &value, const std::vector<std::string
 }
 
 AyonUsdResolverContext::AyonUsdResolverContext(): cache(GetGlobalCache()) {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Build timestamp: {} {}\n", __DATE__, __TIME__);
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Build timestamp: %s %s\n", __DATE__, __TIME__);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context\n");
     Initialize();
 }
@@ -75,7 +77,7 @@ AyonUsdResolverContext::AyonUsdResolverContext(): cache(GetGlobalCache()) {
 AyonUsdResolverContext::AyonUsdResolverContext(const AyonUsdResolverContext &ctx) = default;
 
 AyonUsdResolverContext::AyonUsdResolverContext(const std::string &filePath) : cache(GetGlobalCache()) {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Build timestamp: {} {}\n", __DATE__, __TIME__);
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Build timestamp: %s %s\n", __DATE__, __TIME__);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContext::ResolverContext() - Creating new context with defined mapping filePath: '%s'\n", filePath.c_str());
     mappingFilePath = filePath;
     Initialize();

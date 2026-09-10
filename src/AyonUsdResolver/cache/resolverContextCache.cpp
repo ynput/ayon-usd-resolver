@@ -25,8 +25,23 @@
 #include <utility>
 
 PXR_NAMESPACE_USING_DIRECTIVE
-// TODO pinning file hanlder should construct its cache directly at construction getAssetData should not call
-// rootReplace
+
+static std::mutex s_memcachedMutex;
+
+static std::string _ToRootlessPath(
+    const std::string &resolvedPath,
+    const std::unordered_map<std::string,
+    std::string> &rootReplaceData) {
+    std::string rootlessPath = resolvedPath;
+    for (const auto &[root, replacement] : rootReplaceData) {
+        if (rootlessPath.find(root) == 0) {
+            rootlessPath.replace(0, root.length(), replacement);
+            break;
+        }
+    }
+    return rootlessPath;
+}
+
 PinningFileHandler::PinningFileHandler(const std::string &pinningFilePath,
                                        const std::unordered_map<std::string, std::string> &rootReplaceData):
     m_pinningFilePath(pinningFilePath),
@@ -56,14 +71,6 @@ PinningFileHandler::PinningFileHandler(const std::string &pinningFilePath,
     }
 };
 
-/**
- * @brief return AssetIdentifier populated with root rootReplaceData from the pinning file using the pinning file data loaded
- * at construction and the AYON_USD_RESOLVER_PINNING_ROOTS env variable.
- * this is not a cached function it will reconstruct the AssetIdentifier. it will not reload the file or the env var however.
- *
- * @param resolveKey UsdAssetIdent
- * @return populated AssetIdentifier if key was found in pinning file. Empty AssetIdentifier if key was not found
- */
 AssetIdentifier
 PinningFileHandler::getAssetData(const std::string &resolveKey) {
     AssetIdentifier assetEntry;
@@ -96,18 +103,63 @@ ResolverContextCache::ResolverContextCache(): m_AyonCache(), m_CommonCache(), m_
         m_staticCache = false;
     }
     else {
+        // Static mode: load root replace data from env var for pinning file path resolution
         std::map<std::string, std::string> projectRootsEnvMap = ynput::core::iostd::getEnvMap(PINNING_ROOTS_ENV_KEY);
-        std::unordered_map<std::string, std::string> projectRootsEnvUMap(
+        m_rootReplaceData = std::unordered_map<std::string, std::string>(
             std::make_move_iterator(projectRootsEnvMap.begin()), std::make_move_iterator(projectRootsEnvMap.end()));
+
         m_pinningFileHandler.emplace(ynput::core::iostd::getEnvKey(PINNING_FILE_PATH_ENV_KEY),
-                                           projectRootsEnvUMap);
+                                           m_rootReplaceData);
+    }
+
+    // Initialize memcached handler if enabled
+    const char* enable_memcached_env_var = std::getenv(ENABLE_MEMCACHED_ENV_KEY);
+    const char* memcached_servers_env_var = std::getenv(MEMCACHED_SERVERS_ENV_KEY);
+    
+    if (enable_memcached_env_var != nullptr && std::strcmp(enable_memcached_env_var, "true") == 0 && 
+        memcached_servers_env_var != nullptr) {
+        uint32_t timeout_ms = 1000;  // Default 1 second timeout
+        const char* timeout_env_var = std::getenv(MEMCACHED_TIMEOUT_ENV_KEY);
+        if (timeout_env_var != nullptr) {
+            try {
+                timeout_ms = std::stoul(timeout_env_var);
+            }
+            catch (const std::exception &e) {
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                    .Msg("ResolverContextCache: Invalid timeout value, using default: %s\n", e.what());
+            }
+        }
+        
+        try {
+            auto memcached = std::make_unique<MemcachedHandler>(memcached_servers_env_var, timeout_ms);
+            if (memcached->isConnected()) {
+                m_memcached.emplace(std::move(memcached));
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                    .Msg("ResolverContextCache: Memcached handler initialized successfully\n");
+
+                // Fetch site roots from server once to use for memcached path root replacement,
+                // avoiding the need to set AYON_USD_RESOLVER_PINNING_ROOTS manually.
+                if (m_ayon.has_value()) {
+                    m_rootReplaceData = m_ayon->get()->getSiteRoots();
+                    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                        .Msg("ResolverContextCache: Loaded site roots from server for memcached path processing\n");
+                }
+            }
+            else {
+                TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                    .Msg("ResolverContextCache: Failed to connect to memcached servers\n");
+            }
+        }
+        catch (const std::exception &e) {
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                .Msg("ResolverContextCache: Exception initializing memcached: %s\n", e.what());
+        }
     }
 };
 
 ResolverContextCache::~ResolverContextCache() {
 };
 
-// TODO when ayonLogger.h has the header guards then we can import it and use logging from there
 void
 ResolverContextCache::printCache() const {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::printCache \n");
@@ -162,11 +214,166 @@ ResolverContextCache::migratePreCacheIntoAyonCache() {
     m_PreCache.clear();
 };
 
+/**
+ * @brief Migrate all entries from the PreCache into the AyonCache.
+ * 
+ * This function is called when the PreCache reaches its maximum size.
+ * It moves all entries from the PreCache into the AyonCache and clears the PreCache.
+ */
+
+std::optional<std::string>
+ResolverContextCache::inProcessResolved(const std::string &uriPath) const {
+    const AssetIdentifier key(uriPath);
+    {
+        std::shared_lock<std::shared_mutex> lock(m_PreCacheSharedMutex);
+        auto hit = m_PreCache.find(key);
+        if (hit != m_PreCache.end()) {
+            return hit->getResolvedAssetPath().GetPathString();
+        }
+    }
+    {
+        std::shared_lock<std::shared_mutex> lock(m_AyonCacheSharedMutex);
+        auto hit = m_AyonCache.find(key);
+        if (hit != m_AyonCache.end()) {
+            return hit->getResolvedAssetPath().GetPathString();
+        }
+    }
+    {
+        std::shared_lock<std::shared_mutex> lock(m_CommonCacheSharedMutex);
+        auto hit = m_CommonCache.find(key);
+        if (hit != m_CommonCache.end()) {
+            return hit->getResolvedAssetPath().GetPathString();
+        }
+    }
+    return std::nullopt;
+};
+
+/**
+ * @brief Batch warm the Resolver Context Cache with a list of URI paths.
+ * 
+ * @param uriPaths A vector of URI paths to be resolved and cached.
+ * @return std::unordered_map<std::string, std::string> A map of resolved URI paths.
+ */
+
+std::unordered_map<std::string, std::string>
+ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("ResolverContextCache::batchWarm: %zu uris \n", uriPaths.size());
+
+    std::unordered_map<std::string, std::string> resolved;
+    if (m_staticCache || uriPaths.empty()) {
+        return resolved;
+    }
+
+    // Memcached first: any URI already resolved by another session, machine or DCC costs a
+    // local-network lookup instead of a slot in the batched server request. Without this the
+    // prewarm pass would re-resolve the whole frontier server-side on every machine, and the
+    // per-asset _Resolve() calls afterwards would all hit PreCache — so the shared cache
+    // would never be read.
+    // Drop URIs an in-process cache can already answer. memcached gets are one network round
+    // trip EACH (serial — libmemcached, no mget), so re-querying what PreCache already holds is
+    // pure cost, and it compounds per stage: a 24-stage session issued ~3623 gets where 470
+    // suffice. Their paths still go into `resolved` so the prewarm BFS can descend through them.
+    std::vector<std::string> pending;
+    pending.reserve(uriPaths.size());
+    for (const auto &uriPath: uriPaths) {
+        if (std::optional<std::string> cached = inProcessResolved(uriPath); cached.has_value()) {
+            resolved.emplace(uriPath, *cached);
+            continue;
+        }
+        pending.push_back(uriPath);
+    }
+    if (pending.empty()) {
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("ResolverContextCache::batchWarm: all %zu uris already cached in-process \n", uriPaths.size());
+        return resolved;
+    }
+
+    std::vector<std::string> misses;
+    if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
+        misses.reserve(pending.size());
+        for (const auto &uriPath: pending) {
+            // Lock per call, not around the loop: s_memcachedMutex is process-wide, so holding
+            // it for a whole frontier would stall every other resolver thread's memcached path
+            // for the length of the prewarm.
+            AssetIdentifier asset;
+            {
+                std::lock_guard<std::mutex> lock(s_memcachedMutex);
+                asset = m_memcached->get()->getAssetData(uriPath);
+            }
+            if (asset.isEmpty()) {
+                misses.push_back(uriPath);
+                continue;
+            }
+            // Cached values are rootless; apply this site's roots before use.
+            std::string resolvedPath =
+                ynput::tool::ayon::rootReplace(asset.getResolvedAssetPath().GetPathString(), m_rootReplaceData);
+            asset.setResolvedAssetPath(ArResolvedPath(resolvedPath));
+            this->insert(asset);
+            resolved.emplace(asset.getAssetIdentifier(), resolvedPath);
+        }
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("ResolverContextCache::batchWarm: memcached %zu hits, %zu misses \n", resolved.size(), misses.size());
+    }
+    else {
+        misses = pending;
+    }
+
+    if (misses.empty()) {
+        return resolved;
+    }
+
+    // One batched request over the persistent keep-alive client: few round-trips,
+    // deterministic, connection reused.
+    std::unordered_map<std::string, std::string> fetched = m_ayon->get()->batchResolvePathSerial(misses);
+
+    for (const auto &entry: fetched) {
+        if (entry.first.empty() || entry.second.empty()) {
+            continue;
+        }
+        AssetIdentifier asset;
+        asset.setAssetIdentifier(entry.first);
+        asset.setResolvedAssetPath(entry.second);
+        this->insert(asset);
+        resolved.emplace(entry.first, entry.second);
+    }
+
+    // Write the freshly resolved entries through, so the next session/machine on this
+    // memcached instance prewarms without touching the AYON server at all.
+    if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
+        for (const auto &entry: fetched) {
+            if (entry.first.empty() || entry.second.empty()) {
+                continue;
+            }
+            const std::string rootlessPath = _ToRootlessPath(entry.second, m_rootReplaceData);
+            std::lock_guard<std::mutex> lock(s_memcachedMutex);
+            m_memcached->get()->setAssetData(entry.first, rootlessPath);
+        }
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+            .Msg("ResolverContextCache::batchWarm: stored %zu rootless results in memcached \n", fetched.size());
+    }
+
+    return resolved;
+};
+
+/**
+ * @brief Retrieve an asset from the cache.
+ * 
+ * This function attempts to retrieve the asset identified by the given assetIdentifier
+ * from the specified cache (PreCache, AyonCache, or CommonCache). If the asset is found,
+ * it is returned; otherwise, an empty AssetIdentifier is returned.
+ * 
+ * @param assetIdentifier The identifier of the asset to retrieve.
+ * @param selectedCache The cache to search for the asset.
+ * @param isAyonPath Indicates whether the asset path is an Ayon path.
+ * @return The retrieved AssetIdentifier, or an empty AssetIdentifier if not found.
+ */
+
 AssetIdentifier
 ResolverContextCache::getAsset(const std::string &assetIdentifier,
                                const CacheName selectedCache,
                                const bool isAyonPath) {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: (%s) \n", assetIdentifier.c_str());
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: (%s) - Using cache %s \n", assetIdentifier.c_str(), (selectedCache == CacheName::AYONCACHE ? "AyonCache" : "CommonCache"));
 
     AssetIdentifier asset;
 
@@ -227,7 +434,37 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
         return asset;
     }
 
+    // Try memcached as second-level cache before calling REST API
+    if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
+        std::lock_guard<std::mutex> lock(s_memcachedMutex);
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: Checking memcached\n");
+        asset = m_memcached->get()->getAssetData(assetIdentifier);
+        if (!asset.isEmpty()) {
+            // Apply root replacement to convert rootless path to absolute path
+            std::string resolvedPath = ynput::tool::ayon::rootReplace(
+                asset.getResolvedAssetPath().GetPathString(), m_rootReplaceData);
+            asset.setResolvedAssetPath(ArResolvedPath(resolvedPath));
+
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                .Msg("ResolverContextCache::getAsset: Memcached Hit with (%s) with (%s) \n",
+                     asset.getAssetIdentifier().c_str(), asset.getResolvedAssetPath().GetPathString().c_str());
+            // Cache result locally for faster future lookups
+            this->insert(asset);
+            return asset;
+        }
+    }
+
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: No Cache Hit \n");
+    // Scope the lock to the memcached call only. insert() below takes the PreCache and
+    // AyonCache unique locks, while removeCachedObject()/ClearCache() take those cache
+    // locks FIRST and then s_memcachedMutex -- holding the memcached mutex across
+    // insert() is the opposite order and deadlocks. Both of those are exposed to Python
+    // (wrapResolverContext), so a "clear resolver cache" call racing composition threads
+    // can wedge the DCC permanently.
+    {
+        std::lock_guard<std::mutex> lock(s_memcachedMutex);
+        asset = m_memcached->get()->getAssetData(assetIdentifier);
+    }
     if (isAyonPath) {
         std::pair<std::string, std::string> resolvedAsset = m_ayon->get()->resolvePath(assetIdentifier);
 
@@ -236,6 +473,23 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
 
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: called ayon.resolvePath() \n");
         this->insert(asset);
+
+        // Also store in memcached for distributed caching.
+        // Store the rootless path (e.g. {root[work]}/...) so that other platforms can apply
+        // their own root via rootReplace on retrieval.
+        if (m_memcached.has_value() && m_memcached->get()->isConnected() && !asset.isEmpty()) {
+            std::string rootlessPath = _ToRootlessPath(asset.getResolvedAssetPath().GetPathString(), m_rootReplaceData);
+            for (const auto &[key, root] : m_rootReplaceData) {
+                if (!root.empty() && rootlessPath.rfind(root, 0) == 0) {
+                    rootlessPath = "{root[" + key + "]}" + rootlessPath.substr(root.size());
+                    break;
+                }
+            }
+            std::lock_guard<std::mutex> lock(s_memcachedMutex);
+            m_memcached->get()->setAssetData(asset.getAssetIdentifier(), rootlessPath);
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                .Msg("ResolverContextCache::getAsset: Stored rootless result in memcached\n");
+        }
     }
     else {
         if (_IsRelativePath(assetIdentifier)) {
@@ -258,6 +512,16 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
     return asset;
 };
 
+/**
+ * @brief Remove a cached object from all caches and memcached.
+ * 
+ * This function attempts to remove the object identified by the given key from the PreCache,
+ * AyonCache, and CommonCache. If the object is found and removed, it also deletes the corresponding
+ * entry from memcached if it is connected.
+ * 
+ * @param key The key identifying the cached object to be removed.
+ */
+
 void
 ResolverContextCache::removeCachedObject(const std::string &key) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::removeCachedObject (%s) \n", key.c_str());
@@ -272,6 +536,10 @@ ResolverContextCache::removeCachedObject(const std::string &key) {
         preCacheSharedWriteLock.unlock();
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("ResolverContextCache::removeCachedObject removed object from PreCache");
+        if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
+            std::lock_guard<std::mutex> lock(s_memcachedMutex);
+            m_memcached->get()->deleteAssetData(key);
+        }
         return;
     }
 
@@ -283,6 +551,10 @@ ResolverContextCache::removeCachedObject(const std::string &key) {
         AyonCachesharedWriteLock.unlock();
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("ResolverContextCache::removeCachedObject removed object from AyonCache");
+        if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
+            std::lock_guard<std::mutex> lock(s_memcachedMutex);
+            m_memcached->get()->deleteAssetData(key);
+        }
         return;
     }
 
@@ -293,6 +565,10 @@ ResolverContextCache::removeCachedObject(const std::string &key) {
         CommonCachesharedWriteLock.unlock();
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("ResolverContextCache::removeCachedObject removed object from CommonCache");
+        if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
+            std::lock_guard<std::mutex> lock(s_memcachedMutex);
+            m_memcached->get()->deleteAssetData(key);
+        }
         return;
     }
 
@@ -313,7 +589,10 @@ ResolverContextCache::removeCachedObject(const std::string &key, const CacheName
         preCacheSharedDeleteLock.unlock();
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("ResolverContextCache::removeCachedObject removed object from PreCache");
-
+        if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
+            std::lock_guard<std::mutex> lock(s_memcachedMutex);
+            m_memcached->get()->deleteAssetData(key);
+        }
         return;
     }
     else {
@@ -328,6 +607,10 @@ ResolverContextCache::removeCachedObject(const std::string &key, const CacheName
                         AyonCachesharedDellLock.unlock();
                         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
                             .Msg("ResolverContextCache::removeCachedObject removed object from AyonCache");
+                        if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
+                            std::lock_guard<std::mutex> lock(s_memcachedMutex);
+                            m_memcached->get()->deleteAssetData(key);
+                        }
                         return;
                     }
                     break;
@@ -341,6 +624,10 @@ ResolverContextCache::removeCachedObject(const std::string &key, const CacheName
                         CommonCachesharedDellLock.unlock();
                         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
                             .Msg("ResolverContextCache::removeCachedObject removed object from CommonCache");
+                        if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
+                            std::lock_guard<std::mutex> lock(s_memcachedMutex);
+                            m_memcached->get()->deleteAssetData(key);
+                        }
                         return;
                     }
                     break;
@@ -362,6 +649,12 @@ ResolverContextCache::ClearCache() {
     m_CommonCache.clear();
     m_AyonCache.clear();
     m_PreCache.clear();
+
+    if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
+        std::lock_guard<std::mutex> lock(s_memcachedMutex);
+        m_memcached->get()->flushAll();
+        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::ClearCache flushed memcached\n");
+    }
 };
 
 bool
