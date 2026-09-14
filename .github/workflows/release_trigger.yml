@@ -15,7 +15,7 @@ on:
 
 jobs:
   call-release-trigger:
-    uses: ynput/ops-repo-automation/.github/workflows/release_trigger_cpp.yml@develop
+    uses: ynput/ops-repo-automation/.github/workflows/release_trigger_cpp.yml@main
 
     with:
       draft: ${{ inputs.draft }}
