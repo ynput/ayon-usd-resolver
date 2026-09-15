@@ -19,7 +19,6 @@ jobs:
     with:
       draft: ${{ inputs.draft }}
       release_overwrite: ${{ inputs.release_overwrite }}
-      build_package: false
     secrets:
       token: ${{ secrets.YNPUT_BOT_TOKEN }}
       email: ${{ secrets.CI_EMAIL }}
