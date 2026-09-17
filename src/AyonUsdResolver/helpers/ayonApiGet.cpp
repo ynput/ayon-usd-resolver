@@ -3,9 +3,26 @@
 #include "appDataFolder.h"
 #include "AyonCppApi.h"
 
+#include <algorithm>
+#include <cctype>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
+
+namespace {
+/// True only on an explicit affirmative; anything else, including empty, is off.
+bool
+fileLoggingIsEnabled(const char* value) {
+    if (value == nullptr) {
+        return false;
+    }
+    std::string normalized(value);
+    std::transform(normalized.begin(), normalized.end(), normalized.begin(),
+                   [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+    return normalized == "on" || normalized == "1" || normalized == "true";
+}
+}   // namespace
 
 std::unique_ptr<AyonApi>
 getAyonApiFromEnv() {
@@ -47,18 +64,17 @@ getAyonApiFromEnv() {
         AYON_SITE_ID = AYON_SITE_ID_ENV;
     }
 
-    std::cout << "before fileLoggerFilePath - " << envVarFileLoggingPath << std::endl;
-    std::string fileLoggerFilePath;
-    if (envVarFileLoggingPath != nullptr && envVarFileLogging != nullptr) {
-        switch (envVarFileLogging[1]) {
-            case 'F':
-                std::cout << "file logging is OFF" << std::endl;
-                break;
-            default:
-                std::cout << "file logging is ON" << std::endl;
-                fileLoggerFilePath
-                    = std::filesystem::absolute(std::string(envVarFileLoggingPath) + "/logFile.json").string();
-                break;
+    // Must stay disengaged unless logging is enabled AND given a path: an engaged-but-empty
+    // optional resolves to temp_directory_path(), which AyonCppApi then opens as a log file.
+    std::optional<std::string> fileLoggerFilePath;
+    if (fileLoggingIsEnabled(envVarFileLogging)) {
+        if (envVarFileLoggingPath[0] == '\0') {
+            std::cout << "file logging enabled but AYON_USD_RESOLVER_LOG_FILE is empty; staying off" << std::endl;
+        }
+        else {
+            fileLoggerFilePath
+                = std::filesystem::absolute(std::string(envVarFileLoggingPath) + "/logFile.json").string();
+            std::cout << "file logging -> " << *fileLoggerFilePath << std::endl;
         }
     }
     std::cout << "before api init" << std::endl;
