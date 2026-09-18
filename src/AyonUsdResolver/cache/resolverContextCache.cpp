@@ -18,9 +18,11 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <shared_mutex>
 #include <stdexcept>
 #include <string>
+#include <vector>
 #include <unordered_map>
 #include <utility>
 
@@ -28,14 +30,16 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 static std::mutex s_memcachedMutex;
 
+// Absolute path -> rootless ("{root[work]}/..."), so any site can re-root it on read.
+// NB rootReplaceData maps root NAME -> root PATH; destructure it the other way round and the
+// match never fires, silently caching absolute paths that break every other site.
 static std::string _ToRootlessPath(
     const std::string &resolvedPath,
-    const std::unordered_map<std::string,
-    std::string> &rootReplaceData) {
+    const std::unordered_map<std::string, std::string> &rootReplaceData) {
     std::string rootlessPath = resolvedPath;
-    for (const auto &[root, replacement] : rootReplaceData) {
-        if (rootlessPath.find(root) == 0) {
-            rootlessPath.replace(0, root.length(), replacement);
+    for (const auto &[key, root] : rootReplaceData) {
+        if (!root.empty() && rootlessPath.rfind(root, 0) == 0) {
+            rootlessPath = "{root[" + key + "]}" + rootlessPath.substr(root.size());
             break;
         }
     }
@@ -455,16 +459,6 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
     }
 
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: No Cache Hit \n");
-    // Scope the lock to the memcached call only. insert() below takes the PreCache and
-    // AyonCache unique locks, while removeCachedObject()/ClearCache() take those cache
-    // locks FIRST and then s_memcachedMutex -- holding the memcached mutex across
-    // insert() is the opposite order and deadlocks. Both of those are exposed to Python
-    // (wrapResolverContext), so a "clear resolver cache" call racing composition threads
-    // can wedge the DCC permanently.
-    {
-        std::lock_guard<std::mutex> lock(s_memcachedMutex);
-        asset = m_memcached->get()->getAssetData(assetIdentifier);
-    }
     if (isAyonPath) {
         std::pair<std::string, std::string> resolvedAsset = m_ayon->get()->resolvePath(assetIdentifier);
 
@@ -478,13 +472,8 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
         // Store the rootless path (e.g. {root[work]}/...) so that other platforms can apply
         // their own root via rootReplace on retrieval.
         if (m_memcached.has_value() && m_memcached->get()->isConnected() && !asset.isEmpty()) {
-            std::string rootlessPath = _ToRootlessPath(asset.getResolvedAssetPath().GetPathString(), m_rootReplaceData);
-            for (const auto &[key, root] : m_rootReplaceData) {
-                if (!root.empty() && rootlessPath.rfind(root, 0) == 0) {
-                    rootlessPath = "{root[" + key + "]}" + rootlessPath.substr(root.size());
-                    break;
-                }
-            }
+            const std::string rootlessPath
+                = _ToRootlessPath(asset.getResolvedAssetPath().GetPathString(), m_rootReplaceData);
             std::lock_guard<std::mutex> lock(s_memcachedMutex);
             m_memcached->get()->setAssetData(asset.getAssetIdentifier(), rootlessPath);
             TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
