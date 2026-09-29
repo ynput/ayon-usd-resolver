@@ -153,6 +153,7 @@ endif()
 
 set(RESOLVER_SRCS
     resolver.cpp
+    codes/debugCodes.cpp
     resolverContext.cpp
     Wrappers_Tokens/resolverTokens.cpp
     helpers/resolutionFunctions.cpp
