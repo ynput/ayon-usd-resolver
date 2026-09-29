@@ -45,7 +45,10 @@ AssetIdentifier::setAssetIdentifier(const std::string &inAssetIdentifier) {
 
 bool
 AssetIdentifier::isEmpty() const {
-    if (m_assetIdentifier.empty() && m_resolvedAssetPath.empty()) {
+    // Either half missing means there is nothing usable here. With && instead of ||, a
+    // failed resolve -- identifier set, resolved path empty -- reports non-empty, so the
+    // caller caches the empty path and every later reader takes it as a hit.
+    if (m_assetIdentifier.empty() || m_resolvedAssetPath.empty()) {
         return true;
     }
 
