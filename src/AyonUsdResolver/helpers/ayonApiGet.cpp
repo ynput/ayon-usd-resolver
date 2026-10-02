@@ -38,9 +38,11 @@ getAyonApiFromEnv() {
     if (AYON_SITE_ID_ENV == nullptr) {
         std::ifstream siteIdFile(getAppDataDir() + "/site_id");
         if (!siteIdFile.is_open()) {
-            std::runtime_error("");
+            throw std::runtime_error("Unable to open AYON site-ID file");
         }
-        std::getline(siteIdFile, AYON_SITE_ID);
+        if (!std::getline(siteIdFile, AYON_SITE_ID) || AYON_SITE_ID.empty()) {
+            throw std::runtime_error("AYON site-ID file is empty or unreadable");
+        }
         siteIdFile.close();
     }
     else {
