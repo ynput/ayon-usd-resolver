@@ -235,7 +235,12 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
         asset.setResolvedAssetPath(std::move(resolvedAsset.second));
 
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: called ayon.resolvePath() \n");
-        this->insert(asset);
+        // A failed lookup may still return the requested identifier with an
+        // empty resolved path. Do not cache that negative result: otherwise a
+        // later retry is treated as an in-process cache hit forever.
+        if (!asset.getResolvedAssetPath().empty()) {
+            this->insert(asset);
+        }
     }
     else {
         if (_IsRelativePath(assetIdentifier)) {
