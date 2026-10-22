@@ -15,10 +15,12 @@
 
 #include <filesystem>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <shared_mutex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -171,6 +173,15 @@ class ResolverContextCache {
         int64_t m_memcachedExpire = 0;
         int64_t m_memcachedHeroExpire = 3600;
         int64_t m_memcachedLatestExpire = -1;
+        // Miss marker TTL: -1 = never write markers (see MemcachedExpiry::parseMissExpiry).
+        int64_t m_memcachedMissExpire = MemcachedExpiry::kDefaultMissSeconds;
+
+        // Keys this process saw as known misses; ClearCache deletes them from memcached. Leaf lock.
+        std::unordered_set<std::string> m_missKeys;
+        std::mutex m_missKeysMutex;
+        void _TrackMiss(const std::string &uri);
+        // Write the miss marker for a failed AYON lookup (no-op when memcached/miss caching is off for this URI).
+        void _StoreMiss(const std::string &uri);
 
         int64_t _MemcachedTtl(const std::string &uri) const {
             return MemcachedExpiry::ttlFor(uri, m_memcachedExpire, m_memcachedHeroExpire, m_memcachedLatestExpire);

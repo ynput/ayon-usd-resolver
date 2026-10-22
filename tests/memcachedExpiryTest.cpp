@@ -57,5 +57,16 @@ int main() {
     assert(parseExpiry("12x", -1, -1).value == -1);
     assert(parseExpiry("", -1, -1).value == -1);
 
+    // miss marker + miss TTL: default 60, -1 = off, 0 refused
+    assert(isMissMarker(kMissMarker) && kMissMarker[0] == '\x01' && kMissMarker.size() == 19);
+    assert(!isMissMarker("") && !isMissMarker("ayon-resolver-miss") && !isMissMarker("{root[work]}/a/b.usd"));
+    assert(parseMissExpiry(nullptr).value == 60 && parseMissExpiry(nullptr).warning.empty());
+    assert(parseMissExpiry("-1").value == -1 && parseMissExpiry("-1").warning.empty());
+    assert(parseMissExpiry("30").value == 30 && parseMissExpiry("30").warning.empty());
+    assert(parseMissExpiry("0").value == 60 && !parseMissExpiry("0").warning.empty());
+    assert(parseMissExpiry("abc").value == 60 && !parseMissExpiry("abc").warning.empty());
+    assert(parseMissExpiry("-5").value == 60 && !parseMissExpiry("-5").warning.empty());
+    assert(parseMissExpiry("9999999").value == kMaxRelativeSeconds && !parseMissExpiry("9999999").warning.empty());
+
     std::cout << "ok\n";
 }

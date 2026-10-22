@@ -70,6 +70,10 @@ Values are matched trimmed and case-insensitively. If a URI carries several `ver
 
 `ClearCache()` (and the Houdini "clear resolver cache" actions) clears the in-process caches and deletes this session's hero/latest keys from the regional memcached. It never flushes memcached (shared by all artists), and integer-version entries are untouched.
 
+`AYON_MEMCACHED_MISS_EXPIRE_SECONDS` - negative cache for failed lookups (e.g. a placeholder product with nothing published yet). When AYON has no path for an AYON URI, a reserved marker value is stored in memcached under the same key for this many seconds; other processes that read the marker treat the URI as unresolved without calling AYON. `60` (default), `-1` = do not cache misses, `>0` = seconds (clamped to 2592000 with a warning). `0` is refused (default + warning): a miss that never expires would hide a first publish if the invalidation watcher is not running. Misses follow the class rule above: URIs whose class bypasses memcached (e.g. `latest` by default) never get a marker.
+
+The marker is never returned as a path: a known miss yields exactly what an uncached failed resolve yields, and is not stored in the in-process caches. Transport errors are not misses and write no marker. The invalidation watcher deletes a URI's miss marker when its first version is created; the TTL is the fallback if the watcher is not running. `ClearCache()` also deletes the miss markers this process saw.
+
 ### How to build with memcached support
 You only need to add `--with-memcached` argument to build command. You need to have `libmemcached` available.
 

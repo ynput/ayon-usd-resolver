@@ -154,6 +154,11 @@ ResolverContextCache::ResolverContextCache(): m_AyonCache(), m_CommonCache(), m_
             TF_WARN("%s: %s", MEMCACHED_LATEST_EXPIRE_ENV_KEY, latestExpire.warning.c_str());
         }
         m_memcachedLatestExpire = latestExpire.value;
+        const auto missExpire = MemcachedExpiry::parseMissExpiry(std::getenv(MEMCACHED_MISS_EXPIRE_ENV_KEY));
+        if (!missExpire.warning.empty()) {
+            TF_WARN("%s: %s", MEMCACHED_MISS_EXPIRE_ENV_KEY, missExpire.warning.c_str());
+        }
+        m_memcachedMissExpire = missExpire.value;
 
         try {
             auto memcached = std::make_unique<MemcachedHandler>(memcached_servers_env_var, timeout_ms);
@@ -326,6 +331,11 @@ ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
                 std::lock_guard<std::mutex> lock(s_memcachedMutex);
                 asset = m_memcached->get()->getAssetData(uriPath);
             }
+            if (!asset.isEmpty() && MemcachedExpiry::isMissMarker(asset.getResolvedAssetPath().GetPathString())) {
+                // Known miss: AYON had no path for it recently. Skip the API call; do not cache or return it.
+                _TrackMiss(uriPath);
+                continue;
+            }
             if (asset.isEmpty()) {
                 misses.push_back(uriPath);
                 continue;
@@ -353,7 +363,13 @@ ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
     std::unordered_map<std::string, std::string> fetched = m_ayon->get()->batchResolvePathSerial(misses);
 
     for (const auto &entry: fetched) {
-        if (entry.first.empty() || entry.second.empty()) {
+        if (entry.first.empty()) {
+            continue;
+        }
+        if (entry.second.empty()) {
+            // AYON answered but has no path (uri, ""): a genuine miss. URIs absent from `fetched`
+            // (transport/parse failure) are not misses and get no marker.
+            _StoreMiss(entry.first);
             continue;
         }
         AssetIdentifier asset;
@@ -472,6 +488,13 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
             TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: Checking memcached\n");
             asset = m_memcached->get()->getAssetData(assetIdentifier);
         }
+        if (!asset.isEmpty() && MemcachedExpiry::isMissMarker(asset.getResolvedAssetPath().GetPathString())) {
+            // Known miss: return what a failed resolve returns (identifier set, empty path), without calling AYON.
+            _TrackMiss(assetIdentifier);
+            AssetIdentifier miss;
+            miss.setAssetIdentifier(assetIdentifier);
+            return miss;
+        }
         if (!asset.isEmpty()) {
             // Apply root replacement to convert rootless path to absolute path
             std::string resolvedPath = ynput::tool::ayon::rootReplace(
@@ -495,7 +518,13 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
         asset.setResolvedAssetPath(std::move(resolvedAsset.second));
 
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: called ayon.resolvePath() \n");
+        // Failed resolve = (uri, ""): getAssetIdent sets the uri before the missing entity throws.
+        // A transport failure returns an empty pair instead and is NOT a miss.
+        const bool isMiss = !asset.getAssetIdentifier().empty() && asset.getResolvedAssetPath().empty();
         this->insert(asset);
+        if (isMiss) {
+            _StoreMiss(assetIdentifier);
+        }
 
         // Also store in memcached for distributed caching.
         // Store the rootless path (e.g. {root[work]}/...) so that other platforms can apply
@@ -683,13 +712,45 @@ ResolverContextCache::ClearCache() {
     }
 
     // Cache locks are released above so s_memcachedMutex is never held together with them.
+    std::unordered_set<std::string> missKeys;
+    {
+        std::lock_guard<std::mutex> lock(m_missKeysMutex);
+        missKeys.swap(m_missKeys);
+    }
     if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
         for (const auto &key: mutableKeys) {
             std::lock_guard<std::mutex> lock(s_memcachedMutex);
             m_memcached->get()->deleteAssetData(key);
         }
+        // Known-miss markers this process saw: drop them too so a fresh resolve re-asks AYON.
+        for (const auto &key: missKeys) {
+            std::lock_guard<std::mutex> lock(s_memcachedMutex);
+            m_memcached->get()->deleteAssetData(key);
+        }
     }
 };
+
+void
+ResolverContextCache::_TrackMiss(const std::string &uri) {
+    std::lock_guard<std::mutex> lock(m_missKeysMutex);
+    m_missKeys.insert(uri);
+}
+
+void
+ResolverContextCache::_StoreMiss(const std::string &uri) {
+    if (!m_memcached.has_value() || !m_memcached->get()->isConnected() || m_memcachedMissExpire < 0
+        || _MemcachedTtl(uri) < 0) {
+        return;
+    }
+    {
+        std::lock_guard<std::mutex> lock(s_memcachedMutex);
+        m_memcached->get()->setAssetData(uri, MemcachedExpiry::kMissMarker, static_cast<uint32_t>(m_memcachedMissExpire));
+    }
+    _TrackMiss(uri);
+    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+        .Msg("ResolverContextCache: stored miss marker (%ld s) for %s\n", static_cast<long>(m_memcachedMissExpire),
+             uri.c_str());
+}
 
 bool
 ResolverContextCache::isCacheStatic() const {

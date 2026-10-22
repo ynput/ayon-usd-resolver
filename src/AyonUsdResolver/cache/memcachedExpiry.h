@@ -44,6 +44,29 @@ parseExpiry(const char *env, int64_t defaultValue, int64_t minValue) {
     return {v, ""};
 }
 
+// Negative cache ("miss marker"): value stored under a URI's key when AYON had no path for it. Short TTL, never a path.
+// Adjacent literals on purpose: "\x01ayon" would parse as hex escape \x01a.
+inline const std::string kMissMarker = "\x01" "ayon-resolver-miss";
+constexpr int64_t kDefaultMissSeconds = 60;
+
+inline bool
+isMissMarker(const std::string &value) {
+    return value == kMissMarker;
+}
+
+/**
+ * @brief Miss TTL env: unset -> 60, -1 = do not cache misses, >0 = seconds (clamped at 30 days).
+ * 0 is refused (default + warning): a miss that never expires would hide a first publish if the watcher is down.
+ */
+inline Parsed
+parseMissExpiry(const char *env) {
+    Parsed p = parseExpiry(env, kDefaultMissSeconds, kSkipMemcached);
+    if (p.warning.empty() && p.value == 0) {
+        return {kDefaultMissSeconds, "0 is not allowed (a miss must expire), using default " + std::to_string(kDefaultMissSeconds)};
+    }
+    return p;
+}
+
 enum class VersionClass { Immutable, Hero, Latest };
 
 /**
