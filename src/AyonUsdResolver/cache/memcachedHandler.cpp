@@ -225,10 +225,7 @@ class MemcachedHandler::Impl {
 
             memcached_return_t rc = memcached_delete(m_memc, key.c_str(), key.length(), 0);
             if (memcached_failed(rc) && rc != MEMCACHED_NOTFOUND) {
-                TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
-                    .Msg("MemcachedHandler: delete failed for key %s (%s)\n",
-                         key.c_str(),
-                         memcached_strerror(m_memc, rc));
+                logMemcachedFailure("delete", key, memcached_strerror(m_memc, rc));
                 return false;
             }
 
