@@ -67,6 +67,10 @@ int main() {
     assert(parseMissExpiry("abc").value == 60 && !parseMissExpiry("abc").warning.empty());
     assert(parseMissExpiry("-5").value == 60 && !parseMissExpiry("-5").warning.empty());
     assert(parseMissExpiry("9999999").value == kMaxRelativeSeconds && !parseMissExpiry("9999999").warning.empty());
+    assert(missTtlFor(30, 60) == 30);   // latest=30: marker must not outlive a found entry
+    assert(missTtlFor(3600, 60) == 60);
+    assert(missTtlFor(0, 60) == 60);    // class never expires: miss TTL applies
+    assert(missTtlFor(-1, 60) == kSkipMemcached && missTtlFor(60, -1) == kSkipMemcached);
 
     std::cout << "ok\n";
 }

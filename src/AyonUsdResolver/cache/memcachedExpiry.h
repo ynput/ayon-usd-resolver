@@ -3,6 +3,7 @@
 
 // Pure helpers (std only) for memcached TTL selection; unit-tested by tests/memcachedExpiryTest.cpp.
 
+#include <algorithm>
 #include <cctype>
 #include <cerrno>
 #include <cstdint>
@@ -118,6 +119,18 @@ ttlFor(const std::string &uri, int64_t generalTtl, int64_t heroTtl, int64_t late
         case VersionClass::Hero: return heroTtl;
         default: return generalTtl;
     }
+}
+
+/**
+ * @brief TTL for a miss marker: never longer than the URI's own class TTL (a missing `latest` must not
+ * outlive a found one). kSkipMemcached when either side bypasses memcached.
+ */
+inline int64_t
+missTtlFor(int64_t classTtl, int64_t missTtl) {
+    if (classTtl < 0 || missTtl < 0) {
+        return kSkipMemcached;
+    }
+    return classTtl > 0 ? std::min(classTtl, missTtl) : missTtl;
 }
 
 }   // namespace MemcachedExpiry

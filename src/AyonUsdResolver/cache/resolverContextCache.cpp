@@ -738,18 +738,17 @@ ResolverContextCache::_TrackMiss(const std::string &uri) {
 
 void
 ResolverContextCache::_StoreMiss(const std::string &uri) {
-    if (!m_memcached.has_value() || !m_memcached->get()->isConnected() || m_memcachedMissExpire < 0
-        || _MemcachedTtl(uri) < 0) {
+    const int64_t ttl = MemcachedExpiry::missTtlFor(_MemcachedTtl(uri), m_memcachedMissExpire);
+    if (!m_memcached.has_value() || !m_memcached->get()->isConnected() || ttl < 0) {
         return;
     }
     {
         std::lock_guard<std::mutex> lock(s_memcachedMutex);
-        m_memcached->get()->setAssetData(uri, MemcachedExpiry::kMissMarker, static_cast<uint32_t>(m_memcachedMissExpire));
+        m_memcached->get()->setAssetData(uri, MemcachedExpiry::kMissMarker, static_cast<uint32_t>(ttl));
     }
     _TrackMiss(uri);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
-        .Msg("ResolverContextCache: stored miss marker (%ld s) for %s\n", static_cast<long>(m_memcachedMissExpire),
-             uri.c_str());
+        .Msg("ResolverContextCache: stored miss marker (%ld s) for %s\n", static_cast<long>(ttl), uri.c_str());
 }
 
 bool
