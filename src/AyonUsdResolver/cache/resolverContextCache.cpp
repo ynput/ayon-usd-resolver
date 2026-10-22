@@ -4,6 +4,7 @@
 #include "../config.h"
 #include "../helpers/ayonApiGet.h"
 #include "../helpers/resolutionFunctions.h"
+#include "memcachedExpiry.h"
 #include <ynput/core/iostd/envVarHelpers.hpp>
 #include <ynput/tool/ayon/rootHelpers.hpp>
 
@@ -134,6 +135,19 @@ ResolverContextCache::ResolverContextCache(): m_AyonCache(), m_CommonCache(), m_
             }
         }
         
+        const auto expire = MemcachedExpiry::parseExpiry(std::getenv(MEMCACHED_EXPIRE_ENV_KEY), 0, 0);
+        if (!expire.warning.empty()) {
+            TF_WARN("%s: %s", MEMCACHED_EXPIRE_ENV_KEY, expire.warning.c_str());
+        }
+        m_memcachedExpire = expire.value;
+        const auto latestExpire = MemcachedExpiry::parseExpiry(std::getenv(MEMCACHED_LATEST_EXPIRE_ENV_KEY),
+                                                               MemcachedExpiry::kSkipMemcached,
+                                                               MemcachedExpiry::kSkipMemcached);
+        if (!latestExpire.warning.empty()) {
+            TF_WARN("%s: %s", MEMCACHED_LATEST_EXPIRE_ENV_KEY, latestExpire.warning.c_str());
+        }
+        m_memcachedLatestExpire = latestExpire.value;
+
         try {
             auto memcached = std::make_unique<MemcachedHandler>(memcached_servers_env_var, timeout_ms);
             if (memcached->isConnected()) {
@@ -301,7 +315,7 @@ ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
             // it for a whole frontier would stall every other resolver thread's memcached path
             // for the length of the prewarm.
             AssetIdentifier asset;
-            {
+            if (_MemcachedTtl(uriPath) >= 0) {
                 std::lock_guard<std::mutex> lock(s_memcachedMutex);
                 asset = m_memcached->get()->getAssetData(uriPath);
             }
@@ -349,9 +363,13 @@ ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
             if (entry.first.empty() || entry.second.empty()) {
                 continue;
             }
+            const int64_t ttl = _MemcachedTtl(entry.first);
+            if (ttl < 0) {
+                continue;
+            }
             const std::string rootlessPath = _ToRootlessPath(entry.second, m_rootReplaceData);
             std::lock_guard<std::mutex> lock(s_memcachedMutex);
-            m_memcached->get()->setAssetData(entry.first, rootlessPath);
+            m_memcached->get()->setAssetData(entry.first, rootlessPath, static_cast<uint32_t>(ttl));
         }
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
             .Msg("ResolverContextCache::batchWarm: stored %zu rootless results in memcached \n", fetched.size());
@@ -439,7 +457,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
     }
 
     // Try memcached as second-level cache before calling REST API
-    if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
+    if (m_memcached.has_value() && m_memcached->get()->isConnected() && _MemcachedTtl(assetIdentifier) >= 0) {
         // Release s_memcachedMutex before insert(): insert() takes the cache locks, and
         // ClearCache() takes them in the opposite order (cache locks, then s_memcachedMutex).
         {
@@ -475,11 +493,12 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
         // Also store in memcached for distributed caching.
         // Store the rootless path (e.g. {root[work]}/...) so that other platforms can apply
         // their own root via rootReplace on retrieval.
-        if (m_memcached.has_value() && m_memcached->get()->isConnected() && !asset.isEmpty()) {
+        const int64_t ttl = _MemcachedTtl(assetIdentifier);
+        if (m_memcached.has_value() && m_memcached->get()->isConnected() && !asset.isEmpty() && ttl >= 0) {
             const std::string rootlessPath
                 = _ToRootlessPath(asset.getResolvedAssetPath().GetPathString(), m_rootReplaceData);
             std::lock_guard<std::mutex> lock(s_memcachedMutex);
-            m_memcached->get()->setAssetData(asset.getAssetIdentifier(), rootlessPath);
+            m_memcached->get()->setAssetData(asset.getAssetIdentifier(), rootlessPath, static_cast<uint32_t>(ttl));
             TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
                 .Msg("ResolverContextCache::getAsset: Stored rootless result in memcached\n");
         }
@@ -643,13 +662,6 @@ ResolverContextCache::ClearCache() {
         m_CommonCache.clear();
         m_AyonCache.clear();
         m_PreCache.clear();
-    }
-
-    // Cache locks are released above so s_memcachedMutex is never held together with them.
-    if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
-        std::lock_guard<std::mutex> lock(s_memcachedMutex);
-        m_memcached->get()->flushAll();
-        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::ClearCache flushed memcached\n");
     }
 };
 
