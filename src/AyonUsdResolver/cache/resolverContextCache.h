@@ -167,12 +167,13 @@ class ResolverContextCache {
         std::unordered_map<std::string, std::string> m_rootReplaceData;
         std::optional<PinningFileHandler> m_pinningFileHandler;
         std::optional<std::unique_ptr<MemcachedHandler>> m_memcached;
-        // Seconds: 0 = never expire; latest also allows -1 = bypass memcached (see memcachedExpiry.h).
+        // Seconds: 0 = never expire; hero/latest also allow -1 = bypass memcached (see memcachedExpiry.h).
         int64_t m_memcachedExpire = 0;
+        int64_t m_memcachedHeroExpire = 3600;
         int64_t m_memcachedLatestExpire = -1;
 
         int64_t _MemcachedTtl(const std::string &uri) const {
-            return MemcachedExpiry::ttlFor(uri, m_memcachedExpire, m_memcachedLatestExpire);
+            return MemcachedExpiry::ttlFor(uri, m_memcachedExpire, m_memcachedHeroExpire, m_memcachedLatestExpire);
         }
 };
 

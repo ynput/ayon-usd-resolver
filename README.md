@@ -54,11 +54,21 @@ connection cannot be established.
 
 `AYON_MEMCACHED_TIMEOUT_MS` - control connection timeout - default value is 1000ms.
 
-`AYON_MEMCACHED_EXPIRE_SECONDS` - lifetime of cached entries in seconds. `0` (default) = never expire. Memcached treats relative lifetimes above 30 days (2592000 s) as absolute timestamps, so larger values are clamped to 2592000 with a warning. Invalid values fall back to the default with a warning.
+`AYON_MEMCACHED_EXPIRE_SECONDS` - lifetime of cached entries for immutable versions (integer versions such as `v004` or `4`) in seconds. `0` (default) = never expire. Memcached treats relative lifetimes above 30 days (2592000 s) as absolute timestamps, so larger values are clamped to 2592000 with a warning. Invalid values fall back to the default with a warning.
+
+`AYON_MEMCACHED_HERO_EXPIRE_SECONDS` - same, but only for URIs whose `version` query parameter is `hero` (a hero republish re-points the hero version in place, so its path can change). `3600` (default) = one hour. `-1` = do not use memcached for them at all, `0` = never expire, `>0` = seconds (clamped as above).
 
 `AYON_MEMCACHED_LATEST_EXPIRE_SECONDS` - same, but only for URIs whose `version` query parameter is `latest` or `latestdone` (these resolve to a path that changes when a new version is published). `-1` (default) = do not use memcached for them at all (neither read nor write), so they are always resolved live from AYON. `0` = never expire, `>0` = seconds (clamped as above). Memcached is not consulted for these URIs even if older resolver builds stored them. The in-process cache is unaffected: a running session keeps its answer until the cache is cleared.
 
-`ClearCache()` (and the Houdini "clear resolver cache" actions) only clears the in-process caches. It does not flush memcached, which is shared by all artists.
+| `version` value | Class | Setting | Default |
+|---|---|---|---|
+| `latest`, `latestdone` | latest | `AYON_MEMCACHED_LATEST_EXPIRE_SECONDS` | `-1` (bypass) |
+| `hero` | hero | `AYON_MEMCACHED_HERO_EXPIRE_SECONDS` | `3600` |
+| anything else (`v004`, `4`, missing) | immutable | `AYON_MEMCACHED_EXPIRE_SECONDS` | `0` (never) |
+
+Values are matched trimmed and case-insensitively. If a URI carries several `version` parameters, latest wins over hero, hero over immutable.
+
+`ClearCache()` (and the Houdini "clear resolver cache" actions) clears the in-process caches and deletes this session's hero/latest keys from the regional memcached. It never flushes memcached (shared by all artists), and integer-version entries are untouched.
 
 ### How to build with memcached support
 You only need to add `--with-memcached` argument to build command. You need to have `libmemcached` available.

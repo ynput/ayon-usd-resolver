@@ -13,7 +13,7 @@ namespace MemcachedExpiry {
 
 // memcached reads a relative exptime above 30 days as an absolute unix timestamp (= already expired).
 constexpr int64_t kMaxRelativeSeconds = 2592000;
-// Latest-URI setting meaning "do not touch memcached for this key".
+// Hero/latest setting meaning "do not touch memcached for this key".
 constexpr int64_t kSkipMemcached = -1;
 
 struct Parsed {
@@ -44,14 +44,18 @@ parseExpiry(const char *env, int64_t defaultValue, int64_t minValue) {
     return {v, ""};
 }
 
+enum class VersionClass { Immutable, Hero, Latest };
+
 /**
- * @brief True if the URI's `version` query parameter is `latest` or `latestdone` (trimmed, case-insensitive).
+ * @brief Class of the URI's `version` query parameter (trimmed, case-insensitive): `latest`/`latestdone` -> Latest,
+ * `hero` -> Hero, anything else (incl. missing) -> Immutable. With several version params, Latest > Hero > Immutable.
  */
-inline bool
-isLatestUri(const std::string &uri) {
+inline VersionClass
+classifyUri(const std::string &uri) {
+    VersionClass result = VersionClass::Immutable;
     const size_t q = uri.find('?');
     if (q == std::string::npos) {
-        return false;
+        return result;
     }
     size_t pos = q + 1;
     const size_t fragment = uri.find('#', pos);
@@ -70,20 +74,27 @@ isLatestUri(const std::string &uri) {
             std::string val = param.substr(b, e - b);
             for (char &c: val) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
             if (val == "latest" || val == "latestdone") {
-                return true;
+                return VersionClass::Latest;
+            }
+            if (val == "hero") {
+                result = VersionClass::Hero;
             }
         }
         pos = amp + 1;
     }
-    return false;
+    return result;
 }
 
 /**
  * @brief TTL for this URI: kSkipMemcached (-1) = bypass memcached, 0 = never expire, >0 = seconds.
  */
 inline int64_t
-ttlFor(const std::string &uri, int64_t generalTtl, int64_t latestTtl) {
-    return isLatestUri(uri) ? latestTtl : generalTtl;
+ttlFor(const std::string &uri, int64_t generalTtl, int64_t heroTtl, int64_t latestTtl) {
+    switch (classifyUri(uri)) {
+        case VersionClass::Latest: return latestTtl;
+        case VersionClass::Hero: return heroTtl;
+        default: return generalTtl;
+    }
 }
 
 }   // namespace MemcachedExpiry

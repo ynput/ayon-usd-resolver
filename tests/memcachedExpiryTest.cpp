@@ -8,21 +8,38 @@ using namespace MemcachedExpiry;
 
 int main() {
     const std::string base = "ayon://P//assets/x?product=usdAsset&representation=usd&version=";
-    assert(isLatestUri(base + "latest"));
-    assert(isLatestUri(base + "LATEST"));
-    assert(isLatestUri(base + " Latest "));
-    assert(isLatestUri(base + "latestdone"));
-    assert(isLatestUri("ayon+entity://P//a?version=latest&product=x"));
-    assert(!isLatestUri(base + "hero"));
-    assert(!isLatestUri(base + "v004"));
-    assert(!isLatestUri("ayon://P//a?product=x"));
-    assert(!isLatestUri("ayon://P//a"));
-    assert(!isLatestUri("ayon://P//a?preversion=latest"));
-    assert(!isLatestUri("ayon://P//a?product=version=latest&version=hero"));
-    assert(!isLatestUri("ayon://P//a?version=hero#version=latest"));
+    const auto L = VersionClass::Latest, H = VersionClass::Hero, I = VersionClass::Immutable;
+    assert(classifyUri(base + "latest") == L);
+    assert(classifyUri(base + "LATEST") == L);
+    assert(classifyUri(base + " Latest ") == L);
+    assert(classifyUri(base + "latestdone") == L);
+    assert(classifyUri("ayon+entity://P//a?version=latest&product=x") == L);
+    assert(classifyUri(base + "hero") == H);
+    assert(classifyUri(base + "HERO") == H);
+    assert(classifyUri(base + " Hero ") == H);
+    assert(classifyUri(base + "herox") == I);
+    assert(classifyUri(base + "v004") == I);
+    assert(classifyUri(base + "4") == I);
+    assert(classifyUri("ayon://P//a?product=x") == I);
+    assert(classifyUri("ayon://P//a") == I);
+    assert(classifyUri("ayon://P//a?preversion=hero") == I);
+    assert(classifyUri("ayon://P//a?preversion=latest") == I);
+    assert(classifyUri("ayon://P//a?version=hero&version=latest") == L);
+    assert(classifyUri("ayon://P//a?version=latest&version=hero") == L);
+    assert(classifyUri("ayon://P//a?product=version=latest&version=hero") == H);
+    assert(classifyUri("ayon://P//a?version=hero#version=latest") == H);
 
-    assert(ttlFor(base + "latest", 0, -1) == -1);
-    assert(ttlFor(base + "hero", 7, -1) == 7);
+    assert(ttlFor(base + "latest", 0, 5, -1) == -1);
+    assert(ttlFor(base + "hero", 7, 5, -1) == 5);
+    assert(ttlFor(base + "v004", 7, 5, -1) == 7);
+
+    // hero: default 3600, min -1
+    assert(parseExpiry(nullptr, 3600, -1).value == 3600 && parseExpiry(nullptr, 3600, -1).warning.empty());
+    assert(parseExpiry("-1", 3600, -1).value == -1 && parseExpiry("0", 3600, -1).value == 0);
+    assert(parseExpiry("60", 3600, -1).value == 60);
+    assert(parseExpiry("x", 3600, -1).value == 3600 && !parseExpiry("x", 3600, -1).warning.empty());
+    assert(parseExpiry("-5", 3600, -1).value == 3600);
+    assert(parseExpiry("9999999", 3600, -1).value == kMaxRelativeSeconds);
 
     // general: default 0, min 0
     assert(parseExpiry(nullptr, 0, 0).value == 0);

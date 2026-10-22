@@ -141,6 +141,12 @@ ResolverContextCache::ResolverContextCache(): m_AyonCache(), m_CommonCache(), m_
             TF_WARN("%s: %s", MEMCACHED_EXPIRE_ENV_KEY, expire.warning.c_str());
         }
         m_memcachedExpire = expire.value;
+        const auto heroExpire = MemcachedExpiry::parseExpiry(std::getenv(MEMCACHED_HERO_EXPIRE_ENV_KEY), 3600,
+                                                             MemcachedExpiry::kSkipMemcached);
+        if (!heroExpire.warning.empty()) {
+            TF_WARN("%s: %s", MEMCACHED_HERO_EXPIRE_ENV_KEY, heroExpire.warning.c_str());
+        }
+        m_memcachedHeroExpire = heroExpire.value;
         const auto latestExpire = MemcachedExpiry::parseExpiry(std::getenv(MEMCACHED_LATEST_EXPIRE_ENV_KEY),
                                                                MemcachedExpiry::kSkipMemcached,
                                                                MemcachedExpiry::kSkipMemcached);
@@ -656,13 +662,32 @@ void
 ResolverContextCache::ClearCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::ClearCache \n");
 
+    // Only PreCache/AyonCache can hold keys written to memcached (CommonCache is non-AYON paths).
+    // Mutable (hero/latest) keys of this session are deleted from memcached; immutable ones stay.
+    std::vector<std::string> mutableKeys;
     {
         std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(m_PreCacheSharedMutex);
         std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(m_AyonCacheSharedMutex);
         std::unique_lock<std::shared_mutex> CommonCachesharedMutexLock(m_CommonCacheSharedMutex);
+        for (const auto *cache: {&m_PreCache, &m_AyonCache}) {
+            for (const auto &asset: *cache) {
+                if (MemcachedExpiry::classifyUri(asset.getAssetIdentifier())
+                    != MemcachedExpiry::VersionClass::Immutable) {
+                    mutableKeys.push_back(asset.getAssetIdentifier());
+                }
+            }
+        }
         m_CommonCache.clear();
         m_AyonCache.clear();
         m_PreCache.clear();
+    }
+
+    // Cache locks are released above so s_memcachedMutex is never held together with them.
+    if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
+        for (const auto &key: mutableKeys) {
+            std::lock_guard<std::mutex> lock(s_memcachedMutex);
+            m_memcached->get()->deleteAssetData(key);
+        }
     }
 };
 
