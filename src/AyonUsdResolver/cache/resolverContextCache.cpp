@@ -322,14 +322,25 @@ ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
     std::vector<std::string> misses;
     if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
         misses.reserve(pending.size());
+        // One mget for every eligible key (one round trip per <=256-key chunk, not per key). The
+        // mutex is held for the whole call: it is a few round trips, not one per key.
+        std::vector<std::string> eligible;
+        eligible.reserve(pending.size());
         for (const auto &uriPath: pending) {
-            // Lock per call, not around the loop: s_memcachedMutex is process-wide, so holding
-            // it for a whole frontier would stall every other resolver thread's memcached path
-            // for the length of the prewarm.
-            AssetIdentifier asset;
             if (_MemcachedTtl(uriPath) >= 0) {
-                std::lock_guard<std::mutex> lock(s_memcachedMutex);
-                asset = m_memcached->get()->getAssetData(uriPath);
+                eligible.push_back(uriPath);
+            }
+        }
+        std::unordered_map<std::string, std::string> cachedValues;
+        {
+            std::lock_guard<std::mutex> lock(s_memcachedMutex);
+            cachedValues = m_memcached->get()->getMany(eligible);
+        }
+        for (const auto &uriPath: pending) {
+            AssetIdentifier asset;
+            if (auto it = cachedValues.find(uriPath); it != cachedValues.end()) {
+                asset.setAssetIdentifier(uriPath);
+                asset.setResolvedAssetPath(ArResolvedPath(it->second));
             }
             if (!asset.isEmpty() && MemcachedExpiry::isMissMarker(asset.getResolvedAssetPath().GetPathString())) {
                 // Known miss: AYON had no path for it recently. Skip the API call; do not cache or return it.
