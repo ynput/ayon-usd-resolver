@@ -10,6 +10,7 @@
 
 #include "nlohmann/json_fwd.hpp"
 #include "pxr/base/arch/systemInfo.h"
+#include "pxr/base/tf/diagnostic.h"
 #include "pxr/base/tf/pathUtils.h"
 #include "pxr/usd/ar/resolvedPath.h"
 
