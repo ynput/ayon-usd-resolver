@@ -440,9 +440,13 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
 
     // Try memcached as second-level cache before calling REST API
     if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
-        std::lock_guard<std::mutex> lock(s_memcachedMutex);
-        TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: Checking memcached\n");
-        asset = m_memcached->get()->getAssetData(assetIdentifier);
+        // Release s_memcachedMutex before insert(): insert() takes the cache locks, and
+        // ClearCache() takes them in the opposite order (cache locks, then s_memcachedMutex).
+        {
+            std::lock_guard<std::mutex> lock(s_memcachedMutex);
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: Checking memcached\n");
+            asset = m_memcached->get()->getAssetData(assetIdentifier);
+        }
         if (!asset.isEmpty()) {
             // Apply root replacement to convert rootless path to absolute path
             std::string resolvedPath = ynput::tool::ayon::rootReplace(
@@ -632,13 +636,16 @@ void
 ResolverContextCache::ClearCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::ClearCache \n");
 
-    std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(m_PreCacheSharedMutex);
-    std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(m_AyonCacheSharedMutex);
-    std::unique_lock<std::shared_mutex> CommonCachesharedMutexLock(m_CommonCacheSharedMutex);
-    m_CommonCache.clear();
-    m_AyonCache.clear();
-    m_PreCache.clear();
+    {
+        std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(m_PreCacheSharedMutex);
+        std::unique_lock<std::shared_mutex> AyonCachesharedMutexLock(m_AyonCacheSharedMutex);
+        std::unique_lock<std::shared_mutex> CommonCachesharedMutexLock(m_CommonCacheSharedMutex);
+        m_CommonCache.clear();
+        m_AyonCache.clear();
+        m_PreCache.clear();
+    }
 
+    // Cache locks are released above so s_memcachedMutex is never held together with them.
     if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
         std::lock_guard<std::mutex> lock(s_memcachedMutex);
         m_memcached->get()->flushAll();
