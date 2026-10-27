@@ -217,8 +217,15 @@ class MemcachedHandler::Impl {
                 ptrs.clear();
                 lens.clear();
                 for (size_t i = begin; i < end; ++i) {
+                    // One over-long key fails the whole mget; skip it (a plain miss) so the rest of the chunk still hits.
+                    if (keys[i].length() >= MEMCACHED_MAX_KEY) {
+                        continue;
+                    }
                     ptrs.push_back(keys[i].c_str());
                     lens.push_back(keys[i].length());
+                }
+                if (ptrs.empty()) {
+                    continue;
                 }
                 memcached_return_t rc = memcached_mget(m_memc, ptrs.data(), lens.data(), ptrs.size());
                 if (memcached_failed(rc)) {
