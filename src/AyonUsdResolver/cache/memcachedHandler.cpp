@@ -2,6 +2,7 @@
 
 #include "../codes/debugCodes.h"
 #include "../config.h"
+#include "memcachedExpiry.h"
 
 #include "pxr/usd/ar/resolvedPath.h"
 
@@ -188,6 +189,11 @@ class MemcachedHandler::Impl {
                 return "";
             }
 
+            // An empty stored value comes back as NULL + SUCCESS: that is the miss marker.
+            if (rc == MEMCACHED_SUCCESS && value == nullptr) {
+                return MemcachedExpiry::kMissMarker;
+            }
+
             if (memcached_failed(rc) || value == nullptr) {
                 logMemcachedFailure("get", key, memcached_strerror(m_memc, rc));
                 return "";
@@ -203,11 +209,13 @@ class MemcachedHandler::Impl {
                 return false;
             }
 
+            // The miss marker goes on the wire as an empty value (see MemcachedExpiry::kMissMarker).
+            const std::string &stored = MemcachedExpiry::isMissMarker(value) ? std::string() : value;
             memcached_return_t rc = memcached_set(m_memc,
                                                   key.c_str(),
                                                   key.length(),
-                                                  value.c_str(),
-                                                  value.length(),
+                                                  stored.c_str(),
+                                                  stored.length(),
                                                   static_cast<time_t>(expireSeconds),
                                                   0);
             if (memcached_failed(rc)) {
