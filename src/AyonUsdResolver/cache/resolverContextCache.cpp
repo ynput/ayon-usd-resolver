@@ -48,6 +48,20 @@ static std::string _ToRootlessPath(
     return rootlessPath;
 }
 
+// True when rootReplace left a "{root[...]}" template in place: the site roots failed to load (fetched
+// once at construction), so a cached rootless path is unusable here and must be treated as a miss.
+static bool _HasUnresolvedRoot(const std::string &path) {
+    if (path.find("{root[") == std::string::npos) {
+        return false;
+    }
+    static std::once_flag warned;
+    std::call_once(warned, [&path] {
+        TF_WARN("AYON site roots unavailable: cached path '%s' has an unmapped root; resolving via AYON instead",
+                path.c_str());
+    });
+    return true;
+}
+
 PinningFileHandler::PinningFileHandler(const std::string &pinningFilePath,
                                        const std::unordered_map<std::string, std::string> &rootReplaceData):
     m_pinningFilePath(pinningFilePath),
@@ -354,6 +368,10 @@ ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
             // Cached values are rootless; apply this site's roots before use.
             std::string resolvedPath =
                 ynput::tool::ayon::rootReplace(asset.getResolvedAssetPath().GetPathString(), m_rootReplaceData);
+            if (_HasUnresolvedRoot(resolvedPath)) {
+                misses.push_back(uriPath);
+                continue;
+            }
             asset.setResolvedAssetPath(ArResolvedPath(resolvedPath));
             this->insert(asset);
             resolved.emplace(asset.getAssetIdentifier(), resolvedPath);
@@ -506,10 +524,15 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
             miss.setAssetIdentifier(assetIdentifier);
             return miss;
         }
+        // Apply root replacement to convert rootless path to absolute path
+        std::string resolvedPath;
         if (!asset.isEmpty()) {
-            // Apply root replacement to convert rootless path to absolute path
-            std::string resolvedPath = ynput::tool::ayon::rootReplace(
-                asset.getResolvedAssetPath().GetPathString(), m_rootReplaceData);
+            resolvedPath = ynput::tool::ayon::rootReplace(asset.getResolvedAssetPath().GetPathString(), m_rootReplaceData);
+            if (_HasUnresolvedRoot(resolvedPath)) {
+                asset = AssetIdentifier();   // fall through to the AYON lookup below
+            }
+        }
+        if (!asset.isEmpty()) {
             asset.setResolvedAssetPath(ArResolvedPath(resolvedPath));
 
             TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
