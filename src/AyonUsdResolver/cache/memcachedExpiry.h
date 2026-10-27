@@ -45,7 +45,9 @@ parseExpiry(const char *env, int64_t defaultValue, int64_t minValue) {
     return {v, ""};
 }
 
-// Negative cache ("miss marker"): value stored under a URI's key when AYON had no path for it. Short TTL, never a path.
+// Negative cache ("miss marker") for a URI AYON had no path for. Short TTL, never a path. In-process sentinel only:
+// MemcachedHandler stores it as an EMPTY value, which builds without miss markers read as a plain miss (a
+// non-empty marker would be returned by them as a resolved path).
 // Adjacent literals on purpose: "\x01ayon" would parse as hex escape \x01a.
 inline const std::string kMissMarker = "\x01" "ayon-resolver-miss";
 constexpr int64_t kDefaultMissSeconds = 60;

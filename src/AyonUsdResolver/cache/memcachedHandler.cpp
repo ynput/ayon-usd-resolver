@@ -3,6 +3,7 @@
 #include "../codes/debugCodes.h"
 #include "../config.h"
 #include "memcachedChunks.h"
+#include "memcachedExpiry.h"
 
 #include "pxr/usd/ar/resolvedPath.h"
 
@@ -191,6 +192,11 @@ class MemcachedHandler::Impl {
                 return "";
             }
 
+            // An empty stored value comes back as NULL + SUCCESS: that is the miss marker.
+            if (rc == MEMCACHED_SUCCESS && value == nullptr) {
+                return MemcachedExpiry::kMissMarker;
+            }
+
             if (memcached_failed(rc) || value == nullptr) {
                 logMemcachedFailure("get", key, memcached_strerror(m_memc, rc));
                 return "";
@@ -237,11 +243,11 @@ class MemcachedHandler::Impl {
                 memcached_result_create(m_memc, &result);
                 // Drain fully: the connection is unusable for other ops until END.
                 while (memcached_fetch_result(m_memc, &result, &rc) != nullptr) {
-                    if (memcached_result_length(&result) == 0) {
-                        continue;   // same as the single-key path: empty == miss
-                    }
+                    // Empty value = the miss marker (see queryMemcached).
                     found.emplace(std::string(memcached_result_key_value(&result), memcached_result_key_length(&result)),
-                                  std::string(memcached_result_value(&result), memcached_result_length(&result)));
+                                  memcached_result_length(&result) == 0
+                                      ? MemcachedExpiry::kMissMarker
+                                      : std::string(memcached_result_value(&result), memcached_result_length(&result)));
                 }
                 memcached_result_free(&result);
                 if (rc != MEMCACHED_END && rc != MEMCACHED_NOTFOUND && memcached_failed(rc)) {
@@ -258,11 +264,13 @@ class MemcachedHandler::Impl {
                 return false;
             }
 
+            // The miss marker goes on the wire as an empty value (see MemcachedExpiry::kMissMarker).
+            const std::string &stored = MemcachedExpiry::isMissMarker(value) ? std::string() : value;
             memcached_return_t rc = memcached_set(m_memc,
                                                   key.c_str(),
                                                   key.length(),
-                                                  value.c_str(),
-                                                  value.length(),
+                                                  stored.c_str(),
+                                                  stored.length(),
                                                   static_cast<time_t>(expireSeconds),
                                                   0);
             if (memcached_failed(rc)) {
