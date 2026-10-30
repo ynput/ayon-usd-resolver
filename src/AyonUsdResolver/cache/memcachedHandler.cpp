@@ -2,6 +2,8 @@
 
 #include "../codes/debugCodes.h"
 #include "../config.h"
+#include "memcachedChunks.h"
+#include "memcachedExpiry.h"
 
 #include "pxr/usd/ar/resolvedPath.h"
 
@@ -11,11 +13,13 @@
 
 #include "ynput/lib/logging/AyonLogger.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 PXR_NAMESPACE_USING_DIRECTIVE
@@ -188,6 +192,11 @@ class MemcachedHandler::Impl {
                 return "";
             }
 
+            // An empty stored value comes back as NULL + SUCCESS: that is the miss marker.
+            if (rc == MEMCACHED_SUCCESS && value == nullptr) {
+                return MemcachedExpiry::kMissMarker;
+            }
+
             if (memcached_failed(rc) || value == nullptr) {
                 logMemcachedFailure("get", key, memcached_strerror(m_memc, rc));
                 return "";
@@ -198,16 +207,70 @@ class MemcachedHandler::Impl {
             return result;
         }
 
+        std::unordered_map<std::string, std::string> getMany(const std::vector<std::string> &keys) {
+            std::unordered_map<std::string, std::string> found;
+            if (!m_connected || m_memc == nullptr || keys.empty()) {
+                return found;
+            }
+            const size_t chunks = MemcachedChunks::chunkCount(keys.size());
+            TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
+                .Msg("MemcachedHandler: mget %zu keys in %zu chunks\n", keys.size(), chunks);
+
+            std::vector<const char *> ptrs;
+            std::vector<size_t> lens;
+            for (size_t begin = 0; begin < keys.size(); begin += MemcachedChunks::kMaxKeysPerMget) {
+                const size_t end = std::min(keys.size(), begin + MemcachedChunks::kMaxKeysPerMget);
+                ptrs.clear();
+                lens.clear();
+                for (size_t i = begin; i < end; ++i) {
+                    // One over-long key fails the whole mget; skip it (a plain miss) so the rest of the chunk still hits.
+                    if (keys[i].length() >= MEMCACHED_MAX_KEY) {
+                        continue;
+                    }
+                    ptrs.push_back(keys[i].c_str());
+                    lens.push_back(keys[i].length());
+                }
+                if (ptrs.empty()) {
+                    continue;
+                }
+                memcached_return_t rc = memcached_mget(m_memc, ptrs.data(), lens.data(), ptrs.size());
+                if (memcached_failed(rc)) {
+                    logMemcachedFailure("mget", keys[begin] + " (+" + std::to_string(end - begin - 1) + " more)",
+                                        memcached_strerror(m_memc, rc));
+                    return found;
+                }
+                memcached_result_st result;
+                memcached_result_create(m_memc, &result);
+                // Drain fully: the connection is unusable for other ops until END.
+                while (memcached_fetch_result(m_memc, &result, &rc) != nullptr) {
+                    // Empty value = the miss marker (see queryMemcached).
+                    found.emplace(std::string(memcached_result_key_value(&result), memcached_result_key_length(&result)),
+                                  memcached_result_length(&result) == 0
+                                      ? MemcachedExpiry::kMissMarker
+                                      : std::string(memcached_result_value(&result), memcached_result_length(&result)));
+                }
+                memcached_result_free(&result);
+                if (rc != MEMCACHED_END && rc != MEMCACHED_NOTFOUND && memcached_failed(rc)) {
+                    logMemcachedFailure("mget", keys[begin] + " (+" + std::to_string(end - begin - 1) + " more)",
+                                        memcached_strerror(m_memc, rc));
+                    return found;
+                }
+            }
+            return found;
+        }
+
         bool setMemcached(const std::string &key, const std::string &value, uint32_t expireSeconds) {
             if (!m_connected || m_memc == nullptr) {
                 return false;
             }
 
+            // The miss marker goes on the wire as an empty value (see MemcachedExpiry::kMissMarker).
+            const std::string &stored = MemcachedExpiry::isMissMarker(value) ? std::string() : value;
             memcached_return_t rc = memcached_set(m_memc,
                                                   key.c_str(),
                                                   key.length(),
-                                                  value.c_str(),
-                                                  value.length(),
+                                                  stored.c_str(),
+                                                  stored.length(),
                                                   static_cast<time_t>(expireSeconds),
                                                   0);
             if (memcached_failed(rc)) {
@@ -225,25 +288,7 @@ class MemcachedHandler::Impl {
 
             memcached_return_t rc = memcached_delete(m_memc, key.c_str(), key.length(), 0);
             if (memcached_failed(rc) && rc != MEMCACHED_NOTFOUND) {
-                TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
-                    .Msg("MemcachedHandler: delete failed for key %s (%s)\n",
-                         key.c_str(),
-                         memcached_strerror(m_memc, rc));
-                return false;
-            }
-
-            return true;
-        }
-
-        bool flushAll() {
-            if (!m_connected || m_memc == nullptr) {
-                return false;
-            }
-
-            memcached_return_t rc = memcached_flush(m_memc, 0);
-            if (memcached_failed(rc)) {
-                TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
-                    .Msg("MemcachedHandler: flush failed (%s)\n", memcached_strerror(m_memc, rc));
+                logMemcachedFailure("delete", key, memcached_strerror(m_memc, rc));
                 return false;
             }
 
@@ -272,9 +317,9 @@ class MemcachedHandler::Impl {
         
         bool tryConnect() { return false; }
         std::string queryMemcached(const std::string &) { return ""; }
+        std::unordered_map<std::string, std::string> getMany(const std::vector<std::string> &) { return {}; }
         bool setMemcached(const std::string &, const std::string &, uint32_t) { return false; }
         bool deleteMemcached(const std::string &) { return false; }
-        bool flushAll() { return false; }
         bool isConnected() const { return m_connected; }
     
     private:
@@ -324,6 +369,13 @@ AssetIdentifier MemcachedHandler::getAssetData(const std::string &assetIdentifie
     return asset;
 }
 
+std::unordered_map<std::string, std::string> MemcachedHandler::getMany(const std::vector<std::string> &keys) {
+    if (!m_connected || !pImpl) {
+        return {};
+    }
+    return pImpl->getMany(keys);
+}
+
 bool MemcachedHandler::setAssetData(const std::string &assetIdentifier, const std::string &assetPath,
                                      uint32_t expireSeconds) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
@@ -346,16 +398,6 @@ bool MemcachedHandler::deleteAssetData(const std::string &assetIdentifier) {
     }
 
     return pImpl->deleteMemcached(assetIdentifier);
-}
-
-bool MemcachedHandler::flushAll() {
-    TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("MemcachedHandler::flushAll()\n");
-
-    if (!m_connected || !pImpl) {
-        return false;
-    }
-
-    return pImpl->flushAll();
 }
 
 bool MemcachedHandler::isConnected() const {

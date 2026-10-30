@@ -6,6 +6,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 PXR_NAMESPACE_USING_DIRECTIVE
@@ -32,13 +33,19 @@ class MemcachedHandler {
         AssetIdentifier getAssetData(const std::string &assetIdentifier);
 
         /**
+         * @brief Batched read (memcached_mget, chunked): one round trip per chunk instead of per key.
+         * @return found key -> value. Absent keys are misses; on failure returns what was fetched so far.
+         */
+        std::unordered_map<std::string, std::string> getMany(const std::vector<std::string> &keys);
+
+        /**
          * @brief Store asset data in memcached
          * @param assetIdentifier The asset identifier (key)
          * @param assetPath The resolved asset path (value)
-         * @param expireSeconds Time to live in seconds (default 3600)
+         * @param expireSeconds Time to live in seconds (0 = never expire; memcached caps relative TTLs at 30 days)
          * @return true if successful, false otherwise
          */
-        bool setAssetData(const std::string &assetIdentifier, const std::string &assetPath, uint32_t expireSeconds = 3600);
+        bool setAssetData(const std::string &assetIdentifier, const std::string &assetPath, uint32_t expireSeconds);
 
         /**
          * @brief Delete asset data from memcached
@@ -46,12 +53,6 @@ class MemcachedHandler {
          * @return true if successful or key not found, false on error
          */
         bool deleteAssetData(const std::string &assetIdentifier);
-
-        /**
-         * @brief Flush all entries from the memcached server
-         * @return true if successful, false otherwise
-         */
-        bool flushAll();
 
         /**
          * @brief Check if memcached handler is properly initialized
