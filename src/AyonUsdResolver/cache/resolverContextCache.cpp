@@ -521,9 +521,11 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
         // Failed resolve = (uri, ""): getAssetIdent sets the uri before the missing entity throws.
         // A transport failure returns an empty pair instead and is NOT a miss.
         const bool isMiss = !asset.getAssetIdentifier().empty() && asset.getResolvedAssetPath().empty();
-        this->insert(asset);
-        if (isMiss) {
-            _StoreMiss(assetIdentifier);
+        // A miss with a marker stays out of the in-process caches: the marker is the negative cache, and
+        // a PreCache entry would outlive it and hide a later publish for the life of the process.
+        // Without a marker (memcached off, miss caching disabled), keep the in-process entry as before.
+        if (!isMiss || !_StoreMiss(assetIdentifier)) {
+            this->insert(asset);
         }
 
         // Also store in memcached for distributed caching.
@@ -736,19 +738,24 @@ ResolverContextCache::_TrackMiss(const std::string &uri) {
     m_missKeys.insert(uri);
 }
 
-void
+bool
 ResolverContextCache::_StoreMiss(const std::string &uri) {
     const int64_t ttl = MemcachedExpiry::missTtlFor(_MemcachedTtl(uri), m_memcachedMissExpire);
     if (!m_memcached.has_value() || !m_memcached->get()->isConnected() || ttl < 0) {
-        return;
+        return false;
     }
+    bool stored = false;
     {
         std::lock_guard<std::mutex> lock(s_memcachedMutex);
-        m_memcached->get()->setAssetData(uri, MemcachedExpiry::kMissMarker, static_cast<uint32_t>(ttl));
+        stored = m_memcached->get()->setAssetData(uri, MemcachedExpiry::kMissMarker, static_cast<uint32_t>(ttl));
+    }
+    if (!stored) {
+        return false;
     }
     _TrackMiss(uri);
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
         .Msg("ResolverContextCache: stored miss marker (%ld s) for %s\n", static_cast<long>(ttl), uri.c_str());
+    return true;
 }
 
 bool

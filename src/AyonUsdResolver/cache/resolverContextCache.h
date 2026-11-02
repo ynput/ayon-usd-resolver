@@ -180,8 +180,9 @@ class ResolverContextCache {
         std::unordered_set<std::string> m_missKeys;
         std::mutex m_missKeysMutex;
         void _TrackMiss(const std::string &uri);
-        // Write the miss marker for a failed AYON lookup (no-op when memcached/miss caching is off for this URI).
-        void _StoreMiss(const std::string &uri);
+        // Write the miss marker for a failed AYON lookup. False when no marker was stored (memcached or miss
+        // caching off for this URI, or the write failed).
+        bool _StoreMiss(const std::string &uri);
 
         int64_t _MemcachedTtl(const std::string &uri) const {
             return MemcachedExpiry::ttlFor(uri, m_memcachedExpire, m_memcachedHeroExpire, m_memcachedLatestExpire);
