@@ -68,7 +68,7 @@ connection cannot be established.
 
 Values are matched trimmed and case-insensitively. If a URI carries several `version` parameters, latest wins over hero, hero over immutable.
 
-`ClearCache()` (and the Houdini "clear resolver cache" actions) clears the in-process caches and deletes this session's hero/latest keys from the regional memcached. It never flushes memcached (shared by all artists), and integer-version entries are untouched.
+`ClearCache()` (and the Houdini "clear resolver cache" actions) clears the in-process caches and deletes this session's hero/latest keys from the regional memcached (not for a class set to `-1`, which never wrote them). It never flushes memcached (shared by all artists), and integer-version entries are untouched.
 
 `AYON_MEMCACHED_MISS_EXPIRE_SECONDS` - negative cache for failed lookups (e.g. a placeholder product with nothing published yet). When AYON has no path for an AYON URI, an empty value is stored in memcached under the same key for this many seconds (builds without miss markers read it as a plain miss); other processes that read the marker treat the URI as unresolved without calling AYON. `60` (default), `-1` = do not cache misses, `>0` = seconds (clamped to 2592000 with a warning). `0` is refused (default + warning): a miss that never expires would hide a first publish if the invalidation watcher is not running. Misses follow the class rule above: URIs whose class bypasses memcached (e.g. `latest` by default) never get a marker.
 

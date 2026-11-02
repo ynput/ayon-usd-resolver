@@ -694,7 +694,8 @@ ResolverContextCache::ClearCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::ClearCache \n");
 
     // Only PreCache/AyonCache can hold keys written to memcached (CommonCache is non-AYON paths).
-    // Mutable (hero/latest) keys of this session are deleted from memcached; immutable ones stay.
+    // Mutable (hero/latest) keys of this session are deleted from memcached; immutable ones stay. A class
+    // that bypasses memcached (TTL -1, `latest` by default) never wrote its keys, so they are not deleted.
     std::vector<std::string> mutableKeys;
     {
         std::unique_lock<std::shared_mutex> PreCachesharedMutexLock(m_PreCacheSharedMutex);
@@ -702,9 +703,10 @@ ResolverContextCache::ClearCache() {
         std::unique_lock<std::shared_mutex> CommonCachesharedMutexLock(m_CommonCacheSharedMutex);
         for (const auto *cache: {&m_PreCache, &m_AyonCache}) {
             for (const auto &asset: *cache) {
-                if (MemcachedExpiry::classifyUri(asset.getAssetIdentifier())
-                    != MemcachedExpiry::VersionClass::Immutable) {
-                    mutableKeys.push_back(asset.getAssetIdentifier());
+                std::string uri = asset.getAssetIdentifier();
+                if (MemcachedExpiry::classifyUri(uri) != MemcachedExpiry::VersionClass::Immutable
+                    && _MemcachedTtl(uri) >= 0) {
+                    mutableKeys.push_back(std::move(uri));
                 }
             }
         }
