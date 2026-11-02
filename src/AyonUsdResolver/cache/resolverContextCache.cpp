@@ -622,8 +622,13 @@ ResolverContextCache::removeCachedObject(const std::string &key) {
         return;
     }
 
+    CommonCachesharedWriteLock.unlock();
+    AyonCachesharedWriteLock.unlock();
+    preCacheSharedWriteLock.unlock();
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
         .Msg("ResolverContextCache::removeCachedObject the object could not be found");
+    // A known miss has no local asset (markers stay out of the in-process caches); drop its marker.
+    _DeleteMissMarker(key);
 };
 
 void
@@ -684,9 +689,11 @@ ResolverContextCache::removeCachedObject(const std::string &key, const CacheName
                 }
         }
     }
+    preCacheSharedDeleteLock.unlock();
 
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
         .Msg("ResolverContextCache::removeCachedObject the object could not be found");
+    _DeleteMissMarker(key);
 };
 
 void
@@ -726,11 +733,10 @@ ResolverContextCache::ClearCache() {
             std::lock_guard<std::mutex> lock(s_memcachedMutex);
             m_memcached->get()->deleteAssetData(key);
         }
-        // Known-miss markers this process saw: drop them too so a fresh resolve re-asks AYON.
-        for (const auto &key: missKeys) {
-            std::lock_guard<std::mutex> lock(s_memcachedMutex);
-            m_memcached->get()->deleteAssetData(key);
-        }
+    }
+    // Known-miss markers this process saw: drop them too so a fresh resolve re-asks AYON.
+    for (const auto &key: missKeys) {
+        _DeleteMissMarker(key);
     }
 };
 
@@ -738,6 +744,25 @@ void
 ResolverContextCache::_TrackMiss(const std::string &uri) {
     std::lock_guard<std::mutex> lock(m_missKeysMutex);
     m_missKeys.insert(uri);
+}
+
+void
+ResolverContextCache::_DeleteMissMarker(const std::string &uri) {
+    {
+        std::lock_guard<std::mutex> lock(m_missKeysMutex);
+        m_missKeys.erase(uri);
+    }
+    if (!m_memcached.has_value() || !m_memcached->get()->isConnected() || _MemcachedTtl(uri) < 0) {
+        return;
+    }
+    // Delete only while the key still holds the marker: a path stored since (by this or another process,
+    // e.g. after a publish) must survive. memcached has no conditional delete, so a path written between
+    // this get and the delete is still dropped; that costs one extra AYON lookup, never a wrong path.
+    std::lock_guard<std::mutex> lock(s_memcachedMutex);
+    const AssetIdentifier current = m_memcached->get()->getAssetData(uri);
+    if (!current.isEmpty() && MemcachedExpiry::isMissMarker(current.getResolvedAssetPath().GetPathString())) {
+        m_memcached->get()->deleteAssetData(uri);
+    }
 }
 
 bool

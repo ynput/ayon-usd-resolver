@@ -180,6 +180,9 @@ class ResolverContextCache {
         std::unordered_set<std::string> m_missKeys;
         std::mutex m_missKeysMutex;
         void _TrackMiss(const std::string &uri);
+        // Untrack a miss and delete its marker if memcached still holds the marker (a path stored since is kept).
+        // Takes s_memcachedMutex: call without the cache locks held.
+        void _DeleteMissMarker(const std::string &uri);
         // Write the miss marker for a failed AYON lookup. False when no marker was stored (memcached or miss
         // caching off for this URI, or the write failed).
         bool _StoreMiss(const std::string &uri);
