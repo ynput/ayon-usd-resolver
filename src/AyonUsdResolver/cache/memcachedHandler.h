@@ -41,6 +41,14 @@ class MemcachedHandler {
         bool setAssetData(const std::string &assetIdentifier, const std::string &assetPath, uint32_t expireSeconds);
 
         /**
+         * @brief Store the miss marker with memcached `add`: never replaces a value another process stored
+         * @param assetIdentifier The asset identifier (key)
+         * @param expireSeconds Marker TTL in seconds
+         * @return true if memcached now holds a value for the key (the marker, or an existing entry), false otherwise
+         */
+        bool addMissMarker(const std::string &assetIdentifier, uint32_t expireSeconds);
+
+        /**
          * @brief Delete asset data from memcached
          * @param assetIdentifier The asset identifier (key) to delete
          * @return true if successful or key not found, false on error

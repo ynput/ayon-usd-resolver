@@ -774,7 +774,9 @@ ResolverContextCache::_StoreMiss(const std::string &uri) {
     bool stored = false;
     {
         std::lock_guard<std::mutex> lock(s_memcachedMutex);
-        stored = m_memcached->get()->setAssetData(uri, MemcachedExpiry::kMissMarker, static_cast<uint32_t>(ttl));
+        // add, not set: a path another process stored after our AYON lookup (e.g. a publish) is kept, and we do not
+        // keep the miss in-process either (returns true: memcached holds the answer).
+        stored = m_memcached->get()->addMissMarker(uri, static_cast<uint32_t>(ttl));
     }
     if (!stored) {
         return false;
