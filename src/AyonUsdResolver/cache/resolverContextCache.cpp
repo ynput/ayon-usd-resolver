@@ -563,7 +563,8 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
         if (!asset.getResolvedAssetPath().empty()) {
             asset.setAssetIdentifier(assetIdentifier);
 
-            std::shared_lock<std::shared_mutex> CommonCacheSharedLock(m_CommonCacheSharedMutex);
+            // insert() mutates the set: exclusive lock (a shared one let concurrent resolves race).
+            std::unique_lock<std::shared_mutex> CommonCacheWriteLock(m_CommonCacheSharedMutex);
 
             TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
                 .Msg("ResolverContextCache::getAsset: insert into CommonCache \n");
