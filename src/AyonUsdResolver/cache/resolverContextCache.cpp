@@ -38,14 +38,26 @@ static std::mutex s_memcachedMutex;
 static std::string _ToRootlessPath(
     const std::string &resolvedPath,
     const std::unordered_map<std::string, std::string> &rootReplaceData) {
-    std::string rootlessPath = resolvedPath;
+    // Whole path segments only (root /mnt/work must not match /mnt/work2/...), and the longest matching root wins
+    // (a nested root beats its parent), independent of the map's iteration order.
+    const std::string *bestKey = nullptr;
+    size_t bestLen = 0;
     for (const auto &[key, root] : rootReplaceData) {
-        if (!root.empty() && rootlessPath.rfind(root, 0) == 0) {
-            rootlessPath = "{root[" + key + "]}" + rootlessPath.substr(root.size());
-            break;
+        if (root.empty() || root.size() <= bestLen || resolvedPath.rfind(root, 0) != 0) {
+            continue;
+        }
+        const char last = root.back();
+        const bool boundary = resolvedPath.size() == root.size() || last == '/' || last == '\\'
+                              || resolvedPath[root.size()] == '/' || resolvedPath[root.size()] == '\\';
+        if (boundary) {
+            bestKey = &key;
+            bestLen = root.size();
         }
     }
-    return rootlessPath;
+    if (bestKey == nullptr) {
+        return resolvedPath;
+    }
+    return "{root[" + *bestKey + "]}" + resolvedPath.substr(bestLen);
 }
 
 PinningFileHandler::PinningFileHandler(const std::string &pinningFilePath,
