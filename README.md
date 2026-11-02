@@ -64,9 +64,10 @@ connection cannot be established.
 |---|---|---|---|
 | `latest`, `latestdone` | latest | `AYON_MEMCACHED_LATEST_EXPIRE_SECONDS` | `-1` (bypass) |
 | `hero` | hero | `AYON_MEMCACHED_HERO_EXPIRE_SECONDS` | `3600` |
-| anything else (`v004`, `4`, missing) | immutable | `AYON_MEMCACHED_EXPIRE_SECONDS` | `0` (never) |
+| an integer (`v004`, `4`) | immutable | `AYON_MEMCACHED_EXPIRE_SECONDS` | `0` (never) |
+| missing, `*` or any other value | latest | `AYON_MEMCACHED_LATEST_EXPIRE_SECONDS` | `-1` (bypass) |
 
-Values are matched trimmed and case-insensitively. If a URI carries several `version` parameters, latest wins over hero, hero over immutable.
+Values are matched like the server matches them: trimmed, case-insensitively, one leading `v` ignored. Without an integer, hero or latest value the server can return any version, so such URIs are never treated as immutable. If a URI carries several `version` parameters, latest wins over hero, hero over immutable.
 
 `ClearCache()` (and the Houdini "clear resolver cache" actions) clears the in-process caches and deletes this session's hero/latest keys from the regional memcached (not for a class set to `-1`, which never wrote them). It never flushes memcached (shared by all artists), and integer-version entries are untouched.
 

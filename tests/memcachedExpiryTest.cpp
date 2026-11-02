@@ -17,13 +17,24 @@ int main() {
     assert(classifyUri(base + "hero") == H);
     assert(classifyUri(base + "HERO") == H);
     assert(classifyUri(base + " Hero ") == H);
-    assert(classifyUri(base + "herox") == I);
     assert(classifyUri(base + "v004") == I);
+    assert(classifyUri(base + "V004") == I);
     assert(classifyUri(base + "4") == I);
-    assert(classifyUri("ayon://P//a?product=x") == I);
-    assert(classifyUri("ayon://P//a") == I);
-    assert(classifyUri("ayon://P//a?preversion=hero") == I);
-    assert(classifyUri("ayon://P//a?preversion=latest") == I);
+    assert(classifyUri(base + " 004 ") == I);
+    // The server drops one leading `v` before matching: vhero/vlatest mean hero/latest.
+    assert(classifyUri(base + "vhero") == H);
+    assert(classifyUri(base + "vlatest") == L);
+    // No stable answer (the server matches any version, or rejects the value): never immutable.
+    assert(classifyUri(base + "herox") == L);
+    assert(classifyUri(base + "*") == L);
+    assert(classifyUri(base) == L);
+    assert(classifyUri(base + "v") == L);
+    assert(classifyUri("ayon://P//a?product=x") == L);
+    assert(classifyUri("ayon://P//a") == L);
+    assert(classifyUri("ayon://P//a?preversion=hero") == L);
+    assert(classifyUri("ayon://P//a?preversion=latest") == L);
+    assert(classifyUri("ayon://P//a?version=4&version=hero") == H);
+    assert(classifyUri("ayon://P//a?version=4&version=*") == L);
     assert(classifyUri("ayon://P//a?version=hero&version=latest") == L);
     assert(classifyUri("ayon://P//a?version=latest&version=hero") == L);
     assert(classifyUri("ayon://P//a?product=version=latest&version=hero") == H);

@@ -73,15 +73,18 @@ parseMissExpiry(const char *env) {
 enum class VersionClass { Immutable, Hero, Latest };
 
 /**
- * @brief Class of the URI's `version` query parameter (trimmed, case-insensitive): `latest`/`latestdone` -> Latest,
- * `hero` -> Hero, anything else (incl. missing) -> Immutable. With several version params, Latest > Hero > Immutable.
+ * @brief Class of the URI's `version` query parameter, normalised like the server does (trimmed, lowercased, one
+ * leading `v` dropped): digits -> Immutable, `hero` -> Hero, `latest`/`latestdone` -> Latest. A missing version,
+ * `*` or any other value -> Latest: the server then matches any version (no stable answer), so it must never be
+ * cached as immutable. With several version params, Latest > Hero > Immutable.
  */
 inline VersionClass
 classifyUri(const std::string &uri) {
+    bool seen = false;
     VersionClass result = VersionClass::Immutable;
     const size_t q = uri.find('?');
     if (q == std::string::npos) {
-        return result;
+        return VersionClass::Latest;
     }
     size_t pos = q + 1;
     const size_t fragment = uri.find('#', pos);
@@ -99,16 +102,23 @@ classifyUri(const std::string &uri) {
             while (e > b && std::isspace(static_cast<unsigned char>(param[e - 1]))) --e;
             std::string val = param.substr(b, e - b);
             for (char &c: val) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-            if (val == "latest" || val == "latestdone") {
-                return VersionClass::Latest;
+            if (!val.empty() && val[0] == 'v') {
+                val.erase(0, 1);
             }
+            seen = true;
+            const bool digits = !val.empty() && std::all_of(val.begin(), val.end(), [](unsigned char c) {
+                return std::isdigit(c) != 0;
+            });
             if (val == "hero") {
                 result = VersionClass::Hero;
+            }
+            else if (!digits) {
+                return VersionClass::Latest;   // latest, latestdone, `*`, empty or unknown
             }
         }
         pos = amp + 1;
     }
-    return result;
+    return seen ? result : VersionClass::Latest;
 }
 
 /**
