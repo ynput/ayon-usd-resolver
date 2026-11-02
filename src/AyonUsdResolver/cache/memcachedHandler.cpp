@@ -175,8 +175,14 @@ class MemcachedHandler::Impl {
             return true;
         }
 
+        // memcached keys are at most 250 bytes (MEMCACHED_MAX_KEY counts the NUL). A longer URI is never cached:
+        // skip it quietly instead of failing (and warning) on every get/set.
+        static bool keyFits(const std::string &key) {
+            return key.length() < MEMCACHED_MAX_KEY;
+        }
+
         std::string queryMemcached(const std::string &key) {
-            if (!m_connected || m_memc == nullptr) {
+            if (!m_connected || m_memc == nullptr || !keyFits(key)) {
                 return "";
             }
 
@@ -205,7 +211,7 @@ class MemcachedHandler::Impl {
         }
 
         bool setMemcached(const std::string &key, const std::string &value, uint32_t expireSeconds) {
-            if (!m_connected || m_memc == nullptr) {
+            if (!m_connected || m_memc == nullptr || !keyFits(key)) {
                 return false;
             }
 
@@ -229,7 +235,7 @@ class MemcachedHandler::Impl {
         // add, not set: never overwrites a value another process stored meanwhile. True when memcached now holds a
         // value for the key (our marker, or an existing entry: NOTSTORED), false when the write did not happen.
         bool addMissMarker(const std::string &key, uint32_t expireSeconds) {
-            if (!m_connected || m_memc == nullptr) {
+            if (!m_connected || m_memc == nullptr || !keyFits(key)) {
                 return false;
             }
 
@@ -250,6 +256,9 @@ class MemcachedHandler::Impl {
         bool deleteMemcached(const std::string &key) {
             if (!m_connected || m_memc == nullptr) {
                 return false;
+            }
+            if (!keyFits(key)) {
+                return true;   // never stored
             }
 
             memcached_return_t rc = memcached_delete(m_memc, key.c_str(), key.length(), 0);
