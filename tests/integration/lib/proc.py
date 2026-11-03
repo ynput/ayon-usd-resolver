@@ -55,7 +55,7 @@ class ProbeResult:
         """Failure context for assertion messages: the error and the log tail."""
         tail = "\n".join(self.log.splitlines()[-60:])
         knobs = {k: v for k, v in self.env.items() if k in RESOLVER_KNOBS}
-        tap = {k: self.tap.get(k) for k in ("requests", "errors")}
+        tap = {k: self.tap.get(k) for k in ("requests", "error_count", "errors")}
         return f"knobs={knobs}\nayon={tap}\nerror={self.data.get('error')}\n--- log tail ---\n{tail}"
 
 

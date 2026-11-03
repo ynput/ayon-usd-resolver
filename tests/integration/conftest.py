@@ -204,6 +204,6 @@ def session_record(
         "ayon_resolve_requests": result.tap.get("resolve_requests", 0),
         "ayon_resolve_uris": result.tap.get("resolve_uris_total", 0),
         "ayon_site_roots": sum(n for k, n in requests.items() if k.endswith("/siteRoots")),
-        "ayon_errors": len(result.tap.get("errors", [])),
+        "ayon_errors": result.tap.get("error_count", 0),
         **result.mc,
     }

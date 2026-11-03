@@ -6,8 +6,9 @@ calls" is otherwise unobservable — and inject faults into individual endpoints
 
 Control API (never forwarded upstream), all under ``/__tap``:
 
-- ``GET  /__tap/counts``  request counts per ``METHOD /path`` and per resolved URI, plus the
-  first upstream error responses
+- ``GET  /__tap/counts``  request counts per ``METHOD /path`` and per resolved URI, the
+  number of error responses (``error_count``: every status >= 400, injected or upstream)
+  and the bodies of the first upstream error responses (``errors``, capped, diagnostics only)
 - ``POST /__tap/reset``   zero all counters. Optional body ``{"traceparent": "..."}``: spans
   for the following requests are parented under that W3C trace context
 - ``POST /__tap/fault``   ``{"path_regex": "...", "method": "GET"|null, "status": 500|null,
@@ -39,6 +40,7 @@ if TYPE_CHECKING:
     from collections.abc import Generator
 
 UPSTREAM = os.environ.get("AYON_UPSTREAM_URL", "http://server:5000").rstrip("/")
+MAX_ERROR_DETAILS = 20
 PORT = int(os.environ.get("TAP_PORT", "5000"))
 
 # Headers that describe one hop, not the message; never copied across the proxy.
@@ -117,7 +119,10 @@ class Tap:
         self.requests: Counter[str] = Counter()
         self.resolved_uris: Counter[str] = Counter()
         self.faults: list[Fault] = []
-        # Last upstream error responses, for failure messages: "METHOD path -> status: body"
+        # Every response >= 400 sent to the client, injected or upstream.
+        self.error_count = 0
+        # First upstream error responses, for failure messages: "METHOD path -> status: body".
+        # Capped at MAX_ERROR_DETAILS; use error_count for the number of errors.
         self.errors: list[str] = []
         self.session: ClientSession | None = None
         self.tracing = Tracing()
@@ -125,6 +130,7 @@ class Tap:
     def reset(self) -> None:
         self.requests.clear()
         self.resolved_uris.clear()
+        self.error_count = 0
         self.errors.clear()
 
     def snapshot(self) -> dict:
@@ -133,6 +139,7 @@ class Tap:
             "resolved_uris": dict(self.resolved_uris),
             "resolve_requests": sum(n for k, n in self.requests.items() if k.endswith(" /api/resolve")),
             "resolve_uris_total": sum(self.resolved_uris.values()),
+            "error_count": self.error_count,
             "errors": list(self.errors),
         }
 
@@ -187,6 +194,8 @@ async def proxy(request: web.Request) -> web.StreamResponse:
         **{"http.request.method": request.method, "url.path": path, "ayon.resolve_uris": uris},
     ) as span:
         response = await _forward(tap, request, path, body, span)
+        if response.status >= 400:
+            tap.error_count += 1
         if span is not None:
             span.set_attribute("http.response.status_code", response.status)
             if response.status >= 400:
@@ -224,7 +233,7 @@ async def _forward(
         allow_redirects=False,
     ) as upstream:
         payload = await upstream.read()
-        if upstream.status >= 400 and len(tap.errors) < 20:
+        if upstream.status >= 400 and len(tap.errors) < MAX_ERROR_DETAILS:
             tap.errors.append(f"{request.method} {path} -> {upstream.status}: {payload[:300].decode(errors='replace')}")
         out_headers = {k: v for k, v in upstream.headers.items() if k.lower() not in HOP_BY_HOP}
         return web.Response(status=upstream.status, headers=out_headers, body=payload)
