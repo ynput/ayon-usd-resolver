@@ -9,6 +9,7 @@ assertions instead of failing on them.
 from __future__ import annotations
 
 import socket
+import time
 from dataclasses import dataclass
 
 
@@ -83,6 +84,22 @@ class _Conn:
 class TextClient:
     def __init__(self, host: str, port: int) -> None:
         self.host, self.port = host, port
+
+    def wait_ready(self, timeout: float = 30.0) -> None:
+        """Block until the server answers; compose only guarantees that it was started."""
+        deadline = time.monotonic() + timeout
+        while True:
+            try:
+                with _Conn(self.host, self.port) as c:
+                    c.sock.sendall(b"version\r\n")
+                    c.read_line()
+            except OSError as exc:
+                if time.monotonic() >= deadline:
+                    msg = f"memcached backend {self.host}:{self.port} not ready after {timeout}s: {exc}"
+                    raise TimeoutError(msg) from exc
+                time.sleep(0.25)
+            else:
+                return
 
     def get(self, key: str) -> bytes | None:
         with _Conn(self.host, self.port) as c:

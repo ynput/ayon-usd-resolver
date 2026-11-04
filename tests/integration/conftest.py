@@ -59,7 +59,9 @@ def project():  # ruff: ignore[missing-return-type-undocumented-public-function]
 def backend(request: pytest.FixtureRequest) -> Backend:
     """Each memcached-compatible backend, flushed so every test starts cold."""
     selected = BACKENDS[request.param]
-    selected.client().flush()
+    client = selected.client()
+    client.wait_ready()
+    client.flush()
     return selected
 
 

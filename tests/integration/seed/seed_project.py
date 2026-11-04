@@ -26,7 +26,6 @@ import argparse
 import json
 import os
 import re
-import shutil
 import sys
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -59,6 +58,8 @@ class Manifest:
     expected_prims: int
     # uri -> absolute path the resolver must return, in closure order (root first)
     expected: dict[str, str] = field(default_factory=dict)
+    # every file seeding wrote, including versions outside the closure; removed on teardown
+    written: list[str] = field(default_factory=list)
 
     @property
     def uris(self) -> list[str]:
@@ -182,8 +183,13 @@ def _publish_closure(
     *,
     work_root: str,
     asset_count: int,
+    written: list[str],
 ) -> Manifest:
-    """Create the closure's entities in ``info``'s project and write its layer files."""
+    """Create the closure's entities in ``info``'s project and write its layer files.
+
+    Each path is added to ``written`` before the file is created, so a caller can clean up
+    after a failure part-way through.
+    """
     name = info.project_name
     seeder = _Seeder(session, url, name, info.project_code, anatomy)
 
@@ -216,12 +222,31 @@ def _publish_closure(
     paths = seeder.resolve(list(layers))
     for uri, text in layers.items():
         target = Path(paths[uri])
+        written.append(str(target))
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text, encoding="utf-8")
 
     ordered = [root_uri, layout_uri, *closure]
     # /sh010 + per asset: the referenced Xform and its Cube
-    return Manifest(name, work_root, root_uri, 1 + 2 * asset_count, {uri: paths[uri] for uri in ordered})
+    return Manifest(name, work_root, root_uri, 1 + 2 * asset_count, {uri: paths[uri] for uri in ordered}, written)
+
+
+def _remove_written(written: list[str], work_root: str) -> None:
+    """Delete the seeded files and the directories left empty, never ``work_root`` itself.
+
+    The anatomy decides where files live, so no single directory can be assumed to hold them.
+    """
+    root = Path(work_root)
+    for item in written:
+        path = Path(item)
+        path.unlink(missing_ok=True)
+        for parent in path.parents:
+            if parent == root or root not in parent.parents:
+                break
+            try:
+                parent.rmdir()
+            except OSError:  # not empty, or already removed for a sibling
+                break
 
 
 def seed(work_root: str, asset_count: int, project: str | None = None, preset: str | None = None) -> Manifest:
@@ -234,20 +259,20 @@ def seed(work_root: str, asset_count: int, project: str | None = None, preset: s
     )
     token = uuid.uuid4().hex[:8]
     info = create_project(session, url, anatomy, name=project or f"resolverit_{token}", code=f"rit{token[:5]}")
-    name = info.project_name
+    written: list[str] = []
     try:
-        return _publish_closure(session, url, info, anatomy, work_root=work_root, asset_count=asset_count)
+        return _publish_closure(session, url, info, anatomy, work_root=work_root, asset_count=asset_count, written=written)
     except BaseException:
         # The session fixture never reaches its teardown when seeding fails; clean up here.
-        delete_project(session, url, name)
-        shutil.rmtree(Path(work_root) / name, ignore_errors=True)
+        _remove_written(written, work_root)
+        delete_project(session, url, info.project_name)
         raise
 
 
 def teardown(manifest: Manifest) -> None:
     session, url = connect()
+    _remove_written(manifest.written, manifest.work_root)
     delete_project(session, url, manifest.project)
-    shutil.rmtree(Path(manifest.work_root) / manifest.project, ignore_errors=True)
 
 
 def main() -> int:

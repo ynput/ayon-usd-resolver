@@ -28,7 +28,9 @@ default `__primary__`). The preset's roots are replaced by a single `work` root 
 `/data/work` volume. Representations use the preset's own `publish` and `hero` templates, so
 file locations are decided by the anatomy, not by the tests. After creating the entities, the
 seed asks `/api/resolve` for every URI and writes each layer to the path the server returns.
-That is the same path the resolver will get. The session deletes the project when it finishes.
+That is the same path the resolver will get. The session deletes the project when it finishes,
+along with every file the seed wrote and any directories that leaves empty. Failed seeding cleans
+up the same way.
 
 Before seeding, the session registers `AYON_SITE_ID` with the server (`pytest_ayon.register_site`).
 It does this the same way the launcher does: an authenticated `GET /api/info` with
@@ -65,6 +67,9 @@ stage, because the OpenUSD stage is cached.
 | `RIT_KEEP_PROJECT` | `0` | Set to `1` to keep the seeded project for inspection |
 | `USD_VERSION` | `v25.05` | OpenUSD git tag the runner is built against |
 | `DRAGONFLY_TAG` | `latest` | Dragonfly image tag |
+
+The `backend` fixture waits up to 30 seconds for a memcached backend to answer before flushing
+it, because compose only guarantees that the container was started.
 
 ## How the tests work
 
