@@ -134,5 +134,5 @@ class Telemetry:
 
 def stat_deltas(before: dict[str, int], after: dict[str, int]) -> dict[str, int]:
     """Changes of the memcached counters a session is judged by; absent ones are skipped."""
-    keys = ("get_hits", "get_misses", "cmd_get", "cmd_set", "delete_hits", "cmd_flush", "curr_items")
+    keys = ("get_hits", "get_misses", "cmd_get", "cmd_set", "delete_hits", "delete_misses", "cmd_flush", "curr_items")
     return {f"mc_{k}": after[k] - before[k] for k in keys if k in before and k in after}

@@ -48,6 +48,10 @@ class ProbeResult:
         return self.data.get("resolved", {})
 
     @property
+    def steps(self) -> list[dict[str, Any]]:
+        return self.data.get("steps", [])
+
+    @property
     def prims(self) -> int:
         return self.data.get("prims", 0)
 
@@ -61,8 +65,9 @@ class ProbeResult:
 
 def run_probe(
     *,
-    root: str,
+    root: str | None,
     uris: list[str],
+    steps: list[dict[str, Any]] | None = None,
     base_env: dict[str, str],
     knobs: dict[str, str],
     workdir: Path,
@@ -73,7 +78,14 @@ def run_probe(
     uris_file = workdir / f"{name}.uris.json"
     out_file = workdir / f"{name}.result.json"
     log_file = workdir / f"{name}.log"
-    uris_file.write_text(json.dumps(uris))
+    out_file.unlink(missing_ok=True)  # a test can run one session name twice; never read stale output
+    if steps is None:
+        uris_file.write_text(json.dumps(uris))
+        arguments = ["--root", str(root), "--uris", str(uris_file)]
+    else:
+        steps_file = workdir / f"{name}.steps.json"
+        steps_file.write_text(json.dumps(steps))
+        arguments = ["--steps", str(steps_file)]
 
     env = {k: v for k, v in os.environ.items() if k not in RESOLVER_KNOBS}
     env.update(base_env)
@@ -81,7 +93,7 @@ def run_probe(
 
     with log_file.open("w") as log:
         proc = subprocess.run(
-            [sys.executable, str(PROBE), "--root", root, "--uris", str(uris_file), "--out", str(out_file)],
+            [sys.executable, str(PROBE), *arguments, "--out", str(out_file)],
             env=env,
             stdout=log,
             stderr=subprocess.STDOUT,

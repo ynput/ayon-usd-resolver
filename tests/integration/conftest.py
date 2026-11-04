@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from lib.mc import Backend, parse_backends
+from lib.mcproxy import McProxy
 from lib.proc import ProbeResult, run_probe
 from lib.tap import TapClient
 from lib.telemetry import Telemetry, stat_deltas
@@ -63,6 +64,20 @@ def backend(request: pytest.FixtureRequest) -> Backend:
     client.wait_ready()
     client.flush()
     return selected
+
+
+@pytest.fixture
+def mc_proxy(backend: Backend) -> Iterator[Callable[..., McProxy]]:
+    """Factory for counting proxies in front of the test's backend, closed at teardown."""
+    created: list[McProxy] = []
+
+    def make(**options: float | bool) -> McProxy:
+        created.append(McProxy(backend, **options))
+        return created[-1]
+
+    yield make
+    for proxy in created:
+        proxy.close()
 
 
 @pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse] - every test publishes
@@ -138,8 +153,28 @@ def run_resolver(
         "AYON_PROJECT_NAME": project.project,
     }
 
-    def run(name: str, **knobs: str) -> ProbeResult:
-        backend = _backend_for(knobs)
+    def run(
+        name: str,
+        *,
+        root: str | None = None,
+        uris: list[str] | None = None,
+        steps: list[dict] | None = None,
+        proxy: McProxy | None = None,
+        **knobs: str,
+    ) -> ProbeResult:
+        """One session. Default: open the seeded stage and report the closure.
+
+        ``root``/``uris`` open something else; ``steps`` runs operations without a stage (see
+        lib/probe.py). With ``proxy``, the resolver connects through it, and its counters are
+        added to ``result.mc``.
+        """
+        standard = root is None and uris is None and steps is None
+        if proxy is not None:
+            backend = proxy.target
+            knobs["AYON_MEMCACHED_SERVERS"] = proxy.address
+            proxy.reset()
+        else:
+            backend = _backend_for(knobs)
         client = backend.client() if backend else None
         prewarm = "off" if knobs.get("AYON_RESOLVER_NO_PREWARM") == "1" else "on"
         with telemetry.span(
@@ -149,8 +184,9 @@ def run_resolver(
             tap.reset(traceparent=telemetry.traceparent())
             before = client.stats() if client else {}
             result = run_probe(
-                root=project.root_uri,
-                uris=project.uris,
+                root=root or project.root_uri,
+                uris=project.uris if uris is None else uris,
+                steps=steps,
                 base_env=base_env,
                 knobs=knobs,
                 workdir=tmp_path,
@@ -159,8 +195,17 @@ def run_resolver(
             result.tap = tap.counts()
             tap.reset()  # detach: later traffic (seeding, teardown) is not this session's
             result.mc = stat_deltas(before, client.stats()) if client else {}
+            if proxy is not None:
+                result.mc.update(proxy.metrics())
             record = session_record(
-                request.node.nodeid, session=name, backend=backend, prewarm=prewarm, project=project, result=result
+                request.node.nodeid,
+                session=name,
+                backend=backend,
+                prewarm=prewarm,
+                project=project,
+                result=result,
+                standard=standard,
+                rtt_ms=proxy.rtt_ms if proxy else 0,
             )
             record["trace_id"] = Telemetry.trace_id(span)
             if span is not None:
@@ -189,6 +234,8 @@ def session_record(
     prewarm: str,
     project,
     result: ProbeResult,
+    standard: bool = True,
+    rtt_ms: float = 0,
 ) -> dict:
     """The numbers one resolver session is judged by, flat for LogQL ``| json``."""
     requests = result.tap.get("requests", {})
@@ -198,7 +245,13 @@ def session_record(
         "backend": backend.name if backend else "none",
         "prewarm": prewarm,
         "ok": result.ok,
-        "composed": result.ok and result.resolved == project.expected and result.prims == project.expected_prims,
+        # Only a session that opened the seeded stage has a composition to judge.
+        "composed": (
+            result.ok and result.resolved == project.expected and result.prims == project.expected_prims
+            if standard
+            else None
+        ),
+        "rtt_ms": rtt_ms,
         "open_ms": round(result.data.get("open_seconds", 0) * 1000, 1),
         "prims": result.prims,
         "uris": len(project.uris),

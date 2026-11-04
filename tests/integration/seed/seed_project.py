@@ -48,6 +48,7 @@ ROOT_NAME = "work"
 ROOT_TOKEN = f"{{root[{ROOT_NAME}]}}"
 PRODUCT_TYPE = "usd"
 REPRESENTATION = "usd"
+_SEEDERS: dict[str, _Seeder] = {}  # project -> its seeder, for publishing during tests
 
 
 @dataclass
@@ -60,6 +61,8 @@ class Manifest:
     expected: dict[str, str] = field(default_factory=dict)
     # every file seeding wrote, including versions outside the closure; removed on teardown
     written: list[str] = field(default_factory=list)
+    # uri -> absolute path for every published representation, also outside the closure
+    published: dict[str, str] = field(default_factory=dict)
 
     @property
     def uris(self) -> list[str]:
@@ -100,6 +103,8 @@ class _Seeder:
         self.templates = anatomy["templates"]
         self.work_root = anatomy["roots"][0]["linux"]
         self.folder_types = {item["name"] for item in anatomy.get("folder_types") or []}
+        self.folder_ids: dict[str, str] = {}  # folder path -> id
+        self.product_ids: dict[tuple[str, str], str] = {}  # (folder id, product) -> id
 
     def _post(self, endpoint: str, payload: dict[str, Any]) -> str:
         response = self.session.post(f"{self.url}/api/projects/{self.project}/{endpoint}", json=payload)
@@ -116,7 +121,10 @@ class _Seeder:
     def publish(self, folder_id: str, folder_path: str, product: str, labels: list[str]) -> None:
         """Create the product, its versions ("1", "2", "hero") and a usd representation each."""
         hierarchy, _, folder_name = folder_path.rpartition("/")
-        product_id = self._post("products", {"name": product, "folderId": folder_id, "productType": PRODUCT_TYPE})
+        product_id = self.product_ids.get((folder_id, product))
+        if product_id is None:
+            product_id = self._post("products", {"name": product, "folderId": folder_id, "productType": PRODUCT_TYPE})
+            self.product_ids[folder_id, product] = product_id
         latest = max(int(v) for v in labels if v.isdigit())
         for label in labels:
             hero = label == "hero"
@@ -192,6 +200,7 @@ def _publish_closure(
     """
     name = info.project_name
     seeder = _Seeder(session, url, name, info.project_code, anatomy)
+    _SEEDERS[name] = seeder
 
     layers: dict[str, str] = {}  # uri -> layer text, for every published representation
     closure: list[str] = []
@@ -202,7 +211,8 @@ def _publish_closure(
     for i in range(asset_count):
         asset = f"asset_{i:02d}"
         folder_path = f"assets/{asset}"
-        seeder.publish(seeder.folder(asset, "Asset", assets_id), folder_path, "usdAsset", rotation)
+        seeder.folder_ids[folder_path] = seeder.folder(asset, "Asset", assets_id)
+        seeder.publish(seeder.folder_ids[folder_path], folder_path, "usdAsset", rotation)
         for version in rotation:
             layers[_uri(name, folder_path, "usdAsset", version)] = _asset_layer(asset, version)
         uri = _uri(name, folder_path, "usdAsset", rotation[i % len(rotation)])
@@ -228,7 +238,40 @@ def _publish_closure(
 
     ordered = [root_uri, layout_uri, *closure]
     # /sh010 + per asset: the referenced Xform and its Cube
-    return Manifest(name, work_root, root_uri, 1 + 2 * asset_count, {uri: paths[uri] for uri in ordered}, written)
+    return Manifest(name, work_root, root_uri, 1 + 2 * asset_count, {uri: paths[uri] for uri in ordered}, written, paths)
+
+
+def uri_for(manifest: Manifest, product: str, version: str, folder_path: str = "assets/asset_00") -> str:
+    """URI of any product and version, published or not."""
+    return _uri(manifest.project, folder_path, product, version)
+
+
+def publish_extra(
+    manifest: Manifest,
+    product: str,
+    labels: list[str],
+    *,
+    text: str | None = None,
+    folder_path: str = "assets/asset_00",
+) -> dict[str, str]:
+    """Publish more versions during a test. Returns label -> URI; paths land in ``published``."""
+    seeder = _SEEDERS[manifest.project]
+    seeder.publish(seeder.folder_ids[folder_path], folder_path, product, labels)
+    uris = {label: _uri(manifest.project, folder_path, product, label) for label in labels}
+    paths = seeder.resolve(list(uris.values()))
+    for label, uri in uris.items():
+        target = Path(paths[uri])
+        manifest.written.append(str(target))
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text if text is not None else _asset_layer(folder_path.rpartition("/")[2], label), encoding="utf-8")
+    manifest.published.update(paths)
+    return uris
+
+
+def layer_with_references(references: list[str]) -> str:
+    """Layer text referencing each URI from its own prim."""
+    prims = "".join(f'    def "ref_{i}" (\n        references = @{uri}@\n    )\n    {{\n    }}\n' for i, uri in enumerate(references))
+    return f'#usda 1.0\n(\n    defaultPrim = "refs"\n)\n\ndef Xform "refs"\n{{\n{prims}}}\n'
 
 
 def _remove_written(written: list[str], work_root: str) -> None:

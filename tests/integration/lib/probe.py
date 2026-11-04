@@ -8,6 +8,12 @@ Opens the stage (the composition path, including prewarm when enabled), then res
 every URI in the closure. The resolves after the open are answered from the in-process
 cache, so they add no AYON or memcached traffic; they only report the paths.
 
+With ``--steps``, a session runs a JSON list of operations instead of opening a stage, for
+behaviour one process must see in sequence: ``resolve`` (``uris``), ``clear_cache``, ``delete``
+(``uri``), and ``mc_set`` (``host``, ``port``, ``key``, ``value``), which plays another client
+writing to memcached. ``steps`` in the output has one entry per operation; the paths from
+``resolve`` operations are also merged into ``resolved``.
+
 Writes JSON to ``--out``. stdout is unusable for results: the resolver prints there.
 """
 
@@ -20,10 +26,40 @@ import time
 import traceback
 
 
+def _run_steps(steps: list[dict]) -> tuple[list[dict], dict[str, str]]:
+    from pxr import Ar
+    from usdAssetResolver import AyonUsdResolver
+
+    resolver = Ar.GetResolver()
+    context = AyonUsdResolver.ResolverContext()
+    outcome: list[dict] = []
+    merged: dict[str, str] = {}
+    for step in steps:
+        op = step["op"]
+        if op == "resolve":
+            paths = {uri: str(resolver.Resolve(uri)) for uri in step["uris"]}
+            merged.update(paths)
+            outcome.append({"op": op, "resolved": paths})
+            continue
+        if op == "clear_cache":
+            context.ClearCache()
+        elif op == "delete":
+            context.DeleteFromCache(step["uri"])
+        elif op == "mc_set":
+            from mc import TextClient
+
+            TextClient(step["host"], step["port"]).set(step["key"], step["value"].encode())
+        else:
+            raise ValueError(f"unknown step {op!r}")
+        outcome.append({"op": op})
+    return outcome, merged
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--root", required=True, help="root URI to open")
-    parser.add_argument("--uris", required=True, help="JSON file: URIs to report resolved paths for")
+    parser.add_argument("--root", help="root URI to open")
+    parser.add_argument("--uris", help="JSON file: URIs to report resolved paths for")
+    parser.add_argument("--steps", help="JSON file: operations to run instead of opening a stage")
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
 
@@ -32,16 +68,20 @@ def main() -> int:
         from pxr import Ar, Usd
 
         result["resolver"] = str(Ar.GetUnderlyingResolver())
-        with open(args.uris, encoding="utf-8") as fh:
-            uris = json.load(fh)
+        if args.steps:
+            with open(args.steps, encoding="utf-8") as fh:
+                result["steps"], result["resolved"] = _run_steps(json.load(fh))
+        else:
+            with open(args.uris, encoding="utf-8") as fh:
+                uris = json.load(fh)
 
-        start = time.perf_counter()
-        stage = Usd.Stage.Open(args.root)
-        result["open_seconds"] = time.perf_counter() - start
-        result["prims"] = sum(1 for _ in stage.Traverse()) if stage else 0
+            start = time.perf_counter()
+            stage = Usd.Stage.Open(args.root)
+            result["open_seconds"] = time.perf_counter() - start
+            result["prims"] = sum(1 for _ in stage.Traverse()) if stage else 0
 
-        resolver = Ar.GetResolver()
-        result["resolved"] = {uri: str(resolver.Resolve(uri)) for uri in uris}
+            resolver = Ar.GetResolver()
+            result["resolved"] = {uri: str(resolver.Resolve(uri)) for uri in uris}
         result["ok"] = True
     except Exception:  # ruff: ignore[blind-except] - reported to the test, which owns the failure message
         result["error"] = traceback.format_exc()

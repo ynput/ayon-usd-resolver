@@ -9,6 +9,7 @@ extend-ignore = [
     "raw-string-in-exception",   # raw-string-in-exception: messages are for the test log, not reuse
     "f-string-in-exception",   # f-string-in-exception
     "too-many-arguments", # too-many-arguments: one probe run needs every axis that identifies it
+    "too-many-positional-arguments", # too-many-positional-arguments: pytest passes fixtures and parameters by name
     "too-many-locals", # too-many-locals: the seed builds one project in one function
     "magic-value-comparison", # magic-value-comparison
     "suspicious-url-open-usage",    # suspicious-url-open-usage: URLs come from the compose environment, always http

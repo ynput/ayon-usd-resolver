@@ -114,6 +114,34 @@ class TextClient:
                 size = int(line.split()[3])
                 value = c.read_exact(size + 2)[:-2]
 
+    def set(self, key: str, value: bytes, expire: int = 0) -> None:
+        with _Conn(self.host, self.port) as c:
+            c.sock.sendall(f"set {key} 0 {expire} {len(value)}\r\n".encode() + value + b"\r\n")
+            if (line := c.read_line()) != b"STORED":
+                raise RuntimeError(f"unexpected reply to set: {line!r}")
+
+    def ttl(self, key: str) -> int | None:
+        """Remaining seconds (-1 = never expires) through the meta protocol.
+
+        ``None`` when the key is missing or the backend has no meta protocol; check
+        ``supports_ttl`` to tell the two apart.
+        """
+        with _Conn(self.host, self.port) as c:
+            c.sock.sendall(f"mg {key} t\r\n".encode())
+            parts = c.read_line().split()
+        if parts[:1] != [b"HD"]:
+            return None
+        flag = next((p for p in parts[1:] if p.startswith(b"t")), None)
+        if flag is None:
+            return None
+        ttl = int(flag[1:])
+        return -1 if ttl == 0 else ttl  # no expiry: memcached reports -1, Dragonfly 0
+
+    def supports_ttl(self) -> bool:
+        with _Conn(self.host, self.port) as c:
+            c.sock.sendall(b"mg rit-ttl-probe t\r\n")
+            return c.read_line().split()[:1] in ([b"EN"], [b"HD"])
+
     def flush(self) -> None:
         with _Conn(self.host, self.port) as c:
             c.sock.sendall(b"flush_all\r\n")
