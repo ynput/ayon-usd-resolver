@@ -6,6 +6,8 @@
 #ifndef AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
 #define AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
 
+#include <chrono>
+
 #include "../cache/assetIdentifierDef.h"
 #include "memcachedExpiry.h"
 #include "memcachedHandler.h"
@@ -176,10 +178,13 @@ class ResolverContextCache {
         // Miss marker TTL: -1 = never write markers (see MemcachedExpiry::parseMissExpiry).
         int64_t m_memcachedMissExpire = MemcachedExpiry::kDefaultMissSeconds;
 
-        // Keys this process saw as known misses; ClearCache deletes them from memcached. Leaf lock.
-        std::unordered_set<std::string> m_missKeys;
+        // Keys this process saw as known misses -> until when to trust that without reading memcached again.
+        // ClearCache deletes them from memcached. Leaf lock.
+        std::unordered_map<std::string, std::chrono::steady_clock::time_point> m_missKeys;
         std::mutex m_missKeysMutex;
-        void _TrackMiss(const std::string &uri);
+        // trust = false tracks the key for ClearCache only: memcached holds a value, but it may be a path.
+        void _TrackMiss(const std::string &uri, bool trust = true);
+        bool _IsKnownMiss(const std::string &uri);
         // Untrack a miss and delete its marker if memcached still holds the marker (a path stored since is kept).
         // Takes s_memcachedMutex: call without the cache locks held.
         void _DeleteMissMarker(const std::string &uri);

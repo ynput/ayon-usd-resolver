@@ -57,6 +57,19 @@ isMissMarker(const std::string &value) {
     return value == kMissMarker;
 }
 
+// How long a process trusts a marker it saw without reading memcached again. Markers stay out of the in-process caches
+// so that a publish is seen, but one Resolve can look a URI up several times and each read is a round trip.
+constexpr int64_t kKnownMissWindowSeconds = 5;
+
+/**
+ * @brief Seconds to trust a seen marker: at most kKnownMissWindowSeconds, never longer than the marker's own TTL.
+ * 0 (read memcached every time) when this process has miss caching off for the URI.
+ */
+inline int64_t
+knownMissWindowFor(int64_t missTtl) {
+    return missTtl <= 0 ? 0 : std::min(missTtl, kKnownMissWindowSeconds);
+}
+
 /**
  * @brief Miss TTL env: unset -> 60, -1 = do not cache misses, >0 = seconds (clamped at 30 days).
  * 0 is refused (default + warning): a miss that never expires would hide a first publish if the watcher is down.

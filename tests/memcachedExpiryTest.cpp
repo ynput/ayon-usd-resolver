@@ -82,6 +82,9 @@ int main() {
     assert(missTtlFor(3600, 60) == 60);
     assert(missTtlFor(0, 60) == 60);    // class never expires: miss TTL applies
     assert(missTtlFor(-1, 60) == kSkipMemcached && missTtlFor(60, -1) == kSkipMemcached);
+    assert(knownMissWindowFor(60) == kKnownMissWindowSeconds);
+    assert(knownMissWindowFor(2) == 2);   // never longer than the marker lives
+    assert(knownMissWindowFor(kSkipMemcached) == 0);
 
     std::cout << "ok\n";
 }
