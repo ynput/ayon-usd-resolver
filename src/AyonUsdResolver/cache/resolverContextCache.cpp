@@ -530,8 +530,8 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
         asset.setResolvedAssetPath(std::move(resolvedAsset.second));
 
         TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: called ayon.resolvePath() \n");
-        // Failed resolve = (uri, ""): getAssetIdent sets the uri before the missing entity throws.
-        // A transport failure returns an empty pair instead and is NOT a miss.
+        // (uri, "") = the server answered that it has no path. A transport failure or an answer that cannot be read
+        // returns an empty pair instead and is NOT a miss.
         const bool isMiss = !asset.getAssetIdentifier().empty() && asset.getResolvedAssetPath().empty();
         // A miss with a marker stays out of the in-process caches: the marker is the negative cache, and
         // a PreCache entry would outlive it and hide a later publish for the life of the process.
