@@ -17,13 +17,15 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 enum class CacheName { AYONCACHE, COMMONCACHE };
 
+using AssetIdentifierPtr = std::shared_ptr<const AssetIdentifier>;
+
 class PinningFileHandler {
     public:
         PinningFileHandler(const std::string &pinningFilePath,
                            const std::unordered_map<std::string, std::string> &rootReplaceData);
         ~PinningFileHandler() = default;
 
-        AssetIdentifier getAssetData(const std::string &resolveKey);
+        AssetIdentifierPtr getAssetData(const std::string &resolveKey);
 
     private:
         std::filesystem::path m_pinningFilePath;
@@ -43,11 +45,12 @@ class ResolverContextCache {
         ~ResolverContextCache();
 
         /**
-         * @brief Move the asset into the preCache. Checks space and migrates if needed.
+         * @brief Insert the asset into the preCache. Checks space and migrates if needed.
          * This function is both locking and blocking.
          * @param sourceAssetIdent The asset data to add to the cache
+         * @return Shared pointer to the element stored in the cache
          */
-        void insert(AssetIdentifier &sourceAssetIdent);
+        AssetIdentifierPtr insert(AssetIdentifierPtr sourceAssetIdent);
 
         /**
          * @brief Move the precache into the AyonCache to free the precache
@@ -60,9 +63,11 @@ class ResolverContextCache {
          * @param assetIdentifier The asset URI to resolve
          * @param selectedCache Which cache to search first
          * @param isAyonPath Whether this is an AYON URI
-         * @return AssetIdentifier with resolved path
+         * @return Shared pointer to an immutable AssetIdentifier with resolved path
          */
-        AssetIdentifier getAsset(const std::string &assetIdentifier, const CacheName selectedCache, const bool isAyonPath);
+        AssetIdentifierPtr getAsset(const std::string &assetIdentifier,
+                                    const CacheName selectedCache,
+                                    const bool isAyonPath);
 
         /**
          * @brief Set up the cache from a pinning file
@@ -99,9 +104,9 @@ class ResolverContextCache {
         bool isCacheStatic() const;
 
     private:
-        std::unordered_set<AssetIdentifier, AssetIdentifierHash> m_PreCache;
-        std::unordered_set<AssetIdentifier, AssetIdentifierHash> m_AyonCache;
-        std::unordered_set<AssetIdentifier, AssetIdentifierHash> m_CommonCache;
+        std::unordered_map<std::string, AssetIdentifierPtr> m_PreCache;
+        std::unordered_map<std::string, AssetIdentifierPtr> m_AyonCache;
+        std::unordered_map<std::string, AssetIdentifierPtr> m_CommonCache;
 
         mutable std::shared_mutex m_PreCacheSharedMutex;
         mutable std::shared_mutex m_AyonCacheSharedMutex;
