@@ -6,9 +6,13 @@
 #include <algorithm>
 #include <cctype>
 #include <cerrno>
+#include <chrono>
 #include <cstdint>
 #include <cstdlib>
+#include <mutex>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace MemcachedExpiry {
 
@@ -55,6 +59,22 @@ constexpr int64_t kDefaultMissSeconds = 60;
 inline bool
 isMissMarker(const std::string &value) {
     return value == kMissMarker;
+}
+
+// How long a process trusts a marker it saw without reading memcached again. Markers stay out of the in-process caches
+// so that a publish is seen, but one Resolve can look a URI up several times and each read is a round trip.
+constexpr int64_t kKnownMissWindowSeconds = 5;
+
+/**
+ * @brief Seconds to trust a seen marker: at most kKnownMissWindowSeconds, and at most this process's miss TTL.
+ * 0 (read memcached every time) when this process has miss caching off for the URI.
+ *
+ * The window starts when the marker is read and memcached does not report the marker's remaining life, so the trust
+ * can end up to this long after the marker expired.
+ */
+inline int64_t
+knownMissWindowFor(int64_t missTtl) {
+    return missTtl <= 0 ? 0 : std::min(missTtl, kKnownMissWindowSeconds);
 }
 
 /**
@@ -144,6 +164,55 @@ missTtlFor(int64_t classTtl, int64_t missTtl) {
     }
     return classTtl > 0 ? std::min(classTtl, missTtl) : missTtl;
 }
+
+/**
+ * @brief The miss markers one process saw, and until when it trusts each one without reading memcached again.
+ *
+ * A marker read before an invalidation can be recorded after it, because memcached is read outside this lock. Callers
+ * take generation() before reading memcached and pass it to track(). forget() advances the generation, so an older
+ * observation is kept for ClearCache but not trusted. Call forget() after deleting the marker from memcached: a reader
+ * that starts before the delete then holds an old generation, and one that starts after it finds no marker.
+ */
+class KnownMisses {
+    public:
+        uint64_t generation() const {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            return m_generation;
+        }
+
+        void track(const std::string &uri, int64_t windowSeconds, uint64_t observedAt) {
+            const auto now = std::chrono::steady_clock::now();
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_until[uri] = observedAt == m_generation ? now + std::chrono::seconds(windowSeconds) : now;
+        }
+
+        bool isKnown(const std::string &uri) const {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            auto hit = m_until.find(uri);
+            return hit != m_until.end() && std::chrono::steady_clock::now() < hit->second;
+        }
+
+        void forget(const std::string &uri) {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_until.erase(uri);
+            ++m_generation;
+        }
+
+        std::vector<std::string> keys() const {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            std::vector<std::string> result;
+            result.reserve(m_until.size());
+            for (const auto &entry: m_until) {
+                result.push_back(entry.first);
+            }
+            return result;
+        }
+
+    private:
+        mutable std::mutex m_mutex;
+        std::unordered_map<std::string, std::chrono::steady_clock::time_point> m_until;
+        uint64_t m_generation = 0;
+};
 
 }   // namespace MemcachedExpiry
 
