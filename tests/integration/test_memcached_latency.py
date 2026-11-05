@@ -32,6 +32,7 @@ def test_open_time_with_dangling_references(project, backend, run_resolver, mc_p
     for _ in range(REPEATS):
         result = run_resolver("dangling-warm", root=root, uris=[], proxy=proxy, **knobs)
         assert result.ok, result.describe()
+        assert result.prims == DANGLING + 1, result.describe()
         times.append(result.data["open_seconds"] * 1000)
         commands.append(result.mc["mc_get_commands"])
     print(
@@ -55,6 +56,7 @@ def test_open_time_by_round_trip(project, backend, run_resolver, mc_proxy, rtt_m
             result = run_resolver(session, proxy=proxy, **knobs)
             assert result.ok, result.describe()
             assert result.resolved == project.expected, result.describe()
+            assert result.prims == project.expected_prims, result.describe()
             times.append(result.data["open_seconds"] * 1000)
             commands.append(result.mc["mc_get_commands"])
             ayon.append(result.tap["resolve_uris_total"])

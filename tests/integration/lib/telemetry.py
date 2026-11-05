@@ -2,7 +2,8 @@
 
 Nothing here decides a test outcome. Assertions use ayon-tap and memcached counters
 directly; this module only publishes the same numbers so runs can be compared over time
-in Grafana. It is off unless configured, and a broken backend never fails a test:
+in Grafana. It is off unless configured, and a broken backend never fails a test or delays
+one, because records are sent from a background thread:
 
 - ``RIT_LOKI_URL`` (e.g. ``http://ayon-loki:3100``) enables Loki records.
 - ``OTEL_EXPORTER_OTLP_ENDPOINT`` (e.g. ``http://ayon-tempo:4318``) enables traces.
@@ -23,6 +24,8 @@ import contextlib
 import json
 import logging
 import os
+import queue
+import threading
 import time
 import urllib.request
 import uuid
@@ -34,6 +37,8 @@ if TYPE_CHECKING:
 log = logging.getLogger("resolver-it.telemetry")
 
 SERVICE_NAME = "resolver-it"
+SEND_TIMEOUT_SECONDS = 10
+SHUTDOWN_WAIT_SECONDS = 30
 
 
 class Telemetry:
@@ -44,6 +49,8 @@ class Telemetry:
         self._tracer = None
         self._provider = None
         self._propagator = None
+        self._outgoing: queue.Queue[urllib.request.Request | None] = queue.Queue()
+        self._sender: threading.Thread | None = None
         if os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT"):
             self._init_tracing()
 
@@ -107,7 +114,7 @@ class Telemetry:
     # -- loki ---------------------------------------------------------------------------
 
     def push(self, kind: str, records: list[dict[str, Any]], **labels: str) -> None:
-        """One Loki stream per call; every record becomes one JSON line."""
+        """Queue one Loki stream; every record becomes one JSON line. Never blocks the caller."""
         if not self.loki_url or not records:
             return
         stream = {"job": "resolver_it", "kind": kind, "run_id": self.run_id, "build": self.build, **labels}
@@ -121,13 +128,24 @@ class Telemetry:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        try:
-            with urllib.request.urlopen(request, timeout=10):
-                pass
-        except OSError as exc:
-            log.warning("loki push failed (%s records, kind=%s): %s", len(records), kind, exc)
+        if self._sender is None:
+            self._sender = threading.Thread(target=self._send_queued, name="loki-sender", daemon=True)
+            self._sender.start()
+        self._outgoing.put(request)
+
+    def _send_queued(self) -> None:
+        while (request := self._outgoing.get()) is not None:
+            try:
+                with urllib.request.urlopen(request, timeout=SEND_TIMEOUT_SECONDS):
+                    pass
+            except OSError as exc:
+                log.warning("loki push failed: %s", exc)
 
     def shutdown(self) -> None:
+        """Send what is queued, but do not hold up the run for long if Loki is unreachable."""
+        if self._sender is not None:
+            self._outgoing.put(None)
+            self._sender.join(SHUTDOWN_WAIT_SECONDS)
         if self._provider:
             self._provider.shutdown()
 

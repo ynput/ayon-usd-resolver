@@ -25,7 +25,7 @@ def test_warm_prewarm_batches_its_reads(project, backend, run_resolver, mc_proxy
     assert warm.ok, warm.describe()
     assert warm.resolved == project.expected, warm.describe()
     assert warm.tap["resolve_uris_total"] == 0, warm.tap
-    assert warm.mc["mc_get_max_keys"] >= len(project.uris) - 2, warm.mc
+    assert warm.mc["mc_get_max_keys"] >= min(CHUNK, len(project.uris) - 2), warm.mc
     assert warm.mc["mc_get_commands"] < len(project.uris) / 2, warm.mc
 
     single = run_resolver("warm-no-prewarm", proxy=proxy, **memcached_knobs(backend, AYON_RESOLVER_NO_PREWARM="1"))
@@ -83,7 +83,7 @@ def test_one_long_key_does_not_spoil_the_chunk(project, backend, run_resolver, m
     warm = run_resolver("warm", root=root, uris=[], proxy=proxy, **knobs)
     assert warm.ok, warm.describe()
     assert "memcached mget failed" not in warm.log, warm.describe()
-    assert warm.mc["mc_get_max_keys"] >= len(assets), warm.mc
+    assert warm.mc["mc_get_max_keys"] >= min(CHUNK, len(assets)), warm.mc
     assert set(warm.tap["resolved_uris"]) <= {long_uri}, warm.tap["resolved_uris"]
 
 

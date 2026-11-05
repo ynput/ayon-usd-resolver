@@ -419,9 +419,9 @@ def test_clear_cache_never_flushes(project, backend, run_resolver) -> None:
     assert all(client.get(u) is not None for u in integers), "integer keys must survive ClearCache"
     assert all(client.get(u) is None for u in heroes), "hero keys must be deleted"
     assert client.get(missing) is None, "the marker this process saw must be deleted"
-    if "cmd_flush" in result.mc:
-        assert result.mc["cmd_flush"] == 0
-        assert result.mc["delete_hits"] == len(heroes) + 1
+    if "mc_cmd_flush" in result.mc:
+        assert result.mc["mc_cmd_flush"] == 0, result.mc
+        assert result.mc["mc_delete_hits"] == len(heroes) + 1, result.mc
 
 
 def test_clear_cache_skips_a_bypassed_class(project, backend, run_resolver) -> None:
@@ -429,8 +429,8 @@ def test_clear_cache_skips_a_bypassed_class(project, backend, run_resolver) -> N
     knobs = memcached_knobs(backend, AYON_MEMCACHED_HERO_EXPIRE_SECONDS="-1")
     result = run_resolver("clear-bypass", steps=[*resolve(*uris), {"op": "clear_cache"}], **knobs)
     assert result.ok, result.describe()
-    if "delete_hits" in result.mc:
-        assert result.mc["delete_hits"] + result.mc.get("delete_misses", 0) == 0, result.mc
+    if "mc_delete_hits" in result.mc:
+        assert result.mc["mc_delete_hits"] + result.mc.get("mc_delete_misses", 0) == 0, result.mc
 
 
 def test_clear_cache_reasks_within_the_process(project, backend, run_resolver) -> None:
