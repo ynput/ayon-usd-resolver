@@ -89,7 +89,10 @@ def run_probe(
 
     env = {k: v for k, v in os.environ.items() if k not in RESOLVER_KNOBS}
     env.update(base_env)
-    env.update(knobs)
+    # None unsets a variable, including one the runner itself has.
+    env.update({k: v for k, v in knobs.items() if v is not None})
+    for key in (k for k, v in knobs.items() if v is None):
+        env.pop(key, None)
 
     with log_file.open("w") as log:
         proc = subprocess.run(

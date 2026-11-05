@@ -37,12 +37,13 @@ class TapClient:
         delay_ms: int = 0,
         method: str | None = None,
         body: Any = None,  # ruff: ignore[any-type] - any JSON value
+        times: int | None = None,
     ) -> None:
-        """Delay matching requests, then answer with ``status`` and, if given, ``body`` as JSON."""
+        """Delay matching requests (only the first ``times``), then answer with ``status`` and ``body`` as JSON."""
         self._call(
             "POST",
             "fault",
-            {"path_regex": path_regex, "status": status, "delay_ms": delay_ms, "method": method, "body": body},
+            {"path_regex": path_regex, "status": status, "delay_ms": delay_ms, "method": method, "body": body, "times": times},
         )
 
     def clear_faults(self) -> None:

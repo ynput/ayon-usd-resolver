@@ -12,7 +12,8 @@ Control API (never forwarded upstream), all under ``/__tap``:
 - ``POST /__tap/reset``   zero all counters. Optional body ``{"traceparent": "..."}``: spans
   for the following requests are parented under that W3C trace context
 - ``POST /__tap/fault``   ``{"path_regex": "...", "method": "GET"|null, "status": 500|null,
-  "delay_ms": 0, "body": null}`` — every matching request is delayed, then answered with
+  "delay_ms": 0, "body": null, "times": null}`` — every matching request (or only the first
+  ``times``) is delayed, then answered with
   ``status`` and ``body`` as JSON (if a status is set) instead of being forwarded
 - ``DELETE /__tap/fault`` remove all faults
 
@@ -108,6 +109,7 @@ class Fault:
     status: int | None
     delay_ms: int
     body: object = None
+    times: int | None = None
 
     def matches(self, method: str, path: str) -> bool:
         if self.method and self.method.upper() != method:
@@ -175,6 +177,7 @@ async def control(request: web.Request) -> web.Response:
                 status=spec.get("status"),
                 delay_ms=int(spec.get("delay_ms") or 0),
                 body=spec.get("body"),
+                times=spec.get("times"),
             )
         )
         return web.json_response({"ok": True, "faults": len(tap.faults)})
@@ -215,8 +218,12 @@ def _span_path(path: str) -> str:
 async def _forward(
     tap: Tap, request: web.Request, path: str, body: bytes, span: object
 ) -> web.Response:
-    for fault in tap.faults:
+    for fault in list(tap.faults):
         if fault.matches(request.method, path):
+            if fault.times is not None:
+                fault.times -= 1
+                if fault.times <= 0:
+                    tap.faults.remove(fault)
             if span is not None:
                 span.set_attribute("tap.fault.delay_ms", fault.delay_ms)
                 span.set_attribute("tap.fault.status", fault.status or 0)

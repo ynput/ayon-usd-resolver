@@ -23,10 +23,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import threading
 import time
 import traceback
+import urllib.request
 from pathlib import Path
 
 
@@ -54,6 +56,9 @@ def _run_steps(steps: list[dict]) -> tuple[list[dict], dict[str, str]]:
             background.start()
         elif op == "join":
             background.join()
+        elif op == "wait_for_ayon_request":
+            while not _ayon_request_seen(step["request"]):
+                time.sleep(0.02)
         elif op == "handshake":
             Path(step["path"]).touch()
             ack = Path(step["path"] + ".ack")
@@ -73,6 +78,11 @@ def _run_steps(steps: list[dict]) -> tuple[list[dict], dict[str, str]]:
             raise ValueError(f"unknown step {op!r}")
         outcome.append({"op": op})
     return outcome, merged
+
+
+def _ayon_request_seen(request: str) -> bool:
+    with urllib.request.urlopen(f"{os.environ['RIT_TAP_URL']}/counts", timeout=10) as response:
+        return json.load(response)["requests"].get(request, 0) > 0
 
 
 def main() -> int:
