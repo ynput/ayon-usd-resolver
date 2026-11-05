@@ -47,12 +47,13 @@ getAyonApiFromEnv() {
         envVarFileLogging = "OFF";
     }
 
-    std::cout << AYON_SERVER_URL << ", " << AYON_PROJECT_NAME << ", " << envVarFileLoggingPath << ", " << envVarFileLogging << std::endl;
-
+    // Checked before printing: streaming a null char* is undefined behaviour (libstdc++ sets badbit on
+    // std::cout, which silences every later write to it in the process).
     if (AYON_API_KEY == nullptr || AYON_SERVER_URL == nullptr || AYON_PROJECT_NAME == nullptr) {
-        throw std::runtime_error(
-            "Cant find 1 or more env variavbles needed to start the AyonCppApi check if the environment is correct");
+        throw std::runtime_error("AYON_API_KEY, AYON_SERVER_URL and AYON_PROJECT_NAME must all be set");
     }
+
+    std::cout << AYON_SERVER_URL << ", " << AYON_PROJECT_NAME << ", " << envVarFileLoggingPath << ", " << envVarFileLogging << std::endl;
 
     // find the side ID for this system as it might be in the ENV var or in a file
     const char* AYON_SITE_ID_ENV = std::getenv("AYON_SITE_ID");
