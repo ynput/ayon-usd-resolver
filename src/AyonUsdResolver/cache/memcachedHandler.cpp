@@ -14,9 +14,11 @@
 #include "ynput/lib/logging/AyonLogger.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -184,33 +186,65 @@ class MemcachedHandler::Impl {
             return key.length() < MEMCACHED_MAX_KEY;
         }
 
+        // A reply that arrives after the client gave up stays on the connection, and the next command reads it as its
+        // own: every later command is then one reply behind, for the life of the process. Closing the connection is the
+        // only way to get rid of it; the next command reconnects.
+        void dropConnections() {
+            memcached_quit(m_memc);
+        }
+
+        // A read that used up the timeout may have left its reply behind even when libmemcached reports a plain miss.
+        bool usedUpTimeout(std::chrono::steady_clock::time_point started) const {
+            return std::chrono::steady_clock::now() - started >= std::chrono::milliseconds(m_timeoutMs);
+        }
+
         std::string queryMemcached(const std::string &key) {
             if (!m_connected || m_memc == nullptr || !keyFits(key)) {
                 return "";
             }
 
-            size_t valueLength = 0;
-            uint32_t flags = 0;
-            memcached_return_t rc = MEMCACHED_SUCCESS;
-            char *value = memcached_get(m_memc, key.c_str(), key.length(), &valueLength, &flags, &rc);
-
-            if (rc == MEMCACHED_NOTFOUND) {
-                return "";
-            }
-
-            // An empty stored value comes back as NULL + SUCCESS: that is the miss marker.
-            if (rc == MEMCACHED_SUCCESS && value == nullptr) {
-                return MemcachedExpiry::kMissMarker;
-            }
-
-            if (memcached_failed(rc) || value == nullptr) {
+            const char* keys[] = {key.c_str()};
+            const size_t lengths[] = {key.length()};
+            const auto started = std::chrono::steady_clock::now();
+            memcached_return_t rc = memcached_mget(m_memc, keys, lengths, 1);
+            if (memcached_failed(rc)) {
                 logMemcachedFailure("get", key, memcached_strerror(m_memc, rc));
+                dropConnections();
                 return "";
             }
 
-            std::string result(value, valueLength);
-            free(value);
-            return result;
+            std::optional<std::string> value;
+            bool foreignReply = false;
+            memcached_result_st result;
+            memcached_result_create(m_memc, &result);
+            while (memcached_fetch_result(m_memc, &result, &rc) != nullptr) {
+                // libmemcached does not check that a reply is for the key asked: never return another URI's path.
+                if (key.compare(0, std::string::npos, memcached_result_key_value(&result),
+                                memcached_result_key_length(&result)) != 0) {
+                    foreignReply = true;
+                    continue;
+                }
+                // An empty stored value is the miss marker.
+                value = memcached_result_length(&result) == 0
+                            ? std::string(MemcachedExpiry::kMissMarker)
+                            : std::string(memcached_result_value(&result), memcached_result_length(&result));
+            }
+            memcached_result_free(&result);
+
+            // Anything but END or NOTFOUND here is the reply to another command (STORED, for example).
+            const bool wrongReply
+                = foreignReply || (rc != MEMCACHED_END && rc != MEMCACHED_NOTFOUND && rc != MEMCACHED_SUCCESS);
+            if (wrongReply) {
+                logMemcachedFailure("get", key, foreignReply ? "reply for another key" : memcached_strerror(m_memc, rc));
+            }
+            else if (!value.has_value() && usedUpTimeout(started)) {
+                logMemcachedFailure("get", key, "no reply within the timeout");
+            }
+            else {
+                return value.value_or("");
+            }
+            dropConnections();
+            return value.value_or("");
         }
 
         std::unordered_map<std::string, std::string> getMany(const std::vector<std::string> &keys) {
@@ -239,6 +273,7 @@ class MemcachedHandler::Impl {
                 if (ptrs.empty()) {
                     continue;
                 }
+                const auto started = std::chrono::steady_clock::now();
                 memcached_return_t rc = memcached_mget(m_memc, ptrs.data(), lens.data(), ptrs.size());
                 if (memcached_failed(rc)) {
                     logMemcachedFailure("mget", keys[begin] + " (+" + std::to_string(end - begin - 1) + " more)",
@@ -246,6 +281,7 @@ class MemcachedHandler::Impl {
                     // SOME_ERRORS: one server failed, the others were sent the request. Their replies are still valid
                     // and have to be read, or their keys would go to AYON.
                     if (rc != MEMCACHED_SOME_ERRORS) {
+                        dropConnections();
                         return found;
                     }
                 }
@@ -260,9 +296,11 @@ class MemcachedHandler::Impl {
                                       : std::string(memcached_result_value(&result), memcached_result_length(&result)));
                 }
                 memcached_result_free(&result);
-                if (rc != MEMCACHED_END && rc != MEMCACHED_NOTFOUND && memcached_failed(rc)) {
+                const bool wrongReply = rc != MEMCACHED_END && rc != MEMCACHED_NOTFOUND && rc != MEMCACHED_SUCCESS;
+                if (wrongReply || usedUpTimeout(started)) {
                     logMemcachedFailure("mget", keys[begin] + " (+" + std::to_string(end - begin - 1) + " more)",
-                                        memcached_strerror(m_memc, rc));
+                                        wrongReply ? memcached_strerror(m_memc, rc) : "no complete reply within the timeout");
+                    dropConnections();
                     return found;
                 }
             }
@@ -285,6 +323,7 @@ class MemcachedHandler::Impl {
                                                   0);
             if (memcached_failed(rc)) {
                 logMemcachedFailure("set", key, memcached_strerror(m_memc, rc));
+                dropConnections();
                 return false;
             }
 
@@ -305,6 +344,7 @@ class MemcachedHandler::Impl {
             }
             if (memcached_failed(rc)) {
                 logMemcachedFailure("add", key, memcached_strerror(m_memc, rc));
+                dropConnections();
                 return MissMarkerWrite::Failed;
             }
 
@@ -322,6 +362,7 @@ class MemcachedHandler::Impl {
             memcached_return_t rc = memcached_delete(m_memc, key.c_str(), key.length(), 0);
             if (memcached_failed(rc) && rc != MEMCACHED_NOTFOUND) {
                 logMemcachedFailure("delete", key, memcached_strerror(m_memc, rc));
+                dropConnections();
                 return false;
             }
 
