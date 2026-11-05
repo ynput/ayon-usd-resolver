@@ -243,7 +243,11 @@ class MemcachedHandler::Impl {
                 if (memcached_failed(rc)) {
                     logMemcachedFailure("mget", keys[begin] + " (+" + std::to_string(end - begin - 1) + " more)",
                                         memcached_strerror(m_memc, rc));
-                    return found;
+                    // SOME_ERRORS: one server failed, the others were sent the request. Their replies are still valid
+                    // and have to be read, or their keys would go to AYON.
+                    if (rc != MEMCACHED_SOME_ERRORS) {
+                        return found;
+                    }
                 }
                 memcached_result_st result;
                 memcached_result_create(m_memc, &result);
