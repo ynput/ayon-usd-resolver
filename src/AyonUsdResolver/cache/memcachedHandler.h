@@ -6,6 +6,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 PXR_NAMESPACE_USING_DIRECTIVE
@@ -30,6 +31,12 @@ class MemcachedHandler {
          * @return AssetIdentifier if found in memcached, empty AssetIdentifier if not found or error
          */
         AssetIdentifier getAssetData(const std::string &assetIdentifier);
+
+        /**
+         * @brief Batched read (memcached_mget, chunked): one round trip per chunk instead of per key.
+         * @return found key -> value. Absent keys are misses; on failure returns what was fetched so far.
+         */
+        std::unordered_map<std::string, std::string> getMany(const std::vector<std::string> &keys);
 
         /**
          * @brief Store asset data in memcached

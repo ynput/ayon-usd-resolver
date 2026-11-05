@@ -60,6 +60,20 @@ static std::string _ToRootlessPath(
     return "{root[" + *bestKey + "]}" + resolvedPath.substr(bestLen);
 }
 
+// True when rootReplace left a "{root[...]}" template in place: the site roots failed to load (fetched
+// once at construction), so a cached rootless path is unusable here and must be treated as a miss.
+static bool _HasUnresolvedRoot(const std::string &path) {
+    if (path.find("{root[") == std::string::npos) {
+        return false;
+    }
+    static std::once_flag warned;
+    std::call_once(warned, [&path] {
+        TF_WARN("AYON site roots unavailable: cached path '%s' has an unmapped root; resolving via AYON instead",
+                path.c_str());
+    });
+    return true;
+}
+
 PinningFileHandler::PinningFileHandler(const std::string &pinningFilePath,
                                        const std::unordered_map<std::string, std::string> &rootReplaceData):
     m_pinningFilePath(pinningFilePath),
@@ -340,14 +354,25 @@ ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
     std::vector<std::string> misses;
     if (m_memcached.has_value() && m_memcached->get()->isConnected()) {
         misses.reserve(pending.size());
+        // One mget for every eligible key (one round trip per <=256-key chunk, not per key). The
+        // mutex is held for the whole call: it is a few round trips, not one per key.
+        std::vector<std::string> eligible;
+        eligible.reserve(pending.size());
         for (const auto &uriPath: pending) {
-            // Lock per call, not around the loop: s_memcachedMutex is process-wide, so holding
-            // it for a whole frontier would stall every other resolver thread's memcached path
-            // for the length of the prewarm.
-            AssetIdentifier asset;
             if (_MemcachedTtl(uriPath) >= 0) {
-                std::lock_guard<std::mutex> lock(s_memcachedMutex);
-                asset = m_memcached->get()->getAssetData(uriPath);
+                eligible.push_back(uriPath);
+            }
+        }
+        std::unordered_map<std::string, std::string> cachedValues;
+        {
+            std::lock_guard<std::mutex> lock(s_memcachedMutex);
+            cachedValues = m_memcached->get()->getMany(eligible);
+        }
+        for (const auto &uriPath: pending) {
+            AssetIdentifier asset;
+            if (auto it = cachedValues.find(uriPath); it != cachedValues.end()) {
+                asset.setAssetIdentifier(uriPath);
+                asset.setResolvedAssetPath(ArResolvedPath(it->second));
             }
             if (!asset.isEmpty() && MemcachedExpiry::isMissMarker(asset.getResolvedAssetPath().GetPathString())) {
                 // Known miss: AYON had no path for it recently. Skip the API call; do not cache or return it.
@@ -361,6 +386,10 @@ ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
             // Cached values are rootless; apply this site's roots before use.
             std::string resolvedPath =
                 ynput::tool::ayon::rootReplace(asset.getResolvedAssetPath().GetPathString(), m_rootReplaceData);
+            if (_HasUnresolvedRoot(resolvedPath)) {
+                misses.push_back(uriPath);
+                continue;
+            }
             asset.setResolvedAssetPath(ArResolvedPath(resolvedPath));
             this->insert(asset);
             resolved.emplace(asset.getAssetIdentifier(), resolvedPath);
@@ -513,10 +542,15 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
             miss.setAssetIdentifier(assetIdentifier);
             return miss;
         }
+        // Apply root replacement to convert rootless path to absolute path
+        std::string resolvedPath;
         if (!asset.isEmpty()) {
-            // Apply root replacement to convert rootless path to absolute path
-            std::string resolvedPath = ynput::tool::ayon::rootReplace(
-                asset.getResolvedAssetPath().GetPathString(), m_rootReplaceData);
+            resolvedPath = ynput::tool::ayon::rootReplace(asset.getResolvedAssetPath().GetPathString(), m_rootReplaceData);
+            if (_HasUnresolvedRoot(resolvedPath)) {
+                asset = AssetIdentifier();   // fall through to the AYON lookup below
+            }
+        }
+        if (!asset.isEmpty()) {
             asset.setResolvedAssetPath(ArResolvedPath(resolvedPath));
 
             TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
