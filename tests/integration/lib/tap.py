@@ -30,12 +30,19 @@ class TapClient:
         self._call("POST", "reset", {"traceparent": traceparent} if traceparent else None)
 
     def add_fault(
-        self, path_regex: str, *, status: int | None = None, delay_ms: int = 0, method: str | None = None
+        self,
+        path_regex: str,
+        *,
+        status: int | None = None,
+        delay_ms: int = 0,
+        method: str | None = None,
+        body: Any = None,  # ruff: ignore[any-type] - any JSON value
     ) -> None:
+        """Delay matching requests, then answer with ``status`` and, if given, ``body`` as JSON."""
         self._call(
             "POST",
             "fault",
-            {"path_regex": path_regex, "status": status, "delay_ms": delay_ms, "method": method},
+            {"path_regex": path_regex, "status": status, "delay_ms": delay_ms, "method": method, "body": body},
         )
 
     def clear_faults(self) -> None:

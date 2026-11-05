@@ -12,8 +12,8 @@ Control API (never forwarded upstream), all under ``/__tap``:
 - ``POST /__tap/reset``   zero all counters. Optional body ``{"traceparent": "..."}``: spans
   for the following requests are parented under that W3C trace context
 - ``POST /__tap/fault``   ``{"path_regex": "...", "method": "GET"|null, "status": 500|null,
-  "delay_ms": 0}`` — every matching request is delayed, then answered with ``status``
-  (if set) instead of being forwarded
+  "delay_ms": 0, "body": null}`` — every matching request is delayed, then answered with
+  ``status`` and ``body`` as JSON (if a status is set) instead of being forwarded
 - ``DELETE /__tap/fault`` remove all faults
 
 With ``OTEL_EXPORTER_OTLP_ENDPOINT`` set, every proxied request is exported as a span, so a
@@ -107,6 +107,7 @@ class Fault:
     method: str | None
     status: int | None
     delay_ms: int
+    body: object = None
 
     def matches(self, method: str, path: str) -> bool:
         if self.method and self.method.upper() != method:
@@ -173,6 +174,7 @@ async def control(request: web.Request) -> web.Response:
                 method=spec.get("method"),
                 status=spec.get("status"),
                 delay_ms=int(spec.get("delay_ms") or 0),
+                body=spec.get("body"),
             )
         )
         return web.json_response({"ok": True, "faults": len(tap.faults)})
@@ -221,7 +223,8 @@ async def _forward(
             if fault.delay_ms:
                 await asyncio.sleep(fault.delay_ms / 1000)
             if fault.status is not None:
-                return web.json_response({"detail": "injected by ayon-tap"}, status=fault.status)
+                body = {"detail": "injected by ayon-tap"} if fault.body is None else fault.body
+                return web.json_response(body, status=fault.status)
 
     headers = {k: v for k, v in request.headers.items() if k.lower() not in HOP_BY_HOP}
     assert tap.session is not None

@@ -9,11 +9,15 @@ from __future__ import annotations
 import threading
 import time
 import uuid
+from typing import TYPE_CHECKING
 
 import pytest
 
 from lib.mc import memcached_knobs
-from seed.seed_project import publish_extra, uri_for
+from seed.seed_project import layer_with_references, publish_extra, uri_for
+
+if TYPE_CHECKING:
+    from lib.proc import ProbeResult
 
 MEMCACHED_MAX_RELATIVE_TTL = 2592000
 EMPTY_MARKER = b""
@@ -231,6 +235,41 @@ def test_ayon_failure_writes_no_marker(project, backend, run_resolver, tap) -> N
     assert backend.client().get(missing) is None
 
 
+MALFORMED_ANSWERS = {
+    "entities-not-a-list": lambda uri: {"uri": uri, "entities": "oops"},
+    "no-entities": lambda uri: {"uri": uri},
+    "path-not-a-string": lambda uri: {"uri": uri, "entities": [{"filePath": 5}]},
+    "entity-not-an-object": lambda uri: {"uri": uri, "entities": ["oops"]},
+}
+
+
+@pytest.mark.parametrize("answer", sorted(MALFORMED_ANSWERS))
+@pytest.mark.parametrize("path", ["single", "prewarm"])
+def test_malformed_answer_writes_no_marker(project, backend, run_resolver, tap, tmp_path, path, answer) -> None:
+    """Only an answer that says there is no path is a miss; one that cannot be read is an error."""
+    uri = uri_for(project, unique("usdMissing"), "1")
+    tap.add_fault(r"^/api/resolve$", status=200, body=[MALFORMED_ANSWERS[answer](uri)])
+    result = _lookup(run_resolver, backend, tmp_path, uri, path)
+    assert asked(result, uri) >= 1, result.describe()
+    assert backend.client().get(uri) is None, "a malformed answer must not become a shared marker"
+
+
+@pytest.mark.parametrize("path", ["single", "prewarm"])
+def test_answer_without_entities_is_a_miss(project, backend, run_resolver, tap, tmp_path, path) -> None:
+    uri = uri_for(project, unique("usdMissing"), "1")
+    tap.add_fault(r"^/api/resolve$", status=200, body=[{"uri": uri, "entities": []}])
+    _lookup(run_resolver, backend, tmp_path, uri, path)
+    assert backend.client().get(uri) == EMPTY_MARKER
+
+
+def _lookup(run_resolver, backend, tmp_path, uri: str, path: str) -> ProbeResult:
+    if path == "single":
+        return run_resolver("single", steps=resolve(uri), **memcached_knobs(backend))
+    root = tmp_path / "refs.usda"
+    root.write_text(layer_with_references([uri]), encoding="utf-8")
+    return run_resolver("prewarm", root=str(root), uris=[], **memcached_knobs(backend))
+
+
 def test_marker_never_overwrites_a_stored_path(project, backend, run_resolver, tap) -> None:
     """A path another process stores while this one waits for AYON is kept."""
     uri = uri_for(project, unique("usdMissing"), "1")
@@ -244,6 +283,89 @@ def test_marker_never_overwrites_a_stored_path(project, backend, run_resolver, t
         timer.join()
     assert asked(result, uri) == 1, "the write must land while the AYON request is in flight"
     assert backend.client().get(uri) == path
+
+
+def test_seen_marker_is_trusted_only_briefly(project, backend, run_resolver) -> None:
+    """One process does not re-read a marker at once, but sees a stored path after 5 seconds."""
+    uri = uri_for(project, unique("usdMissing"), "1")
+    path = "{root[work]}/stored/by/another/process.usda"
+    other_client = {"op": "mc_set", "host": backend.host, "port": backend.port, "key": uri, "value": path}
+    knobs = memcached_knobs(backend)
+    assert run_resolver("miss", steps=resolve(uri), **knobs).ok
+
+    result = run_resolver(
+        "window", steps=[*resolve(uri), other_client, *resolve(uri), {"op": "sleep", "seconds": 5.5}, *resolve(uri)], **knobs
+    )
+    assert result.ok, result.describe()
+    first, within, after = (result.steps[i]["resolved"][uri] for i in (0, 2, 4))
+    assert within == first, "the marker is trusted inside the window"
+    assert after == path.replace("{root[work]}", project.work_root), result.describe()
+    assert asked(result, uri) == 0
+
+
+def test_clear_cache_ends_the_trust_in_a_marker(project, backend, run_resolver) -> None:
+    uri = uri_for(project, unique("usdMissing"), "1")
+    path = "{root[work]}/stored/by/another/process.usda"
+    other_client = {"op": "mc_set", "host": backend.host, "port": backend.port, "key": uri, "value": path}
+    knobs = memcached_knobs(backend)
+    assert run_resolver("miss", steps=resolve(uri), **knobs).ok
+
+    result = run_resolver("clear", steps=[*resolve(uri), other_client, {"op": "clear_cache"}, *resolve(uri)], **knobs)
+    assert result.steps[3]["resolved"][uri] == path.replace("{root[work]}", project.work_root), result.describe()
+
+
+@pytest.mark.parametrize("operation", ["clear_cache", "delete"])
+def test_invalidation_during_a_read_does_not_restore_the_trust(
+    project, backend, run_resolver, mc_proxy, tmp_path, operation
+) -> None:
+    """A marker read before an invalidation and recorded during it must not hide the publish afterwards.
+
+    The proxy holds every read of the URI, so the stage is still reading the marker when the
+    invalidation starts. The hold stays below the client timeout: past it, the following requests on
+    the connection failed too, with replies meant for earlier ones, and markers were left undeleted.
+    """
+    product = unique("usdLate")
+    uri = uri_for(project, product, "1")
+    knobs = memcached_knobs(backend, AYON_MEMCACHED_TIMEOUT_MS="2000")
+    assert run_resolver("miss", steps=resolve(uri), **knobs).ok
+    publish_extra(project, product, ["1"])
+
+    root = tmp_path / "refs.usda"
+    root.write_text(layer_with_references([uri]), encoding="utf-8")
+    invalidate = {"op": "delete", "uri": uri} if operation == "delete" else {"op": operation}
+    result = run_resolver(
+        "invalidate-during-read",
+        steps=[
+            # ClearCache only deletes the markers this process saw, and that trust has to run out for the stage to read.
+            *resolve(uri),
+            {"op": "sleep", "seconds": 5.5},
+            {"op": "open_in_background", "root": str(root)},
+            {"op": "sleep", "seconds": 0.3},
+            invalidate,
+            {"op": "join"},
+            *resolve(uri),
+        ],
+        proxy=mc_proxy(hold_get=(uri, 800)),
+        AYON_RESOLVER_NO_PREWARM="1",
+        **knobs,
+    )
+    assert result.ok, result.describe()
+    assert "memcached get failed" not in result.log, result.describe()
+    assert result.steps[-1]["resolved"][uri] == project.published[uri], result.describe()
+
+
+def test_a_path_stored_during_the_lookup_is_not_trusted_as_a_miss(project, backend, run_resolver, tap) -> None:
+    """When `add` finds a value it may be a path, so the next resolve has to read it."""
+    uri = uri_for(project, unique("usdMissing"), "1")
+    path = "{root[work]}/stored/by/another/process.usda"
+    tap.add_fault(r"^/api/resolve$", delay_ms=4000)
+    timer = threading.Timer(2.5, backend.client().set, args=(uri, path.encode()))
+    timer.start()
+    try:
+        result = run_resolver("race", steps=[*resolve(uri), *resolve(uri)], **memcached_knobs(backend))
+    finally:
+        timer.join()
+    assert result.steps[1]["resolved"][uri] == path.replace("{root[work]}", project.work_root), result.describe()
 
 
 def test_delete_from_cache_drops_a_marker(project, backend, run_resolver) -> None:

@@ -3,11 +3,13 @@
 memcached's own ``stats`` counts keys, not requests, so it cannot tell one multi-key ``get``
 from many single-key ones. This proxy parses the text protocol the resolver sends, counts
 commands per kind and keys per ``get``, and can add latency or drop the connection on a
-multi-key ``get``. It only reads the client's stream; replies pass through unchanged.
+multi-key ``get``, and can hold the reads of one key to keep a race open. It only reads the
+client's stream; replies pass through unchanged.
 """
 
 from __future__ import annotations
 
+import contextlib
 import socket
 import threading
 import time
@@ -21,16 +23,25 @@ STORAGE_COMMANDS = {b"set", b"add", b"replace", b"append", b"prepend", b"cas"}
 
 
 class McProxy:
-    def __init__(self, target: Backend, *, rtt_ms: float = 0, fail_multi_get: bool = False) -> None:
+    def __init__(
+        self,
+        target: Backend,
+        *,
+        rtt_ms: float = 0,
+        fail_multi_get: bool = False,
+        hold_get: tuple[str, float] | None = None,
+    ) -> None:
         self.target = target
         self.rtt_ms = rtt_ms
         self.fail_multi_get = fail_multi_get
+        self.hold_get = hold_get  # (key, milliseconds): delay every get of that key
         self.get_sizes: Counter[int] = Counter()  # keys in one get -> number of such gets
         self.commands: Counter[str] = Counter()
         self.failed_gets = 0
         self._lock = threading.Lock()
         self._server = socket.create_server(("127.0.0.1", 0))
         self._closing = False
+        self._sockets: list[socket.socket] = []
         self._thread = threading.Thread(target=self._accept, daemon=True)
         self._thread.start()
 
@@ -61,8 +72,17 @@ class McProxy:
             }
 
     def close(self) -> None:
+        """Stop listening and drop every open connection, like a server that died."""
         self._closing = True
+        # close() alone leaves a blocked accept() listening; shutdown() ends it.
+        with contextlib.suppress(OSError):
+            self._server.shutdown(socket.SHUT_RDWR)
         self._server.close()
+        with self._lock:
+            sockets = list(self._sockets)
+        for sock in sockets:
+            with contextlib.suppress(OSError):
+                sock.shutdown(socket.SHUT_RDWR)
 
     def _accept(self) -> None:
         while not self._closing:
@@ -74,6 +94,8 @@ class McProxy:
 
     def _serve(self, client: socket.socket) -> None:
         upstream = socket.create_connection((self.target.host, self.target.port))
+        with self._lock:
+            self._sockets += [client, upstream]
         for sock in (client, upstream):
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         threading.Thread(target=self._pump_replies, args=(upstream, client), daemon=True).start()
@@ -85,8 +107,9 @@ class McProxy:
                 if drop:
                     return
                 if complete:
-                    if self.rtt_ms:
-                        time.sleep(self.rtt_ms / 1000)
+                    delay_ms = self.rtt_ms + self._hold_ms(complete)
+                    if delay_ms:
+                        time.sleep(delay_ms / 1000)
                     upstream.sendall(complete)
         except OSError:
             pass
@@ -103,6 +126,16 @@ class McProxy:
             pass
         finally:
             client.close()
+
+    def _hold_ms(self, commands: bytes) -> float:
+        if self.hold_get is None:
+            return 0
+        key, hold_ms = self.hold_get
+        for line in commands.split(b"\r\n"):
+            parts = line.split()
+            if parts and parts[0] in {b"get", b"gets"} and key.encode() in parts[1:]:
+                return hold_ms
+        return 0
 
     def _parse(self, buffer: bytes) -> tuple[bytes, bytes, bool]:
         """Count the complete commands in ``buffer``. Returns (complete, remainder, drop)."""
