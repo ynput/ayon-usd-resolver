@@ -15,6 +15,12 @@ PXR_NAMESPACE_USING_DIRECTIVE
  * @class MemcachedHandler
  * @brief Handles memcached connection and asset resolution queries
  */
+enum class MissMarkerWrite {
+    Failed,    // nothing written
+    Stored,    // our marker is stored
+    Exists     // the key already holds a value (a marker or a path another process stored)
+};
+
 class MemcachedHandler {
     public:
         /**
@@ -51,9 +57,9 @@ class MemcachedHandler {
          * @brief Store the miss marker with memcached `add`: never replaces a value another process stored
          * @param assetIdentifier The asset identifier (key)
          * @param expireSeconds Marker TTL in seconds
-         * @return true if memcached now holds a value for the key (the marker, or an existing entry), false otherwise
+         * @return what memcached now holds for the key; Failed if the write did not happen
          */
-        bool addMissMarker(const std::string &assetIdentifier, uint32_t expireSeconds);
+        MissMarkerWrite addMissMarker(const std::string &assetIdentifier, uint32_t expireSeconds);
 
         /**
          * @brief Delete asset data from memcached

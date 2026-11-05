@@ -291,25 +291,24 @@ class MemcachedHandler::Impl {
             return true;
         }
 
-        // add, not set: never overwrites a value another process stored meanwhile. True when memcached now holds a
-        // value for the key (our marker, or an existing entry: NOTSTORED), false when the write did not happen.
-        bool addMissMarker(const std::string &key, uint32_t expireSeconds) {
+        // add, not set: never overwrites a value another process stored meanwhile.
+        MissMarkerWrite addMissMarker(const std::string &key, uint32_t expireSeconds) {
             if (!m_connected || m_memc == nullptr || !keyFits(key)) {
-                return false;
+                return MissMarkerWrite::Failed;
             }
 
             // The miss marker goes on the wire as an empty value (see MemcachedExpiry::kMissMarker).
             memcached_return_t rc = memcached_add(m_memc, key.c_str(), key.length(), "", 0,
                                                   static_cast<time_t>(expireSeconds), 0);
             if (rc == MEMCACHED_NOTSTORED || rc == MEMCACHED_DATA_EXISTS) {
-                return true;
+                return MissMarkerWrite::Exists;
             }
             if (memcached_failed(rc)) {
                 logMemcachedFailure("add", key, memcached_strerror(m_memc, rc));
-                return false;
+                return MissMarkerWrite::Failed;
             }
 
-            return true;
+            return MissMarkerWrite::Stored;
         }
 
         bool deleteMemcached(const std::string &key) {
@@ -353,7 +352,7 @@ class MemcachedHandler::Impl {
         std::string queryMemcached(const std::string &) { return ""; }
         std::unordered_map<std::string, std::string> getMany(const std::vector<std::string> &) { return {}; }
         bool setMemcached(const std::string &, const std::string &, uint32_t) { return false; }
-        bool addMissMarker(const std::string &, uint32_t) { return false; }
+        MissMarkerWrite addMissMarker(const std::string &, uint32_t) { return MissMarkerWrite::Failed; }
         bool deleteMemcached(const std::string &) { return false; }
         bool isConnected() const { return m_connected; }
     
@@ -424,12 +423,12 @@ bool MemcachedHandler::setAssetData(const std::string &assetIdentifier, const st
     return pImpl->setMemcached(assetIdentifier, assetPath, expireSeconds);
 }
 
-bool MemcachedHandler::addMissMarker(const std::string &assetIdentifier, uint32_t expireSeconds) {
+MissMarkerWrite MemcachedHandler::addMissMarker(const std::string &assetIdentifier, uint32_t expireSeconds) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
         .Msg("MemcachedHandler::addMissMarker(%s, %u)\n", assetIdentifier.c_str(), expireSeconds);
 
     if (!m_connected || !pImpl) {
-        return false;
+        return MissMarkerWrite::Failed;
     }
 
     return pImpl->addMissMarker(assetIdentifier, expireSeconds);

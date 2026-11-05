@@ -82,6 +82,33 @@ int main() {
     assert(missTtlFor(3600, 60) == 60);
     assert(missTtlFor(0, 60) == 60);    // class never expires: miss TTL applies
     assert(missTtlFor(-1, 60) == kSkipMemcached && missTtlFor(60, -1) == kSkipMemcached);
+    assert(knownMissWindowFor(60) == kKnownMissWindowSeconds);
+    assert(knownMissWindowFor(2) == 2);   // never longer than this process's miss TTL
+    assert(knownMissWindowFor(kSkipMemcached) == 0);
+
+    {
+        KnownMisses misses;
+        const uint64_t before = misses.generation();
+        misses.track("a", 60, before);
+        assert(misses.isKnown("a"));
+        assert(!misses.isKnown("b"));
+
+        // Read before the invalidation, recorded after it: remembered for ClearCache, not trusted.
+        misses.forget("a");
+        assert(!misses.isKnown("a"));
+        assert(misses.keys().empty());
+        misses.track("a", 60, before);
+        assert(!misses.isKnown("a"));
+        assert(misses.keys() == std::vector<std::string>{"a"});
+
+        // Read after the invalidation: trusted again.
+        misses.track("a", 60, misses.generation());
+        assert(misses.isKnown("a"));
+
+        // A window of 0 is for ClearCache only.
+        misses.track("c", 0, misses.generation());
+        assert(!misses.isKnown("c"));
+    }
 
     std::cout << "ok\n";
 }
