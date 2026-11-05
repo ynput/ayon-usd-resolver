@@ -54,6 +54,27 @@ connection cannot be established.
 
 `AYON_MEMCACHED_TIMEOUT_MS` - control connection timeout - default value is 1000ms.
 
+`AYON_MEMCACHED_EXPIRE_SECONDS` - lifetime of cached entries for immutable versions (integer versions such as `v004` or `4`) in seconds. `0` (default) = never expire. Memcached treats relative lifetimes above 30 days (2592000 s) as absolute timestamps, so larger values are clamped to 2592000 with a warning. Invalid values fall back to the default with a warning.
+
+`AYON_MEMCACHED_HERO_EXPIRE_SECONDS` - same, but only for URIs whose `version` query parameter is `hero` (a hero republish re-points the hero version in place, so its path can change). `3600` (default) = one hour. `-1` = do not use memcached for them at all, `0` = never expire, `>0` = seconds (clamped as above).
+
+`AYON_MEMCACHED_LATEST_EXPIRE_SECONDS` - same, but only for URIs whose `version` query parameter is `latest` or `latestdone` (these resolve to a path that changes when a new version is published). `-1` (default) = do not use memcached for them at all (neither read nor write), so they are always resolved live from AYON. `0` = never expire, `>0` = seconds (clamped as above). Memcached is not consulted for these URIs even if older resolver builds stored them. The in-process cache is unaffected: a running session keeps its answer until the cache is cleared.
+
+| `version` value | Class | Setting | Default |
+|---|---|---|---|
+| `latest`, `latestdone` | latest | `AYON_MEMCACHED_LATEST_EXPIRE_SECONDS` | `-1` (bypass) |
+| `hero` | hero | `AYON_MEMCACHED_HERO_EXPIRE_SECONDS` | `3600` |
+| an integer (`v004`, `4`) | immutable | `AYON_MEMCACHED_EXPIRE_SECONDS` | `0` (never) |
+| missing, `*` or any other value | latest | `AYON_MEMCACHED_LATEST_EXPIRE_SECONDS` | `-1` (bypass) |
+
+Values are matched like the server matches them: trimmed, case-insensitively, one leading `v` ignored. Without an integer, hero or latest value the server can return any version, so such URIs are never treated as immutable. If a URI carries several `version` parameters, latest wins over hero, hero over immutable.
+
+`ClearCache()` (and the Houdini "clear resolver cache" actions) clears the in-process caches and deletes this session's hero/latest keys from the regional memcached (not for a class set to `-1`, which never wrote them). It never flushes memcached (shared by all artists), and integer-version entries are untouched.
+
+`AYON_MEMCACHED_MISS_EXPIRE_SECONDS` - negative cache for failed lookups (e.g. a placeholder product with nothing published yet). When AYON has no path for an AYON URI, an empty value is stored in memcached under the same key for this many seconds (builds without miss markers read it as a plain miss); other processes that read the marker treat the URI as unresolved without calling AYON. `60` (default), `-1` = do not cache misses, `>0` = seconds (clamped to 2592000 with a warning). `0` is refused (default + warning): a miss that never expires would hide a first publish if the invalidation watcher is not running. Misses follow the class rule above: URIs whose class bypasses memcached (e.g. `latest` by default) never get a marker.
+
+The marker is never returned as a path: a known miss yields exactly what an uncached failed resolve yields, and is not stored in the in-process caches. A process trusts a marker it saw for up to 5 seconds without reading memcached again, so a stage with many dangling references does not make a round trip per lookup. A publish can stay hidden from that process for that long after another process deletes the marker or the marker expires, because the 5 seconds count from when the marker was read (the window is shorter only when this process's own miss TTL is shorter). Transport errors are not misses and write no marker. The invalidation watcher deletes a URI's miss marker when its first version is created; the TTL is the fallback if the watcher is not running. `ClearCache()` also deletes the miss markers this process saw, and `DeleteFromCache(uri)` deletes that URI's marker. A marker is deleted only while memcached still holds it, so a path stored in the meantime (e.g. after a publish) is kept.
+
 ### How to build with memcached support
 You only need to add `--with-memcached` argument to build command. You need to have `libmemcached` available.
 

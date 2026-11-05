@@ -6,7 +6,9 @@
 #ifndef AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
 #define AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
 
+
 #include "../cache/assetIdentifierDef.h"
+#include "memcachedExpiry.h"
 #include "memcachedHandler.h"
 #include "AyonCppApi.h"
 
@@ -14,10 +16,12 @@
 
 #include <filesystem>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <shared_mutex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -166,6 +170,29 @@ class ResolverContextCache {
         std::unordered_map<std::string, std::string> m_rootReplaceData;
         std::optional<PinningFileHandler> m_pinningFileHandler;
         std::optional<std::unique_ptr<MemcachedHandler>> m_memcached;
+        // Seconds: 0 = never expire; hero/latest also allow -1 = bypass memcached (see memcachedExpiry.h).
+        int64_t m_memcachedExpire = 0;
+        int64_t m_memcachedHeroExpire = 3600;
+        int64_t m_memcachedLatestExpire = -1;
+        // Miss marker TTL: -1 = never write markers (see MemcachedExpiry::parseMissExpiry).
+        int64_t m_memcachedMissExpire = MemcachedExpiry::kDefaultMissSeconds;
+
+        // Known misses this process saw. ClearCache deletes their markers from memcached. Its lock is a leaf lock.
+        MemcachedExpiry::KnownMisses m_knownMisses;
+        // observedAt: m_knownMisses.generation() taken before memcached was read or written.
+        // trust = false tracks the key for ClearCache only: memcached holds a value, but it may be a path.
+        void _TrackMiss(const std::string &uri, uint64_t observedAt, bool trust = true);
+        // Delete a miss's marker if memcached still holds it (a path stored since is kept), then untrack the miss.
+        // Takes s_memcachedMutex: call without the cache locks held.
+        void _DeleteMissMarker(const std::string &uri);
+        // Write the miss marker for a failed AYON lookup (memcached `add`). True when memcached now holds a value for
+        // the URI (the marker, or a path stored meanwhile); false when memcached or miss caching is off for this URI,
+        // or the write failed.
+        bool _StoreMiss(const std::string &uri);
+
+        int64_t _MemcachedTtl(const std::string &uri) const {
+            return MemcachedExpiry::ttlFor(uri, m_memcachedExpire, m_memcachedHeroExpire, m_memcachedLatestExpire);
+        }
 };
 
 #endif   // AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
