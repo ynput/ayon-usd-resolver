@@ -21,7 +21,7 @@ else()
 endif()
 
 # =========================================================
-# Detect Houdini layout (19–21)
+# Detect Houdini layout (19–22)
 # =========================================================
 set(_usd_is_houdini FALSE)
 if (EXISTS "${USD_ROOT}/toolkit/include/pxr/pxr.h")

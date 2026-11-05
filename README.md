@@ -55,6 +55,7 @@ AYON compatible entity URIs through the
   - Maya 2024
 
 - Windows 11
+  - Hou 22.0.368
   - Hou 21.0.512
   - Hou 20.5.370
   - Hou 20.5.332
