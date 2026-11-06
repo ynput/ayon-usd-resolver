@@ -4,6 +4,8 @@
 // resolve, open, open_in_background, join, handshake, clear_cache and delete. A clear_cache or delete
 // step also reports open_finished: whether the background open had already returned when it did.
 // hammer_start (uris, threads) resolves the URIs in a loop on that many threads until hammer_stop.
+// drop_cache gives a second context its own cache instance; a clear_cache or delete step with
+// "context": "second" then runs on that context.
 
 #include <pxr/pxr.h>
 #include <pxr/base/js/json.h>
@@ -33,6 +35,7 @@ class AyonUsdResolverContext {
         AyonUsdResolverContext();
         ~AyonUsdResolverContext();
         void ClearCache();
+        void DropCache();
         void DeleteFromCache(const std::string &key);
 
     private:
@@ -49,7 +52,8 @@ fileExists(const std::string &path) {
 JsArray
 runSteps(const JsArray &steps, JsObject &merged) {
     ArResolver &resolver = ArGetResolver();
-    AyonUsdResolverContext context;
+    AyonUsdResolverContext first;
+    AyonUsdResolverContext second;
     JsArray outcome;
     std::thread background;
     std::vector<std::thread> hammers;
@@ -62,6 +66,7 @@ runSteps(const JsArray &steps, JsObject &merged) {
         const std::string op = step.at("op").GetString();
         JsObject entry;
         entry["op"] = JsValue(op);
+        AyonUsdResolverContext &context = step.count("context") != 0 ? second : first;
         if (op == "resolve") {
             JsObject paths;
             for (const JsValue &uri: step.at("uris").GetJsArray()) {
@@ -94,6 +99,9 @@ runSteps(const JsArray &steps, JsObject &merged) {
         else if (op == "clear_cache") {
             context.ClearCache();
             entry["open_finished"] = JsValue(openFinished.load());
+        }
+        else if (op == "drop_cache") {
+            second.DropCache();
         }
         else if (op == "hammer_start") {
             std::vector<std::string> uris;

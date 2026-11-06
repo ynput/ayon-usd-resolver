@@ -122,6 +122,67 @@ def test_stale_miss_from_ayon_is_not_stored(project, backend, run_resolver, tap,
     assert backend.client().get(uri) != b"", "a marker from before the invalidation must not be stored"
 
 
+@pytest.mark.parametrize("path", sorted(PATHS))
+@pytest.mark.parametrize("operation", ["clear_cache", "delete"])
+def test_invalidation_on_another_cache_instance_stops_the_memcached_write(
+    project, backend, run_resolver, tap, cpp_probe, tmp_path, operation, path
+) -> None:
+    """DropCache gives a context its own instance, and all instances in a process share one memcached."""
+    uri = uri_for(project, "usdAsset", "hero")
+    tap.add_fault(
+        r"^/api/resolve$", status=200, body=[{"uri": uri, "entities": [{"filePath": STALE_PATH}]}], delay_ms=HOLD_MS, times=1
+    )
+    held = tmp_path / "held"
+    answer_when(held, lambda: tap.counts()["requests"].get("POST /api/resolve", 0) > 0)
+    result = run_resolver(
+        "other-instance-cpp",
+        steps=[
+            {"op": "drop_cache"},
+            {"op": "open_in_background", "root": write_root(tmp_path, uri)},
+            {"op": "handshake", "path": str(held)},
+            {**invalidation(operation, uri), "context": "second"},
+            {"op": "join"},
+        ],
+        command=[str(cpp_probe)],
+        **PATHS[path],
+        **memcached_knobs(backend),
+    )
+    assert result.ok, result.describe()
+    assert result.steps[3]["open_finished"] is False, "the invalidation has to land during the open"
+    stored = backend.client().get(uri)
+    assert stored is None or STALE_PATH.encode() not in stored, stored
+
+
+@pytest.mark.parametrize("path", sorted(PATHS))
+def test_marker_read_during_an_invalidation_can_still_be_cleared(
+    project, backend, run_resolver, mc_proxy, cpp_probe, tmp_path, path
+) -> None:
+    """An invalidation of another URI must not lose the marker, or a later ClearCache cannot remove it."""
+    uri = uri_for(project, "usdAsset", "hero")
+    other = uri_for(project, "usdAsset", "1")
+    backend.client().set(uri, b"")
+    proxy = mc_proxy(hold_value=(uri, HOLD_MS))
+    held = tmp_path / "held"
+    answer_when(held, proxy.held_values.is_set)
+    result = run_resolver(
+        "marker-during-delete-cpp",
+        steps=[
+            {"op": "open_in_background", "root": write_root(tmp_path, uri)},
+            {"op": "handshake", "path": str(held)},
+            {"op": "delete", "uri": other},
+            {"op": "join"},
+            {"op": "clear_cache"},
+            {"op": "resolve", "uris": [uri]},
+        ],
+        command=[str(cpp_probe)],
+        proxy=proxy,
+        **PATHS[path],
+        **memcached_knobs(backend, AYON_MEMCACHED_TIMEOUT_MS="5000"),
+    )
+    assert result.ok, result.describe()
+    assert result.steps[-1]["resolved"][uri] == project.published[uri], result.describe()
+
+
 def test_lookups_during_clear_cache_do_not_restore_an_old_path(
     project, backend, run_resolver, cpp_probe, tmp_path
 ) -> None:
