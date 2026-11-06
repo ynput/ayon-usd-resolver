@@ -180,10 +180,12 @@ class MemcachedHandler::Impl {
             return true;
         }
 
-        // memcached keys are at most 250 bytes (MEMCACHED_MAX_KEY counts the NUL). A longer URI is never cached:
-        // skip it quietly instead of failing (and warning) on every get/set.
+        // memcached keys are at most 250 bytes (MEMCACHED_MAX_KEY counts the NUL), without whitespace or control
+        // characters: those end the key in the text protocol, and what follows would run as a command. Such a URI
+        // is never cached: skip it quietly instead of failing (and warning) on every get/set.
         static bool keyFits(const std::string &key) {
-            return key.length() < MEMCACHED_MAX_KEY;
+            return key.length() < MEMCACHED_MAX_KEY
+                   && std::none_of(key.begin(), key.end(), [](unsigned char c) { return c <= ' ' || c == 0x7f; });
         }
 
         // A reply that arrives after the client gave up stays on the connection, and the next command reads it as its
@@ -265,8 +267,8 @@ class MemcachedHandler::Impl {
                 ptrs.clear();
                 lens.clear();
                 for (size_t i = begin; i < end; ++i) {
-                    // One over-long key fails the whole mget; skip it (a plain miss) so the rest of the chunk still hits.
-                    if (keys[i].length() >= MEMCACHED_MAX_KEY) {
+                    // One unusable key fails the whole mget; skip it (a plain miss) so the rest of the chunk still hits.
+                    if (!keyFits(keys[i])) {
                         continue;
                     }
                     ptrs.push_back(keys[i].c_str());

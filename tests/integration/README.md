@@ -95,6 +95,7 @@ it, because compose only guarantees that the container was started.
 | `test_memcached_mget.py` | Prewarm reads with multi-key gets, split at 256 keys, an over-long key left out of the chunk, and a dropped mget falling through to AYON |
 | `test_memcached_unmapped_root.py` | A warm cache with a bad API key fails cleanly. A failed site-roots fetch with a working key is marked `xfail`, because #106 leaves that case open |
 | `test_stale_answers_without_python.py` | An invalidation during a held AYON answer or memcached reply, through prewarm and through a single lookup, from a C++ program with no Python interpreter (`cpp/cpp_probe.cpp`, compiled when the session starts). |
+| `test_memcached_key_characters.py` | A URI with whitespace or control characters stays out of memcached, in single lookups and in prewarm's multi-key get, and still resolves through AYON |
 | `test_memcached_latency.py` | Stage open time at 0, 2 and 5 ms memcached round trip, published for comparing builds. Asserts composition only |
 
 `lib/mcproxy.py` sits between the resolver and memcached where a test needs it. It counts `get`
