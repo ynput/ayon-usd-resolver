@@ -73,6 +73,7 @@ def run_probe(
     workdir: Path,
     name: str,
     timeout: float = 300,
+    command: list[str] | None = None,
 ) -> ProbeResult:
     workdir.mkdir(parents=True, exist_ok=True)
     uris_file = workdir / f"{name}.uris.json"
@@ -96,7 +97,7 @@ def run_probe(
 
     with log_file.open("w") as log:
         proc = subprocess.run(
-            [sys.executable, str(PROBE), *arguments, "--out", str(out_file)],
+            [*(command or [sys.executable, str(PROBE)]), *arguments, "--out", str(out_file)],
             env=env,
             stdout=log,
             stderr=subprocess.STDOUT,

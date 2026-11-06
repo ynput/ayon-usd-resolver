@@ -4,7 +4,7 @@ ayon-tap holds one AYON answer until ClearCache or DeleteFromCache has run, then
 answer. A later lookup in the same process has to reach the real server.
 
 Prewarm is off: scenarios through its batched lookup passed with or without the fix, so they showed
-nothing. batchWarm uses the same check but is not raced here.
+nothing. test_stale_answers_without_python.py races batchWarm from C++.
 """
 
 from __future__ import annotations

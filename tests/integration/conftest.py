@@ -160,13 +160,15 @@ def run_resolver(
         uris: list[str] | None = None,
         steps: list[dict] | None = None,
         proxy: McProxy | None = None,
+        command: list[str] | None = None,
         **knobs: str,
     ) -> ProbeResult:
         """One session. Default: open the seeded stage and report the closure.
 
         ``root``/``uris`` open something else; ``steps`` runs operations without a stage (see
         lib/probe.py). With ``proxy``, the resolver connects through it, and its counters are
-        added to ``result.mc``.
+        added to ``result.mc``. ``command`` replaces lib/probe.py with another program taking the
+        same ``--steps`` and ``--out``.
         """
         standard = root is None and uris is None and steps is None
         if proxy is not None:
@@ -191,6 +193,7 @@ def run_resolver(
                 knobs=knobs,
                 workdir=tmp_path,
                 name=name,
+                command=command,
             )
             result.tap = tap.counts()
             tap.reset()  # detach: later traffic (seeding, teardown) is not this session's

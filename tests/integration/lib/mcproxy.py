@@ -3,8 +3,8 @@
 memcached's own ``stats`` counts keys, not requests, so it cannot tell one multi-key ``get``
 from many single-key ones. This proxy parses the text protocol the resolver sends, counts
 commands per kind and keys per ``get``, and can add latency or drop the connection on a
-multi-key ``get``, and can hold the reads of one key to keep a race open. It only reads the
-client's stream; replies pass through unchanged.
+multi-key ``get``, and can hold the reads of one key, or the replies carrying its value, to keep
+a race open. It only reads the client's stream; replies pass through unchanged.
 """
 
 from __future__ import annotations
@@ -30,11 +30,15 @@ class McProxy:
         rtt_ms: float = 0,
         fail_multi_get: bool = False,
         hold_get: tuple[str, float] | None = None,
+        hold_value: tuple[str, float] | None = None,
     ) -> None:
         self.target = target
         self.rtt_ms = rtt_ms
         self.fail_multi_get = fail_multi_get
         self.hold_get = hold_get  # (key, milliseconds): delay every get of that key
+        # (key, milliseconds): delay every reply carrying that key's value, after the server has sent it
+        self.hold_value = hold_value
+        self.held_values = threading.Event()  # set once a reply is being held
         self.get_sizes: Counter[int] = Counter()  # keys in one get -> number of such gets
         self.commands: Counter[str] = Counter()
         self.failed_gets = 0
@@ -117,10 +121,12 @@ class McProxy:
             client.close()
             upstream.close()
 
-    @staticmethod
-    def _pump_replies(upstream: socket.socket, client: socket.socket) -> None:
+    def _pump_replies(self, upstream: socket.socket, client: socket.socket) -> None:
         try:
             while data := upstream.recv(65536):
+                if self.hold_value is not None and f"VALUE {self.hold_value[0]} ".encode() in data:
+                    self.held_values.set()
+                    time.sleep(self.hold_value[1] / 1000)
                 client.sendall(data)
         except OSError:
             pass

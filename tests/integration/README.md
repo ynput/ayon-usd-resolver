@@ -94,6 +94,7 @@ it, because compose only guarantees that the container was started.
 | `test_memcached_expiry.py` | Needs #104. TTL per URI class, clamping and invalid values, `latest` staying live, miss markers (TTL, known misses, publish after a marker, no marker on a server error, never overwriting a path), `DeleteFromCache`, and `ClearCache` without a flush |
 | `test_memcached_mget.py` | Needs #105. Prewarm reads with multi-key gets, split at 256 keys, an over-long key left out of the chunk, and a dropped mget falling through to AYON |
 | `test_memcached_unmapped_root.py` | Needs #106. A warm cache with a bad API key fails cleanly. A failed site-roots fetch with a working key is marked `xfail`, because #106 leaves that case open |
+| `test_stale_answers_without_python.py` | Needs the fix in #114. An invalidation during a held AYON answer or memcached reply, through prewarm and through a single lookup, from a C++ program with no Python interpreter (`cpp/cpp_probe.cpp`, compiled when the session starts). |
 | `test_memcached_latency.py` | Any build. Stage open time at 0, 2 and 5 ms memcached round trip, published for comparing builds. Asserts composition only |
 
 Until those PRs are merged, run only the files a build supports, for example
