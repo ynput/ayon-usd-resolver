@@ -1,0 +1,68 @@
+# Resolver integration tests against a running AYON server.
+#
+# By default the tests reuse the AYON stack from ayon-docker (container network
+# `ayon-docker_default`, server reachable as `server:5000`). Override with
+# AYON_DOCKER_NETWORK / AYON_UPSTREAM_URL for a different deployment.
+#
+#   export AYON_API_KEY=...            # service user key on that server
+#   docker compose -f tests/integration/compose.yml run --rm runner
+#
+name: ayon-resolver-it
+
+networks:
+  ayon:
+    external: true
+    name: ${AYON_DOCKER_NETWORK:-ayon-docker_default}
+
+volumes:
+  # Published files the seeded project points at. Mounted at the project's
+  # linux `work` root in the runner.
+  work:
+
+services:
+  # Reference memcached: text protocol, full `stats`, meta commands.
+  memcached:
+    image: memcached:1.6-alpine
+    command: ["memcached", "-v", "-m", "64"]
+
+  # Protocol-compatible alternative (memcached text API). `stats` carries no hit counters.
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:${DRAGONFLY_TAG:-latest}
+    command: ["--memcached_port=11211", "--proactor_threads=1", "--maxmemory=256mb"]
+    ulimits:
+      memlock: -1
+
+  ayon-tap:
+    build: tap
+    environment:
+      AYON_UPSTREAM_URL: ${AYON_UPSTREAM_URL:-http://server:5000}
+    networks: [default, ayon]
+
+  runner:
+    build:
+      context: ../..
+      dockerfile: tests/integration/runner.Dockerfile
+      target: runner
+      args:
+        USD_VERSION: ${USD_VERSION:-v25.05}
+        # e.g. RESOLVER_REF=$(git rev-parse --short HEAD); labels published test records
+        RESOLVER_REF: ${RESOLVER_REF:-local}
+    image: ayon-resolver-it:runner
+    depends_on:
+      memcached: {condition: service_started}
+      dragonfly: {condition: service_started}
+      ayon-tap: {condition: service_healthy}
+    environment:
+      AYON_SERVER_URL: http://ayon-tap:5000
+      AYON_API_KEY: ${AYON_API_KEY:?set AYON_API_KEY to a service user key}
+      AYON_SITE_ID: ${AYON_SITE_ID:-resolver-it}
+      RIT_TAP_URL: http://ayon-tap:5000/__tap
+      RIT_WORK_ROOT: /data/work
+      RIT_BACKENDS: memcached=memcached:11211,dragonfly=dragonfly:11211
+      RIT_ASSET_COUNT: ${RIT_ASSET_COUNT:-24}
+      RIT_ANATOMY_PRESET: ${RIT_ANATOMY_PRESET:-__primary__}
+      RIT_KEEP_PROJECT: ${RIT_KEEP_PROJECT:-0}
+    volumes:
+      - work:/data/work
+      # Tests are mounted, not baked in: editing them needs no image rebuild.
+      - ../:/tests:ro

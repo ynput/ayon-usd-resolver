@@ -1,0 +1,85 @@
+#ifndef AR_AYONUSDRESOLVER_MEMCACHED_HANDLER_H
+#define AR_AYONUSDRESOLVER_MEMCACHED_HANDLER_H
+
+#include "../cache/assetIdentifierDef.h"
+
+#include <memory>
+#include <optional>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+PXR_NAMESPACE_USING_DIRECTIVE
+
+/**
+ * @class MemcachedHandler
+ * @brief Handles memcached connection and asset resolution queries
+ */
+enum class MissMarkerWrite {
+    Failed,    // nothing written
+    Stored,    // our marker is stored
+    Exists     // the key already holds a value (a marker or a path another process stored)
+};
+
+class MemcachedHandler {
+    public:
+        /**
+         * @brief Construct a memcached handler with server list
+         * @param servers Comma-separated list of memcached servers (e.g., "localhost:11211,192.168.1.100:11211")
+         * @param timeoutMs Timeout for memcached operations in milliseconds
+         */
+        MemcachedHandler(const std::string &servers, uint32_t timeoutMs = 1000);
+        ~MemcachedHandler();
+
+        /**
+         * @brief Try to get asset data from memcached
+         * @param assetIdentifier The asset URI to resolve
+         * @return AssetIdentifier if found in memcached, empty AssetIdentifier if not found or error
+         */
+        AssetIdentifier getAssetData(const std::string &assetIdentifier);
+
+        /**
+         * @brief Batched read (memcached_mget, chunked): one round trip per chunk instead of per key.
+         * @return found key -> value. Absent keys are misses; on failure returns what was fetched so far.
+         */
+        std::unordered_map<std::string, std::string> getMany(const std::vector<std::string> &keys);
+
+        /**
+         * @brief Store asset data in memcached
+         * @param assetIdentifier The asset identifier (key)
+         * @param assetPath The resolved asset path (value)
+         * @param expireSeconds Time to live in seconds (0 = never expire; memcached caps relative TTLs at 30 days)
+         * @return true if successful, false otherwise
+         */
+        bool setAssetData(const std::string &assetIdentifier, const std::string &assetPath, uint32_t expireSeconds);
+
+        /**
+         * @brief Store the miss marker with memcached `add`: never replaces a value another process stored
+         * @param assetIdentifier The asset identifier (key)
+         * @param expireSeconds Marker TTL in seconds
+         * @return what memcached now holds for the key; Failed if the write did not happen
+         */
+        MissMarkerWrite addMissMarker(const std::string &assetIdentifier, uint32_t expireSeconds);
+
+        /**
+         * @brief Delete asset data from memcached
+         * @param assetIdentifier The asset identifier (key) to delete
+         * @return true if successful or key not found, false on error
+         */
+        bool deleteAssetData(const std::string &assetIdentifier);
+
+        /**
+         * @brief Check if memcached handler is properly initialized
+         * @return true if connected and ready, false otherwise
+         */
+        bool isConnected() const;
+
+    private:
+        // Private implementation details
+        class Impl;
+        std::unique_ptr<Impl> pImpl;
+        uint32_t m_timeoutMs;
+        bool m_connected;
+};
+
+#endif  // AR_AYONUSDRESOLVER_MEMCACHED_HANDLER_H
