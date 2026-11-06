@@ -237,8 +237,8 @@ class MemcachedHandler::Impl {
             if (wrongReply) {
                 logMemcachedFailure("get", key, foreignReply ? "reply for another key" : memcached_strerror(m_memc, rc));
             }
-            else if (!value.has_value() && usedUpTimeout(started)) {
-                logMemcachedFailure("get", key, "no reply within the timeout");
+            else if (usedUpTimeout(started)) {
+                logMemcachedFailure("get", key, "no complete reply within the timeout");
             }
             else {
                 return value.value_or("");
