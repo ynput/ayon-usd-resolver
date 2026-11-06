@@ -14,6 +14,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <atomic>
+#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <mutex>
@@ -186,9 +188,16 @@ class ResolverContextCache {
         // Takes s_memcachedMutex: call without the cache locks held.
         void _DeleteMissMarker(const std::string &uri);
         // Write the miss marker for a failed AYON lookup (memcached `add`). True when memcached now holds a value for
-        // the URI (the marker, or a path stored meanwhile); false when memcached or miss caching is off for this URI,
-        // or the write failed.
-        bool _StoreMiss(const std::string &uri);
+        // the URI (the marker, or a path stored meanwhile) or the answer predates an invalidation and must not be
+        // kept; false when memcached or miss caching is off for this URI, or the write failed.
+        bool _StoreMiss(const std::string &uri, uint64_t startedAt);
+
+        // Whether a lookup that read the invalidation count (see s_invalidations) as startedAt may store its answer.
+        static bool _IsCurrent(uint64_t startedAt);
+        // Caller holds the PreCache and AyonCache write locks.
+        void _InsertLocked(AssetIdentifier &asset);
+        void _MigratePreCacheLocked();
+        void _InsertIfCurrent(AssetIdentifier &asset, uint64_t startedAt);
 
         int64_t _MemcachedTtl(const std::string &uri) const {
             return MemcachedExpiry::ttlFor(uri, m_memcachedExpire, m_memcachedHeroExpire, m_memcachedLatestExpire);
