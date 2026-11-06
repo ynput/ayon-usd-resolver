@@ -35,9 +35,9 @@ For faster access the resolver can use [memcached](https://docs.memcached.org/).
 Memcached is a free, open-source distributed memory caching system. It speeds up dynamic, database-driven websites and applications by storing frequently accessed data and objects directly in RAM, reducing the number of times a system must query slower external data sources like a database or API.
 
 > [!NOTE]
-> There are some protocol compatible alternatives to memcached, like [memc-rs](https://memc.rs), etc.
+> There are some protocol compatible alternatives to memcached, like [Dragonfly](https://www.dragonflydb.io/). The resolver uses the text protocol, so the server has to support it. [memc-rs](https://memc.rs), for example, speaks only the binary protocol and does not work.
 
-Memcached can run as a service on a local machine or in a Docker container. You can even setup multiple servers and utilize client hashing feature that distributes keys across a cluster of servers using hashing algorithms. This ensures that adding or removing servers causes only a minimal shift in key mapping, preventing massive cache misses. Note that this depends on the used memcached client features.
+Memcached can run as a service on a local machine or in a Docker container. You can even setup multiple servers: the client distributes keys across them by hashing. The resolver uses libmemcached's default distribution, so changing the server list moves most keys to another server, and those URIs go to AYON until the cache fills again. Use the same list, in the same order, on every machine.
 
 ### How it works
 If memcached is enabled and the asset resolver cannot find the path in the context cache, it will try memcached configured by environment variable `AYON_MEMCACHED_SERVERS` (comma separated `host:port` list). Only if this query misses, it will get the path from AYON server (and then store it in memcaches for further use as a rootless path).
@@ -47,8 +47,7 @@ the cache gets populated over time.
 
 To use memcached support, set following environment variables
 
-`AYON_MEMCACHED_SERVERS` - comma separated list of `host:port` defined servers. When more servers are defined, they are used as a fallback option when the
-connection cannot be established.
+`AYON_MEMCACHED_SERVERS` - comma separated list of `host:port` defined servers. When more servers are defined, keys are split between them, so they are not fallbacks for each other. If any server cannot be reached when the process starts, memcached stays off for that whole process, even with the other servers up: a warning is logged and lookups go to AYON. If a server is lost during a session, paths stay correct and more lookups go to AYON.
 
 `AYON_MEMCACHED_ENABLED` - set to `true` to enable memcached support.
 
@@ -75,8 +74,15 @@ Values are matched like the server matches them: trimmed, case-insensitively, on
 
 The marker is never returned as a path: a known miss yields exactly what an uncached failed resolve yields, and is not stored in the in-process caches. A process trusts a marker it saw for up to 5 seconds without reading memcached again, so a stage with many dangling references does not make a round trip per lookup. A publish can stay hidden from that process for that long after another process deletes the marker or the marker expires, because the 5 seconds count from when the marker was read (the window is shorter only when this process's own miss TTL is shorter). Transport errors are not misses and write no marker. The invalidation watcher deletes a URI's miss marker when its first version is created; the TTL is the fallback if the watcher is not running. `ClearCache()` also deletes the miss markers this process saw, and `DeleteFromCache(uri)` deletes that URI's marker. A marker is deleted only while memcached still holds it, so a path stored in the meantime (e.g. after a publish) is kept.
 
+### Stage prewarm
+When a stage is opened, the resolver first walks its layers and resolves the AYON URIs it finds in batched requests, instead of one request per URI during composition. This runs once per root asset path in a process and is on by default, with or without memcached.
+
+`AYON_RESOLVER_NO_PREWARM` - set to anything except `0` or `false` to turn prewarm off. `AYON_RESOLVER_PREWARM` set to `0` or `false` does the same.
+
+Prewarm opens each layer it walks and then drops it, so composition opens that layer again. Stages with many AYON references open faster, but a large text layer can take about twice as long to open. In one test, a 7.5 MB `.usda` sublayer took 0.83 s instead of 0.37 s. `.usdc` was not measured.
+
 ### How to build with memcached support
-You only need to add `--with-memcached` argument to build command. You need to have `libmemcached` available.
+You need to have `libmemcached` available. Memcached support is built whenever the build finds it, otherwise the resolver is built without it. The `--with-memcached` argument of `build_resolver.py` does not change this: it only adds a warning when `libmemcached` is not found.
 
 ### Windows
 On windows, the best way is to use [vcpkg](https://github.com/microsoft/vcpkg).
