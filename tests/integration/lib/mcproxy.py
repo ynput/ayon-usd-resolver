@@ -31,6 +31,7 @@ class McProxy:
         fail_multi_get: bool = False,
         hold_get: tuple[str, float] | None = None,
         hold_value: tuple[str, float] | None = None,
+        hold_end: tuple[str, float] | None = None,
     ) -> None:
         self.target = target
         self.rtt_ms = rtt_ms
@@ -39,6 +40,9 @@ class McProxy:
         # (key, milliseconds): delay every reply carrying that key's value, after the server has sent it
         self.hold_value = hold_value
         self.held_values = threading.Event()  # set once a reply is being held
+        # (key, milliseconds): send that key's value at once, and only the END after it late
+        self.hold_end = hold_end
+        self.held_ends = 0  # replies split by hold_end
         self.get_sizes: Counter[int] = Counter()  # keys in one get -> number of such gets
         self.commands: Counter[str] = Counter()
         self.failed_gets = 0
@@ -127,6 +131,15 @@ class McProxy:
                 if self.hold_value is not None and f"VALUE {self.hold_value[0]} ".encode() in data:
                     self.held_values.set()
                     time.sleep(self.hold_value[1] / 1000)
+                if (
+                    self.hold_end is not None
+                    and f"VALUE {self.hold_end[0]} ".encode() in data
+                    and data.endswith(b"END\r\n")
+                ):
+                    client.sendall(data[:-5])
+                    self.held_ends += 1
+                    time.sleep(self.hold_end[1] / 1000)
+                    data = data[-5:]
                 client.sendall(data)
         except OSError:
             pass

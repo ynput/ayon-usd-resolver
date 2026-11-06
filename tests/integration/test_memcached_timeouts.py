@@ -56,6 +56,27 @@ def test_late_reply_does_not_reach_another_uri(project, backend, run_resolver, m
 
 
 @pytest.mark.parametrize("hold_ms", HOLDS_MS)
+def test_late_end_after_a_value_is_not_read_by_the_next_get(project, backend, run_resolver, mc_proxy, hold_ms: int) -> None:
+    """The value arrives in time and only its END is late. Read by the next get, that END looks like a miss."""
+    knobs = knobs_for(backend)
+    assert run_resolver("cold", **knobs).ok
+    uris = sorted(project.uris)
+    proxy = mc_proxy(hold_end=(uris[0], hold_ms))
+
+    result = run_resolver(
+        "late-end",
+        steps=one_by_one(uris),
+        proxy=proxy,
+        AYON_RESOLVER_NO_PREWARM="1",
+        **knobs,
+    )
+    assert result.ok, result.describe()
+    assert proxy.held_ends == 1, "the reply has to arrive in one piece to be split"
+    assert not wrong_answers(result, uris, project), result.describe()
+    assert result.tap["resolve_requests"] == 0, result.describe()
+
+
+@pytest.mark.parametrize("hold_ms", HOLDS_MS)
 def test_cache_keeps_working_after_a_timeout(project, backend, run_resolver, mc_proxy, hold_ms: int) -> None:
     knobs = knobs_for(backend)
     assert run_resolver("cold", **knobs).ok
