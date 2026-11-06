@@ -77,6 +77,49 @@ def test_late_end_after_a_value_is_not_read_by_the_next_get(project, backend, ru
 
 
 @pytest.mark.parametrize("hold_ms", HOLDS_MS)
+def test_late_store_acknowledgement_is_not_read_by_the_next_get(project, backend, run_resolver, mc_proxy, hold_ms: int) -> None:
+    """Read by the next get, a late STORED would look like a miss and leave that get's own reply unread."""
+    knobs = knobs_for(backend)
+    uris = sorted(project.uris)
+    assert run_resolver("warm-the-rest", steps=one_by_one(uris[1:]), AYON_RESOLVER_NO_PREWARM="1", **knobs).ok
+    proxy = mc_proxy(hold_ack_ms=hold_ms)
+
+    result = run_resolver(
+        "late-stored",
+        steps=one_by_one(uris),
+        proxy=proxy,
+        AYON_RESOLVER_NO_PREWARM="1",
+        **knobs,
+    )
+    assert result.ok, result.describe()
+    assert proxy.held_acks == 1, "the store has to be acknowledged late"
+    assert not wrong_answers(result, uris, project), result.describe()
+    assert result.tap["resolve_requests"] == 1, result.describe()
+    assert "memcached set failed" in result.log, result.describe()
+
+
+@pytest.mark.parametrize("hold_ms", HOLDS_MS)
+def test_late_delete_acknowledgement_is_not_read_by_the_next_get(project, backend, run_resolver, mc_proxy, hold_ms: int) -> None:
+    knobs = knobs_for(backend)
+    assert run_resolver("cold", **knobs).ok
+    uris = sorted(project.uris)
+    proxy = mc_proxy(hold_ack_ms=hold_ms)
+
+    result = run_resolver(
+        "late-deleted",
+        steps=[{"op": "resolve", "uris": [uris[0]]}, {"op": "delete", "uri": uris[0]}, *one_by_one(uris[1:])],
+        proxy=proxy,
+        AYON_RESOLVER_NO_PREWARM="1",
+        **knobs,
+    )
+    assert result.ok, result.describe()
+    assert proxy.held_acks == 1, "the delete has to be acknowledged late"
+    assert not wrong_answers(result, uris[1:], project, first_step=2), result.describe()
+    assert result.tap["resolve_requests"] == 0, result.describe()
+    assert "memcached delete failed" in result.log, result.describe()
+
+
+@pytest.mark.parametrize("hold_ms", HOLDS_MS)
 def test_cache_keeps_working_after_a_timeout(project, backend, run_resolver, mc_proxy, hold_ms: int) -> None:
     knobs = knobs_for(backend)
     assert run_resolver("cold", **knobs).ok

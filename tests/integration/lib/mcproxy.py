@@ -32,6 +32,7 @@ class McProxy:
         hold_get: tuple[str, float] | None = None,
         hold_value: tuple[str, float] | None = None,
         hold_end: tuple[str, float] | None = None,
+        hold_ack_ms: float = 0,
     ) -> None:
         self.target = target
         self.rtt_ms = rtt_ms
@@ -43,6 +44,8 @@ class McProxy:
         # (key, milliseconds): send that key's value at once, and only the END after it late
         self.hold_end = hold_end
         self.held_ends = 0  # replies split by hold_end
+        self.hold_ack_ms = hold_ack_ms  # delay the first STORED or DELETED reply
+        self.held_acks = 0
         self.get_sizes: Counter[int] = Counter()  # keys in one get -> number of such gets
         self.commands: Counter[str] = Counter()
         self.failed_gets = 0
@@ -140,6 +143,9 @@ class McProxy:
                     self.held_ends += 1
                     time.sleep(self.hold_end[1] / 1000)
                     data = data[-5:]
+                if self.hold_ack_ms and not self.held_acks and data.startswith((b"STORED", b"DELETED")):
+                    self.held_acks += 1
+                    time.sleep(self.hold_ack_ms / 1000)
                 client.sendall(data)
         except OSError:
             pass
