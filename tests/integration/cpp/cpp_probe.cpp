@@ -3,6 +3,7 @@
 // Takes the same --steps file and --out file as lib/probe.py and supports these of its operations:
 // resolve, open, open_in_background, join, handshake, clear_cache and delete. A clear_cache or delete
 // step also reports open_finished: whether the background open had already returned when it did.
+// hammer_start (uris, threads) resolves the URIs in a loop on that many threads until hammer_stop.
 
 #include <pxr/pxr.h>
 #include <pxr/base/js/json.h>
@@ -20,6 +21,7 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <vector>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -50,6 +52,8 @@ runSteps(const JsArray &steps, JsObject &merged) {
     AyonUsdResolverContext context;
     JsArray outcome;
     std::thread background;
+    std::vector<std::thread> hammers;
+    std::atomic<bool> stopHammers{false};
     std::atomic<bool> openFinished{false};
     UsdStageRefPtr backgroundStage;
 
@@ -90,6 +94,29 @@ runSteps(const JsArray &steps, JsObject &merged) {
         else if (op == "clear_cache") {
             context.ClearCache();
             entry["open_finished"] = JsValue(openFinished.load());
+        }
+        else if (op == "hammer_start") {
+            std::vector<std::string> uris;
+            for (const JsValue &uri: step.at("uris").GetJsArray()) {
+                uris.push_back(uri.GetString());
+            }
+            stopHammers = false;
+            for (int i = 0; i < step.at("threads").GetInt(); ++i) {
+                hammers.emplace_back([uris, &resolver, &stopHammers]() {
+                    while (!stopHammers) {
+                        for (const std::string &uri: uris) {
+                            resolver.Resolve(uri);
+                        }
+                    }
+                });
+            }
+        }
+        else if (op == "hammer_stop") {
+            stopHammers = true;
+            for (std::thread &hammer: hammers) {
+                hammer.join();
+            }
+            hammers.clear();
         }
         else if (op == "delete") {
             context.DeleteFromCache(step.at("uri").GetString());

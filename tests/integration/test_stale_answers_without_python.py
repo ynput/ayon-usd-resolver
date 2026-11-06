@@ -30,6 +30,8 @@ RESOLVER_LIB = "/opt/resolver/ayonUsdResolver/lib"
 USD_LIB = "/opt/usd/lib"
 STALE_PATH = "/stale/answer/from/before/the/invalidation.usda"
 HOLD_MS = 800
+ROUNDS = 40
+HAMMER_THREADS = 8
 PATHS = {"prewarm": {}, "single": {"AYON_RESOLVER_NO_PREWARM": "1"}}
 
 
@@ -118,6 +120,50 @@ def test_stale_miss_from_ayon_is_not_stored(project, backend, run_resolver, tap,
     uri, result = run_during_ayon_answer(project, backend, run_resolver, tap, cpp_probe, tmp_path, [], operation, path)
     assert result.steps[-1]["resolved"][uri] == project.published[uri], result.describe()
     assert backend.client().get(uri) != b"", "a marker from before the invalidation must not be stored"
+
+
+def test_lookups_during_clear_cache_do_not_restore_an_old_path(
+    project, backend, run_resolver, cpp_probe, tmp_path
+) -> None:
+    """ClearCache empties the in-process caches first and deletes from memcached after that.
+
+    A lookup in between starts after the invalidation began, and can still read a path ClearCache has not
+    deleted yet. That path must not stay in the process once ClearCache has finished. The window is short and
+    this cannot hold it open, so the scenario repeats it with several threads looking up at once.
+    """
+    uris = sorted(uri for uri in project.uris if "version=hero" in uri)
+    client = backend.client()
+
+    def seed() -> None:
+        for uri in uris:
+            client.set(uri, STALE_PATH.encode())
+
+    steps = []
+    for round_number in range(ROUNDS):
+        seeded = tmp_path / f"seeded{round_number}"
+        answer_when(seeded, lambda: True, seed)
+        steps += [
+            {"op": "clear_cache"},
+            {"op": "handshake", "path": str(seeded)},
+            {"op": "resolve", "uris": uris},
+            {"op": "hammer_start", "uris": uris, "threads": HAMMER_THREADS},
+            {"op": "clear_cache"},
+            {"op": "hammer_stop"},
+            {"op": "resolve", "uris": uris},
+        ]
+    result = run_resolver(
+        "lookups-during-clear-cpp",
+        steps=steps,
+        command=[str(cpp_probe)],
+        AYON_RESOLVER_NO_PREWARM="1",
+        **memcached_knobs(backend, AYON_MEMCACHED_TIMEOUT_MS="5000"),
+    )
+    assert result.ok, result.describe()
+    expected = {uri: project.published[uri] for uri in uris}
+    resolves = [step["resolved"] for step in result.steps if "resolved" in step]
+    assert all(after_seed == dict.fromkeys(uris, STALE_PATH) for after_seed in resolves[0::2]), "each round starts stale"
+    wrong = sum(after_clear != expected for after_clear in resolves[1::2])
+    assert not wrong, f"{wrong} of {ROUNDS} rounds kept an old path after ClearCache"
 
 
 @pytest.mark.parametrize("path", sorted(PATHS))
