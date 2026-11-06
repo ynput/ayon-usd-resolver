@@ -1,0 +1,5 @@
+pytest>=8
+# Project/anatomy/site helpers (ynput/pytest-ayon develop, includes #4).
+pytest-ayon @ git+https://github.com/ynput/pytest-ayon@04c70b18c71940339f34324ae96c84c1f22b854f
+opentelemetry-sdk>=1.25
+opentelemetry-exporter-otlp-proto-http>=1.25
