@@ -231,7 +231,9 @@ class MemcachedHandler::Impl {
             }
             memcached_result_free(&result);
 
-            // Anything but END or NOTFOUND here is the reply to another command (STORED, for example).
+            // Anything but END or NOTFOUND here is the reply to another command. This does not catch all of them:
+            // libmemcached reports a STORED or DELETED read first as NOTFOUND, which looks like a miss. Those do not
+            // stay behind, because a set, add or delete that times out fails and closes the connection.
             const bool wrongReply
                 = foreignReply || (rc != MEMCACHED_END && rc != MEMCACHED_NOTFOUND && rc != MEMCACHED_SUCCESS);
             if (wrongReply) {
