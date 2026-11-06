@@ -170,7 +170,7 @@ target_link_libraries(${CORE_LIB_TARGET} PRIVATE AyonResolver::DccDeps)
 # Link memcached only if available
 if(AYON_LIBMEMCACHED_AVAILABLE)
     target_link_libraries(${CORE_LIB_TARGET} PRIVATE ${AYON_LIBMEMCACHED_TARGET})
-    target_compile_definitions(${CORE_LIB_TARGET} PRIVATE AYON_LIBMEMCACHED_AVAILABLE=1 WIN32_LEAN_AND_MEAN)
+    target_compile_definitions(${CORE_LIB_TARGET} PRIVATE AYON_LIBMEMCACHED_AVAILABLE=1 WIN32_LEAN_AND_MEAN NOMINMAX)
     if(AYON_MEMCACHED_STATIC_LINK AND WIN32)
         # Tell libmemcached headers not to use __declspec(dllimport)
         target_compile_definitions(${CORE_LIB_TARGET} PRIVATE LIBMEMCACHED_STATIC)
