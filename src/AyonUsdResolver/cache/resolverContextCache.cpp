@@ -32,6 +32,15 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 static std::mutex s_memcachedMutex;
 
+// Advanced at both ends of ClearCache and removeCachedObject. A lookup reads it before it reads memcached or asks AYON,
+// and stores its answer only if it has not moved: an answer from before an invalidation must not come back after it.
+// Checked under the lock that protects the write, so a write that passes the check finishes before the invalidation
+// removes it. One per process, not per instance: DropCache gives a context its own instance, and they all share memcached.
+static std::atomic<uint64_t> s_invalidations{0};
+// Invalidations between their start and end. A lookup may not store during one: what it read can be an entry the
+// invalidation has not deleted yet.
+static std::atomic<uint32_t> s_invalidationsRunning{0};
+
 // Absolute path -> rootless ("{root[work]}/..."), so any site can re-root it on read.
 // NB rootReplaceData maps root NAME -> root PATH; destructure it the other way round and the
 // match never fires, silently caching absolute paths that break every other site.
@@ -258,21 +267,16 @@ namespace {
 // that one can have read an entry not deleted yet.
 class InvalidationScope {
     public:
-        InvalidationScope(std::atomic<uint64_t> &count, std::atomic<uint32_t> &running)
-            : m_count(count), m_running(running) {
-            m_running.fetch_add(1);
-            m_count.fetch_add(1);
+        InvalidationScope() {
+            s_invalidationsRunning.fetch_add(1);
+            s_invalidations.fetch_add(1);
         }
         ~InvalidationScope() {
-            m_count.fetch_add(1);
-            m_running.fetch_sub(1);
+            s_invalidations.fetch_add(1);
+            s_invalidationsRunning.fetch_sub(1);
         }
         InvalidationScope(const InvalidationScope &) = delete;
         InvalidationScope &operator=(const InvalidationScope &) = delete;
-
-    private:
-        std::atomic<uint64_t> &m_count;
-        std::atomic<uint32_t> &m_running;
 };
 
 }   // namespace
@@ -307,9 +311,9 @@ ResolverContextCache::_InsertLocked(AssetIdentifier &asset) {
 }
 
 bool
-ResolverContextCache::_IsCurrent(uint64_t startedAt) const {
+ResolverContextCache::_IsCurrent(uint64_t startedAt) {
     // In this order: an invalidation advances the count before it stops counting as running.
-    return m_invalidationsRunning.load() == 0 && m_invalidations.load() == startedAt;
+    return s_invalidationsRunning.load() == 0 && s_invalidations.load() == startedAt;
 }
 
 void
@@ -378,7 +382,7 @@ ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
     if (m_staticCache || uriPaths.empty()) {
         return resolved;
     }
-    const uint64_t startedAt = m_invalidations.load();
+    const uint64_t startedAt = s_invalidations.load();
 
     // Memcached first: any URI already resolved by another session, machine or DCC costs a
     // local-network lookup instead of a slot in the batched server request. Without this the
@@ -424,6 +428,13 @@ ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
         {
             std::lock_guard<std::mutex> lock(s_memcachedMutex);
             cachedValues = m_memcached->get()->getMany(eligible);
+            // Under the same lock as the read, so that ClearCache finds the key (see there). A read from before an
+            // invalidation is tracked for cleanup, but not trusted.
+            for (const auto &entry: cachedValues) {
+                if (MemcachedExpiry::isMissMarker(entry.second)) {
+                    _TrackMiss(entry.first, observedAt, _IsCurrent(startedAt));
+                }
+            }
         }
         for (const auto &uriPath: pending) {
             AssetIdentifier asset;
@@ -433,7 +444,6 @@ ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
             }
             if (!asset.isEmpty() && MemcachedExpiry::isMissMarker(asset.getResolvedAssetPath().GetPathString())) {
                 // Known miss: AYON had no path for it recently. Skip the API call; do not cache or return it.
-                _TrackMissIfCurrent(uriPath, observedAt, startedAt);
                 continue;
             }
             if (asset.isEmpty()) {
@@ -586,7 +596,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
         return asset;
     }
 
-    const uint64_t startedAt = m_invalidations.load();
+    const uint64_t startedAt = s_invalidations.load();
 
     // Try memcached as second-level cache before calling REST API
     if (m_memcached.has_value() && m_memcached->get()->isConnected() && _MemcachedTtl(assetIdentifier) >= 0) {
@@ -602,10 +612,14 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
             std::lock_guard<std::mutex> lock(s_memcachedMutex);
             TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::getAsset: Checking memcached\n");
             asset = m_memcached->get()->getAssetData(assetIdentifier);
+            // Under the same lock as the read, so that ClearCache finds the key (see there). A read from before an
+            // invalidation is tracked for cleanup, but not trusted.
+            if (!asset.isEmpty() && MemcachedExpiry::isMissMarker(asset.getResolvedAssetPath().GetPathString())) {
+                _TrackMiss(assetIdentifier, observedAt, _IsCurrent(startedAt));
+            }
         }
         if (!asset.isEmpty() && MemcachedExpiry::isMissMarker(asset.getResolvedAssetPath().GetPathString())) {
             // Known miss: return what a failed resolve returns (identifier set, empty path), without calling AYON.
-            _TrackMissIfCurrent(assetIdentifier, observedAt, startedAt);
             AssetIdentifier miss;
             miss.setAssetIdentifier(assetIdentifier);
             return miss;
@@ -701,7 +715,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
 void
 ResolverContextCache::removeCachedObject(const std::string &key) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::removeCachedObject (%s) \n", key.c_str());
-    const InvalidationScope invalidation(m_invalidations, m_invalidationsRunning);
+    const InvalidationScope invalidation;
 
     std::unordered_set<AssetIdentifier>::iterator hit;
 
@@ -761,7 +775,7 @@ ResolverContextCache::removeCachedObject(const std::string &key) {
 void
 ResolverContextCache::removeCachedObject(const std::string &key, const CacheName selectedCache) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::removeCachedObject (%s) \n", key.c_str());
-    const InvalidationScope invalidation(m_invalidations, m_invalidationsRunning);
+    const InvalidationScope invalidation;
 
     std::unordered_set<AssetIdentifier>::iterator hit;
 
@@ -827,7 +841,7 @@ ResolverContextCache::removeCachedObject(const std::string &key, const CacheName
 void
 ResolverContextCache::ClearCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::ClearCache \n");
-    const InvalidationScope invalidation(m_invalidations, m_invalidationsRunning);
+    const InvalidationScope invalidation;
 
     // Only PreCache/AyonCache can hold keys written to memcached (CommonCache is non-AYON paths).
     // Mutable (hero/latest) keys of this session are deleted from memcached; immutable ones stay. A class
@@ -858,7 +872,7 @@ ResolverContextCache::ClearCache() {
             m_memcached->get()->deleteAssetData(key);
         }
     }
-    // A marker write that passed the check above has to be tracked before the keys are listed.
+    // A marker read or written under this mutex has to be tracked before the keys are listed.
     { std::lock_guard<std::mutex> lock(s_memcachedMutex); }
     // Known-miss markers this process saw: drop them too so a fresh resolve re-asks AYON.
     for (const auto &uri: m_knownMisses.keys()) {
@@ -872,15 +886,6 @@ ResolverContextCache::_TrackMiss(const std::string &uri, uint64_t observedAt, bo
         = trust ? MemcachedExpiry::knownMissWindowFor(MemcachedExpiry::missTtlFor(_MemcachedTtl(uri), m_memcachedMissExpire))
                 : 0;
     m_knownMisses.track(uri, window, observedAt);
-}
-
-void
-ResolverContextCache::_TrackMissIfCurrent(const std::string &uri, uint64_t observedAt, uint64_t startedAt) {
-    // Under the lock, so that ClearCache finds the key (see there).
-    std::lock_guard<std::mutex> lock(s_memcachedMutex);
-    if (_IsCurrent(startedAt)) {
-        _TrackMiss(uri, observedAt);
-    }
 }
 
 void

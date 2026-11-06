@@ -192,16 +192,8 @@ class ResolverContextCache {
         // kept; false when memcached or miss caching is off for this URI, or the write failed.
         bool _StoreMiss(const std::string &uri, uint64_t startedAt);
 
-        // Advanced first thing by ClearCache and removeCachedObject. A lookup reads it before it reads memcached or
-        // asks AYON, and stores its answer only if it has not moved: an answer from before an invalidation must not
-        // come back after it. Checked under the lock that protects the write, so a write that passes the check
-        // finishes before the invalidation removes it.
-        std::atomic<uint64_t> m_invalidations{0};
-        // Invalidations between their start and end. A lookup may not store during one: what it read can be
-        // an entry the invalidation has not deleted yet. See InvalidationScope.
-        std::atomic<uint32_t> m_invalidationsRunning{0};
-        bool _IsCurrent(uint64_t startedAt) const;
-        void _TrackMissIfCurrent(const std::string &uri, uint64_t observedAt, uint64_t startedAt);
+        // Whether a lookup that read the invalidation count (see s_invalidations) as startedAt may store its answer.
+        static bool _IsCurrent(uint64_t startedAt);
         // Caller holds the PreCache and AyonCache write locks.
         void _InsertLocked(AssetIdentifier &asset);
         void _MigratePreCacheLocked();
