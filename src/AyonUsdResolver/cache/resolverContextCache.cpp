@@ -251,32 +251,65 @@ ResolverContextCache::printCache() const {
     std::cout << "-----------------------------------------------------\n" << std::endl;
 };
 
+namespace {
+
+// Lookups store an answer only if no invalidation overlapped them (see _IsCurrent). The count moves at both ends:
+// at the start for a lookup already running, and at the end for one that started during the invalidation, since
+// that one can have read an entry not deleted yet.
+class InvalidationScope {
+    public:
+        InvalidationScope(std::atomic<uint64_t> &count, std::atomic<uint32_t> &running)
+            : m_count(count), m_running(running) {
+            m_running.fetch_add(1);
+            m_count.fetch_add(1);
+        }
+        ~InvalidationScope() {
+            m_count.fetch_add(1);
+            m_running.fetch_sub(1);
+        }
+        InvalidationScope(const InvalidationScope &) = delete;
+        InvalidationScope &operator=(const InvalidationScope &) = delete;
+
+    private:
+        std::atomic<uint64_t> &m_count;
+        std::atomic<uint32_t> &m_running;
+};
+
+}   // namespace
+
 void
 ResolverContextCache::insert(AssetIdentifier &sourceAssetIdent) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
         .Msg("ResolverContextCache::insert(%s) \n", sourceAssetIdent.getAssetIdentifier().c_str());
-    if (m_PreCache.size() == PRECACHE_SIZE) {
-        migratePreCacheIntoAyonCache();
-    }
 
     std::unique_lock<std::shared_mutex> PreCacheWriteLock(m_PreCacheSharedMutex);
     std::unique_lock<std::shared_mutex> AyonCacheWriteLock(m_AyonCacheSharedMutex);
 
-    m_PreCache.insert(std::move(sourceAssetIdent));
+    _InsertLocked(sourceAssetIdent);
 };
 
 void
 ResolverContextCache::_InsertIfCurrent(AssetIdentifier &asset, uint64_t startedAt) {
-    if (m_PreCache.size() == PRECACHE_SIZE) {
-        migratePreCacheIntoAyonCache();
-    }
-
     std::unique_lock<std::shared_mutex> PreCacheWriteLock(m_PreCacheSharedMutex);
     std::unique_lock<std::shared_mutex> AyonCacheWriteLock(m_AyonCacheSharedMutex);
 
-    if (m_invalidations.load() == startedAt) {
-        m_PreCache.insert(std::move(asset));
+    if (_IsCurrent(startedAt)) {
+        _InsertLocked(asset);
     }
+}
+
+void
+ResolverContextCache::_InsertLocked(AssetIdentifier &asset) {
+    if (m_PreCache.size() == PRECACHE_SIZE) {
+        _MigratePreCacheLocked();
+    }
+    m_PreCache.insert(std::move(asset));
+}
+
+bool
+ResolverContextCache::_IsCurrent(uint64_t startedAt) const {
+    // In this order: an invalidation advances the count before it stops counting as running.
+    return m_invalidationsRunning.load() == 0 && m_invalidations.load() == startedAt;
 }
 
 void
@@ -285,6 +318,11 @@ ResolverContextCache::migratePreCacheIntoAyonCache() {
     std::unique_lock<std::shared_mutex> PreCacheWriteLock(m_PreCacheSharedMutex);
     std::unique_lock<std::shared_mutex> AyonCacheWriteLock(m_AyonCacheSharedMutex);
 
+    _MigratePreCacheLocked();
+};
+
+void
+ResolverContextCache::_MigratePreCacheLocked() {
     m_AyonCache.reserve(m_AyonCache.size() + m_PreCache.size());
     m_AyonCache.insert(std::make_move_iterator(m_PreCache.begin()), std::make_move_iterator(m_PreCache.end()));
     m_PreCache.clear();
@@ -395,7 +433,7 @@ ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
             }
             if (!asset.isEmpty() && MemcachedExpiry::isMissMarker(asset.getResolvedAssetPath().GetPathString())) {
                 // Known miss: AYON had no path for it recently. Skip the API call; do not cache or return it.
-                _TrackMiss(uriPath, observedAt);
+                _TrackMissIfCurrent(uriPath, observedAt, startedAt);
                 continue;
             }
             if (asset.isEmpty()) {
@@ -458,7 +496,7 @@ ResolverContextCache::batchWarm(std::vector<std::string> &uriPaths) {
             }
             const std::string rootlessPath = _ToRootlessPath(entry.second, m_rootReplaceData);
             std::lock_guard<std::mutex> lock(s_memcachedMutex);
-            if (m_invalidations.load() != startedAt) {
+            if (!_IsCurrent(startedAt)) {
                 break;
             }
             m_memcached->get()->setAssetData(entry.first, rootlessPath, static_cast<uint32_t>(ttl));
@@ -567,7 +605,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
         }
         if (!asset.isEmpty() && MemcachedExpiry::isMissMarker(asset.getResolvedAssetPath().GetPathString())) {
             // Known miss: return what a failed resolve returns (identifier set, empty path), without calling AYON.
-            _TrackMiss(assetIdentifier, observedAt);
+            _TrackMissIfCurrent(assetIdentifier, observedAt, startedAt);
             AssetIdentifier miss;
             miss.setAssetIdentifier(assetIdentifier);
             return miss;
@@ -621,7 +659,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
             const std::string rootlessPath
                 = _ToRootlessPath(asset.getResolvedAssetPath().GetPathString(), m_rootReplaceData);
             std::lock_guard<std::mutex> lock(s_memcachedMutex);
-            if (m_invalidations.load() == startedAt) {
+            if (_IsCurrent(startedAt)) {
                 m_memcached->get()->setAssetData(asset.getAssetIdentifier(), rootlessPath, static_cast<uint32_t>(ttl));
                 TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT)
                     .Msg("ResolverContextCache::getAsset: Stored rootless result in memcached\n");
@@ -663,7 +701,7 @@ ResolverContextCache::getAsset(const std::string &assetIdentifier,
 void
 ResolverContextCache::removeCachedObject(const std::string &key) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::removeCachedObject (%s) \n", key.c_str());
-    m_invalidations.fetch_add(1);
+    const InvalidationScope invalidation(m_invalidations, m_invalidationsRunning);
 
     std::unordered_set<AssetIdentifier>::iterator hit;
 
@@ -723,7 +761,7 @@ ResolverContextCache::removeCachedObject(const std::string &key) {
 void
 ResolverContextCache::removeCachedObject(const std::string &key, const CacheName selectedCache) {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::removeCachedObject (%s) \n", key.c_str());
-    m_invalidations.fetch_add(1);
+    const InvalidationScope invalidation(m_invalidations, m_invalidationsRunning);
 
     std::unordered_set<AssetIdentifier>::iterator hit;
 
@@ -789,7 +827,7 @@ ResolverContextCache::removeCachedObject(const std::string &key, const CacheName
 void
 ResolverContextCache::ClearCache() {
     TF_DEBUG(AYONUSDRESOLVER_RESOLVER_CONTEXT).Msg("ResolverContextCache::ClearCache \n");
-    m_invalidations.fetch_add(1);
+    const InvalidationScope invalidation(m_invalidations, m_invalidationsRunning);
 
     // Only PreCache/AyonCache can hold keys written to memcached (CommonCache is non-AYON paths).
     // Mutable (hero/latest) keys of this session are deleted from memcached; immutable ones stay. A class
@@ -837,6 +875,15 @@ ResolverContextCache::_TrackMiss(const std::string &uri, uint64_t observedAt, bo
 }
 
 void
+ResolverContextCache::_TrackMissIfCurrent(const std::string &uri, uint64_t observedAt, uint64_t startedAt) {
+    // Under the lock, so that ClearCache finds the key (see there).
+    std::lock_guard<std::mutex> lock(s_memcachedMutex);
+    if (_IsCurrent(startedAt)) {
+        _TrackMiss(uri, observedAt);
+    }
+}
+
+void
 ResolverContextCache::_DeleteMissMarker(const std::string &uri) {
     if (m_memcached.has_value() && m_memcached->get()->isConnected() && _MemcachedTtl(uri) >= 0) {
         // Delete only while the key still holds the marker: a path stored since (by this or another process,
@@ -861,7 +908,7 @@ ResolverContextCache::_StoreMiss(const std::string &uri, uint64_t startedAt) {
     const uint64_t observedAt = m_knownMisses.generation();
     {
         std::lock_guard<std::mutex> lock(s_memcachedMutex);
-        if (m_invalidations.load() != startedAt) {
+        if (!_IsCurrent(startedAt)) {
             return true;
         }
         // add, not set: a path another process stored after our AYON lookup (e.g. a publish) is kept, and we do not

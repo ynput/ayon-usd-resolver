@@ -197,6 +197,14 @@ class ResolverContextCache {
         // come back after it. Checked under the lock that protects the write, so a write that passes the check
         // finishes before the invalidation removes it.
         std::atomic<uint64_t> m_invalidations{0};
+        // Invalidations between their start and end. A lookup may not store during one: what it read can be
+        // an entry the invalidation has not deleted yet. See InvalidationScope.
+        std::atomic<uint32_t> m_invalidationsRunning{0};
+        bool _IsCurrent(uint64_t startedAt) const;
+        void _TrackMissIfCurrent(const std::string &uri, uint64_t observedAt, uint64_t startedAt);
+        // Caller holds the PreCache and AyonCache write locks.
+        void _InsertLocked(AssetIdentifier &asset);
+        void _MigratePreCacheLocked();
         void _InsertIfCurrent(AssetIdentifier &asset, uint64_t startedAt);
 
         int64_t _MemcachedTtl(const std::string &uri) const {
