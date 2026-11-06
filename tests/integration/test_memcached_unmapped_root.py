@@ -1,4 +1,4 @@
-"""A cached path whose root cannot be mapped is a miss, not a result (needs PR #106).
+"""A cached path whose root cannot be mapped is a miss, not a result.
 
 Site roots are fetched once, when the cache is built. If that fetch fails, a warm cache used
 to return the stored ``{root[work]}/...`` template as the resolved path.
@@ -45,7 +45,7 @@ def test_bad_key_prewarm_queues_the_uris_for_ayon(project, backend, run_resolver
 
 @pytest.mark.xfail(
     strict=True,
-    reason="PR #106 scope: with a working key AYON's own answer goes through the same empty root map",
+    reason="Known open issue: with a working key AYON's own answer goes through the same empty root map",
 )
 def test_failed_site_roots_with_a_working_key(project, backend, run_resolver, tap) -> None:
     fill(backend, run_resolver)

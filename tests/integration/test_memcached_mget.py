@@ -1,4 +1,4 @@
-"""Prewarm reads memcached with multi-key gets, one per chunk of 256 keys (needs PR #105).
+"""Prewarm reads memcached with multi-key gets, one per chunk of 256 keys.
 
 memcached's ``stats`` counts keys, not requests, so the request counts come from a proxy
 between the resolver and the backend (lib/mcproxy.py).

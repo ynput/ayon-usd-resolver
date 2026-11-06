@@ -484,7 +484,7 @@ def main() -> None:
         print(f"Memcached: ENABLED ({memcached_path})")
     else:
         print(
-            "Memcached: DISABLED (optional, use --with-memcached to install)")
+            "Memcached: DISABLED (libmemcached not found)")
 
     print("\n==================================================")
 

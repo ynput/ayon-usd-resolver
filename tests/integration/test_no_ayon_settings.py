@@ -1,4 +1,4 @@
-"""Without AYON settings only ayon:// URIs stop resolving; plain paths and stages keep working (needs PR #112)."""
+"""Without AYON settings only ayon:// URIs stop resolving; plain paths and stages keep working."""
 
 from __future__ import annotations
 

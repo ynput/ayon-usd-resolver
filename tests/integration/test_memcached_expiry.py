@@ -1,4 +1,4 @@
-"""Expiry per URI class, miss markers and ClearCache without flush_all (needs PR #104).
+"""Expiry per URI class, miss markers and ClearCache without flush_all.
 
 Each session is a new process, so the only state shared between sessions is memcached:
 what these tests read back from it is what another machine would see.
