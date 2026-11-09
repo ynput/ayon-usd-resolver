@@ -65,7 +65,9 @@ reader = Reader(s)
 
 shown = rootless = absolute = empty = 0
 for k in keys:
-    if len(k.encode()) > MAX_MEMCACHED_KEY_LEN or " " in k:
+    # Same rule as the resolver's keyFits(): a space, CR/LF or other control byte would let the
+    # key end the get command early and send the rest to the shared cache as another command.
+    if len(k.encode()) > MAX_MEMCACHED_KEY_LEN or any(c <= " " or c == "\x7f" for c in k):
         continue
     s.sendall(f"get {k}\r\n".encode())
     hdr = reader.line()

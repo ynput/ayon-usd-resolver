@@ -16,13 +16,17 @@ option(AYON_MEMCACHED_COPY_RUNTIME "Install libmemcached shared libraries next t
 find_package(PkgConfig QUIET)
 
 set(AYON_LIBMEMCACHED_RUNTIME_LIBS "")
+# Not LIBMEMCACHED_FOUND: pkg_check_modules caches that one, so a second configure of the same
+# build directory would skip pkg_check_modules and never recreate the PkgConfig::LIBMEMCACHED target.
+set(_AYON_LIBMEMCACHED_FOUND FALSE)
+set(AYON_LIBMEMCACHED_TARGET "")
 
 # this works only on windows with vcpkg installed libmemcached, or if the user has set CMAKE_PREFIX_PATH to a directory containing libmemcachedConfig.cmake
 if(WIN32)
     find_package(libmemcached CONFIG QUIET)
 
     if(TARGET libmemcached::libmemcached)
-        set(LIBMEMCACHED_FOUND TRUE)
+        set(_AYON_LIBMEMCACHED_FOUND TRUE)
         set(AYON_LIBMEMCACHED_TARGET libmemcached::libmemcached)
         get_target_property(_AYON_LIBMEMCACHED_IMPORTED_LOCATION libmemcached::libmemcached IMPORTED_LOCATION)
         if(_AYON_LIBMEMCACHED_IMPORTED_LOCATION AND _AYON_LIBMEMCACHED_IMPORTED_LOCATION MATCHES "\\.(so(\\..*)?|dylib|dll)$")
@@ -31,7 +35,7 @@ if(WIN32)
     endif()
 endif()
 
-if(NOT LIBMEMCACHED_FOUND AND PkgConfig_FOUND)
+if(NOT _AYON_LIBMEMCACHED_FOUND AND PkgConfig_FOUND)
     if(AYON_MEMCACHED_STATIC_LINK)
         set(_AYON_ORIG_PKG_CONFIG_ARGN "${PKG_CONFIG_ARGN}")
         set(PKG_CONFIG_ARGN ${PKG_CONFIG_ARGN} --static)
@@ -39,7 +43,9 @@ if(NOT LIBMEMCACHED_FOUND AND PkgConfig_FOUND)
 
     pkg_check_modules(LIBMEMCACHED QUIET IMPORTED_TARGET libmemcached)
 
-    if(LIBMEMCACHED_FOUND)
+    if(LIBMEMCACHED_FOUND AND TARGET PkgConfig::LIBMEMCACHED)
+        set(_AYON_LIBMEMCACHED_FOUND TRUE)
+        set(AYON_LIBMEMCACHED_TARGET PkgConfig::LIBMEMCACHED)
         foreach(_AYON_LIB_ENTRY IN LISTS LIBMEMCACHED_LINK_LIBRARIES)
             if(IS_ABSOLUTE "${_AYON_LIB_ENTRY}" AND _AYON_LIB_ENTRY MATCHES "\\.(so(\\..*)?|dylib|dll)$")
                 list(APPEND AYON_LIBMEMCACHED_RUNTIME_LIBS "${_AYON_LIB_ENTRY}")
@@ -73,12 +79,10 @@ if(NOT LIBMEMCACHED_FOUND AND PkgConfig_FOUND)
     endif()
 endif()
 
-if(NOT LIBMEMCACHED_FOUND)
+if(NOT _AYON_LIBMEMCACHED_FOUND)
+    # Only the header memcachedHandler.cpp includes; an older layout must leave memcached off, not break the build.
     find_path(AYON_LIBMEMCACHED_INCLUDE_DIR
-        NAMES
-            libmemcached-1.0/memcached.h
-            libmemcached/memcached.h
-            libmemcached.h
+        NAMES libmemcached-1.0/memcached.h
         PATH_SUFFIXES include
     )
 
@@ -123,16 +127,13 @@ if(NOT LIBMEMCACHED_FOUND)
             list(APPEND AYON_LIBMEMCACHED_RUNTIME_LIBS "${AYON_LIBMEMCACHED_LIBRARY}")
         endif()
 
-        set(LIBMEMCACHED_FOUND TRUE)
+        set(_AYON_LIBMEMCACHED_FOUND TRUE)
         set(AYON_LIBMEMCACHED_TARGET AyonLibmemcached)
     endif()
 endif()
 
-if(LIBMEMCACHED_FOUND)
+if(_AYON_LIBMEMCACHED_FOUND)
     set(AYON_LIBMEMCACHED_AVAILABLE TRUE)
-    if(NOT AYON_LIBMEMCACHED_TARGET)
-        set(AYON_LIBMEMCACHED_TARGET PkgConfig::LIBMEMCACHED)
-    endif()
     if(AYON_LIBMEMCACHED_TARGET STREQUAL "libmemcached::libmemcached")
         message(STATUS "[AYON] libmemcached found via CMake package config - memcached support ENABLED")
     elseif(AYON_LIBMEMCACHED_TARGET STREQUAL "PkgConfig::LIBMEMCACHED")
