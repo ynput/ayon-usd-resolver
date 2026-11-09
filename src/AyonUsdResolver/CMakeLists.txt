@@ -186,6 +186,9 @@ if(APPLE)
     set_target_properties(${CORE_LIB_TARGET} PROPERTIES INSTALL_RPATH "@loader_path")
 elseif(UNIX)
     set_target_properties(${CORE_LIB_TARGET} PROPERTIES INSTALL_RPATH "$ORIGIN")
+    # RPATH, not RUNPATH: only RPATH also applies to the dependencies of the bundled libmemcached (libhashkit).
+    # Without it the plugin does not load on a machine with no libmemcached of its own, with memcached on or off.
+    target_link_options(${CORE_LIB_TARGET} PRIVATE "LINKER:--disable-new-dtags")
 endif()
 
 if(UNIX)

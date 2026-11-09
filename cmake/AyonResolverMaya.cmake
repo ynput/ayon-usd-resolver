@@ -188,7 +188,6 @@ else()
         "${USD_ROOT}/include/boost-1_76"
         "${USD_ROOT}/include"
     )
-    find_package(Boost REQUIRED)
     unset(_maya_boost_inc)
     foreach(_boost_inc IN LISTS _maya_boost_candidates)
         if(EXISTS "${_boost_inc}/boost/python/detail/wrap_python.hpp")
