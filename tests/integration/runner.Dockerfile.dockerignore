@@ -1,0 +1,13 @@
+# Context is the repo root; keep it to what the resolver build needs.
+.git
+**/.git
+build_*
+!build_resolver.py
+build/
+install/
+dist/
+**/__pycache__
+.venv/
+tests/testVenv/
+ext/ayon-cpp-api/bin/
+ext/ayon-cpp-api/build*/

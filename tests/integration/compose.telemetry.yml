@@ -1,0 +1,22 @@
+# Optional overlay: publish test results to the local Loki/Tempo/Grafana stack
+# (ayon-vector/services). Tests behave identically with or without it.
+#
+#   docker compose -f tests/integration/compose.yml -f tests/integration/compose.telemetry.yml \
+#       run --rm runner
+#
+networks:
+  observability:
+    external: true
+    name: ${OBSERVABILITY_NETWORK:-services_default}
+
+services:
+  ayon-tap:
+    networks: [default, ayon, observability]
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${RIT_OTLP_ENDPOINT:-http://ayon-tempo:4318}
+
+  runner:
+    networks: [default, observability]
+    environment:
+      RIT_LOKI_URL: ${RIT_LOKI_URL:-http://ayon-loki:3100}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${RIT_OTLP_ENDPOINT:-http://ayon-tempo:4318}

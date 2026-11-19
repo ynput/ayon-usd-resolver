@@ -1,22 +1,55 @@
+/**
+ * @file resolverContextCache.h
+ * @brief Declaration of the ResolverContextCache and PinningFileHandler classes.
+ */
+
 #ifndef AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
 #define AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
 
+
 #include "../cache/assetIdentifierDef.h"
+#include "memcachedExpiry.h"
+#include "memcachedHandler.h"
 #include "AyonCppApi.h"
 
 #include <nlohmann/json.hpp>
 
+#include <atomic>
+#include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <shared_mutex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
 enum class CacheName { AYONCACHE, COMMONCACHE };
 
+/**
+ * @brief Convert a resolved path to a rootless path using the provided root replacement data.
+ *
+ * @param resolvedPath The resolved path to convert.
+ * @param rootReplaceData A map of root paths to their replacements.
+ * @return The rootless path.
+ */
+
+static std::string _ToRootlessPath(
+    const std::string &resolvedPath,
+    const std::unordered_map<std::string,
+    std::string> &rootReplaceData);
+
+/**
+ * @brief Construct a new Pinning File Handler object and load the pinning file data.
+ *
+ * @param pinningFilePath Path to the pinning file.
+ * @param rootReplaceData Root replacement data to apply to the pinning file entries.
+ * @todo pinning file handlder should construct its cache directly at construction getAssetData should not call
+ *       rootReplace
+ */
 class PinningFileHandler {
     public:
         PinningFileHandler(const std::string &pinningFilePath,
@@ -31,7 +64,6 @@ class PinningFileHandler {
 
         std::unordered_map<std::string, std::string> m_rootReplaceData;
 };
-
 
 /**
  * @class ResolverContextCache
@@ -65,6 +97,28 @@ class ResolverContextCache {
         AssetIdentifier getAsset(const std::string &assetIdentifier, const CacheName selectedCache, const bool isAyonPath);
 
         /**
+         * @brief Resolve many AYON URIs in a single batched (parallel) request and seed the cache.
+         *
+         * Unlike getAsset(), which resolves one URI per server round-trip, this collapses a whole
+         * set of URIs into one batched call via AyonApi::batchResolvePath and inserts every result.
+         * Used by the prewarm pass to avoid the serial resolve storm during stage composition.
+         *
+         * No-op in static (pinning) mode or with an empty input.
+         * @param uriPaths The AYON URIs to resolve. May be reordered/deduplicated.
+         * @return Map of URI -> resolved path for the entries that were resolved.
+         */
+        std::unordered_map<std::string, std::string> batchWarm(std::vector<std::string> &uriPaths);
+
+        /**
+         * @brief Resolved path for a URI already held by an in-process cache, if any.
+         *
+         * Lets batchWarm() skip a memcached round trip for URIs PreCache/AyonCache/CommonCache
+         * can already answer. Returns the path (so the prewarm BFS can still descend through
+         * the layer) rather than a bare bool.
+         */
+        std::optional<std::string> inProcessResolved(const std::string &uriPath) const;
+
+        /**
          * @brief Set up the cache from a pinning file
          * @param pinningFilePath Path to the pinning file
          */
@@ -89,7 +143,12 @@ class ResolverContextCache {
         void ClearCache();
 
         /**
-         * @brief Print every object in the cache for debugging
+         * @brief Print the contents of the Resolver Context Cache
+         * 
+         * @note This function is primarily for debugging purposes and prints the cache contents to the standard output.
+         * @todo when ayonLogger.h (in ayon-cpp-dev-tools) has the header guards then we can import
+         * it and use logging from there.
+         * 
          */
         void printCache() const;
 
@@ -110,7 +169,39 @@ class ResolverContextCache {
         std::optional<std::unique_ptr<AyonApi>> m_ayon;
         bool m_staticCache;
 
+        std::unordered_map<std::string, std::string> m_rootReplaceData;
         std::optional<PinningFileHandler> m_pinningFileHandler;
+        std::optional<std::unique_ptr<MemcachedHandler>> m_memcached;
+        // Seconds: 0 = never expire; hero/latest also allow -1 = bypass memcached (see memcachedExpiry.h).
+        int64_t m_memcachedExpire = 0;
+        int64_t m_memcachedHeroExpire = 3600;
+        int64_t m_memcachedLatestExpire = -1;
+        // Miss marker TTL: -1 = never write markers (see MemcachedExpiry::parseMissExpiry).
+        int64_t m_memcachedMissExpire = MemcachedExpiry::kDefaultMissSeconds;
+
+        // Known misses this process saw. ClearCache deletes their markers from memcached. Its lock is a leaf lock.
+        MemcachedExpiry::KnownMisses m_knownMisses;
+        // observedAt: m_knownMisses.generation() taken before memcached was read or written.
+        // trust = false tracks the key for ClearCache only: memcached holds a value, but it may be a path.
+        void _TrackMiss(const std::string &uri, uint64_t observedAt, bool trust = true);
+        // Delete a miss's marker if memcached still holds it (a path stored since is kept), then untrack the miss.
+        // Takes s_memcachedMutex: call without the cache locks held.
+        void _DeleteMissMarker(const std::string &uri);
+        // Write the miss marker for a failed AYON lookup (memcached `add`). True when memcached now holds a value for
+        // the URI (the marker, or a path stored meanwhile) or the answer predates an invalidation and must not be
+        // kept; false when memcached or miss caching is off for this URI, or the write failed.
+        bool _StoreMiss(const std::string &uri, uint64_t startedAt);
+
+        // Whether a lookup that read the invalidation count (see s_invalidations) as startedAt may store its answer.
+        static bool _IsCurrent(uint64_t startedAt);
+        // Caller holds the PreCache and AyonCache write locks.
+        void _InsertLocked(AssetIdentifier &asset);
+        void _MigratePreCacheLocked();
+        void _InsertIfCurrent(AssetIdentifier &asset, uint64_t startedAt);
+
+        int64_t _MemcachedTtl(const std::string &uri) const {
+            return MemcachedExpiry::ttlFor(uri, m_memcachedExpire, m_memcachedHeroExpire, m_memcachedLatestExpire);
+        }
 };
 
 #endif   // AR_AYONUSDRESOLVER_RESOLVER_CONTEXT_CACHE_H
